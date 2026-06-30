@@ -1,7 +1,7 @@
 {
   "name": "Trimble Technician Assistant",
   "short_name": "Tech Assistant",
-  "description": "Field assistant for Earthworks excavator tuning and Siteworks machine guidance measure-up.",
+  "description": "Field assistant for Trimble machine control — pre-inspection wear reports, excavator tuning, and measure-up tools.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
