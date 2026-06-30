@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 280" role="img" aria-label="Tire check">
+  <defs>
+    <style>
+      .ink { fill: none; stroke: #1a1a1a; stroke-width: 2; }
+      .ink-thin { fill: none; stroke: #1a1a1a; stroke-width: 1.2; }
+      .meas { stroke: #005f9e; stroke-width: 2; }
+      .label { font: 600 13px 'Open Sans', Arial, sans-serif; fill: #252a2e; }
+      .small { font: 600 11px 'Open Sans', Arial, sans-serif; fill: #4b5563; }
+      .floor { fill: #f3f4f6; stroke: #9ca3af; stroke-width: 1; }
+    </style>
+  </defs>
+  <rect width="560" height="280" fill="#fff"/>
+  <text class="label" x="24" y="32">Tires  tandem &amp; front (§3.2.8)</text>
+  <text class="small" x="24" y="52">Same make/size · even wear · equal pressure · rim height per pair</text>
+  <rect class="floor" x="40" y="210" width="480" height="48"/>
+  <!-- Rear tandem -->
+  <circle class="ink" cx="160" cy="210" r="38"/><circle class="ink-thin" cx="160" cy="210" r="22"/>
+  <circle class="ink" cx="250" cy="210" r="38"/><circle class="ink-thin" cx="250" cy="210" r="22"/>
+  <text class="small" x="155" y="175">tandem</text>
+  <!-- Front -->
+  <circle class="ink" cx="420" cy="210" r="34"/><circle class="ink-thin" cx="420" cy="210" r="20"/>
+  <text class="small" x="405" y="175">front</text>
+  <!-- Rim height arrows -->
+  <line class="meas" x1="160" y1="210" x2="160" y2="248"/>
+  <line class="meas" x1="250" y1="210" x2="250" y2="248"/>
+  <line class="ink-thin" x1="130" y1="248" x2="280" y2="248"/>
+  <text class="small" fill="#005f9e" x="285" y="252">rim height equal</text>
+  <path class="ink" d="M100 210 L100 140 L400 125 L440 140 L440 210"/>
+</svg>

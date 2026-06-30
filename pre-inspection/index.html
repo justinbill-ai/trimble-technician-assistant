@@ -1,0 +1,2917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pre-Inspection / Machine Wear Report</title>
+  <meta name="theme-color" content="#005f9e" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+</head>
+<body>
+  <header class="tc-app-header">
+    <a class="tc-back-link" href="../index.html">&larr; Technician Assistant</a>
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img
+          class="tc-header__logo"
+          src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
+          alt="Trimble"
+        />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Pre-Inspection / Machine Wear Report</h1>
+          <p class="tc-header__sub">Document machine condition before Trimble control system installation</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main">
+    <p class="note tc-intro" style="margin:0 0 16px;">
+      Document machine wear before machine control install. Select machine type, choose <strong>I know what I am doing</strong> to add your own line items with photos, or use <strong>Guided inspection</strong> for suggested wear areas. Generate a Trimble-branded PDF when finished.
+    </p>
+
+    <form id="reportForm" onsubmit="return false;">
+      <div class="card">
+        <h2>Job details</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="dealerName">Dealer name</label>
+            <input type="text" id="dealerName" placeholder="e.g. SITECH …" />
+          </div>
+          <div class="field">
+            <label for="techName">Technician name</label>
+            <input type="text" id="techName" placeholder="e.g. John Doe" />
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Dealer logo (optional)</label>
+          <p class="note" style="margin-bottom:10px;">Upload your dealer logo to appear in the top-right corner of the PDF report. Once saved, it is stored <strong>on this device only</strong> — not shared with other users or dealers.</p>
+          <div class="dealer-logo-row">
+            <div id="dealerLogoPreview" class="dealer-logo-preview dealer-logo-preview--empty">No dealer logo</div>
+            <div class="dealer-logo-actions">
+              <button type="button" class="btn-sm" onclick="uploadDealerLogo()">Upload dealer logo</button>
+              <button type="button" class="btn-sm hidden" id="clearDealerLogoBtn" onclick="clearDealerLogo()">Remove saved logo</button>
+            </div>
+          </div>
+          <p id="dealerLogoSavedNote" class="dealer-logo-saved-note hidden">Saved on this device for future reports.</p>
+        </div>
+        <details class="glossary-panel" id="glossaryPanel">
+          <summary class="glossary-panel__summary">Voice terminology — dealer glossary</summary>
+          <p class="note glossary-panel__intro">
+            Teach the app how your shop talks. Built-in phrases from the <strong>commissioning manual</strong> (circle backlash, moldboard, RS400, etc.) normalize wear notes; dealer slang can auto-fill machine fields.
+            Saved <strong>on this device only</strong> — export to share the same list with other tech phones.
+          </p>
+          <div class="glossary-examples note">
+            <strong>Examples:</strong> “circle back lash” → <em>circle backlash</em> · “mold board” → <em>moldboard</em> · “yellow iron” → <em>CAT</em> · “road grader” → <em>motor grader</em>
+          </div>
+          <div id="glossaryList" class="glossary-list" aria-live="polite"></div>
+          <div class="glossary-actions">
+            <button type="button" class="btn-sm" onclick="addGlossaryRow()">+ Add phrase</button>
+            <button type="button" class="btn-sm" onclick="loadGlossaryStarterExamples()">Load starter examples</button>
+            <button type="button" class="btn-sm" onclick="exportGlossaryJson()">Export JSON</button>
+            <button type="button" class="btn-sm" onclick="importGlossaryJson()">Import JSON</button>
+          </div>
+          <p id="glossarySavedNote" class="dealer-logo-saved-note hidden">Glossary saved on this device.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Machine information</h2>
+        <div class="field">
+          <label for="machineType">Machine type</label>
+          <select id="machineType" onchange="onMachineTypeChange()">
+            <option value="">Select machine type…</option>
+            <option value="dozer">Dozer</option>
+            <option value="motor_grader">Motor grader</option>
+            <option value="excavator">Excavator</option>
+            <option value="pile_driver">Pile driver</option>
+            <option value="other">Other — anything not listed above</option>
+          </select>
+        </div>
+        <div id="machineTypeOtherGroup" class="field hidden">
+          <label for="machineTypeOther">Specify machine type</label>
+          <input type="text" id="machineTypeOther" placeholder="e.g. Drill, marine excavator, wheel loader, etc." oninput="onMachineTypeOtherInput()" />
+          <p class="note" style="margin-top:8px;margin-bottom:0;">Describe any machine not in the list. Use <strong>I know what I am doing</strong> to add custom wear callouts and photos.</p>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="machineMake">Machine make</label>
+            <input type="text" id="machineMake" class="speech-filled-field" placeholder="e.g. CAT" />
+          </div>
+          <div class="field">
+            <label for="machineModel">Machine model</label>
+            <input type="text" id="machineModel" class="speech-filled-field" placeholder="e.g. D6N" />
+          </div>
+          <div class="field">
+            <label for="serialNumber">Machine serial number</label>
+            <input type="text" id="serialNumber" class="speech-filled-field" placeholder="e.g. SGGXXXXX" />
+          </div>
+          <div class="field">
+            <label for="machineHours">Machine hours</label>
+            <input type="text" id="machineHours" class="speech-filled-field" placeholder="e.g. 1000 hours" />
+          </div>
+        </div>
+        <div id="machineVoiceRow" class="machine-voice-row hidden">
+          <button type="button" class="btn-voice" id="machineDictateBtn" data-voice-label="Record machine details" onclick="toggleMachineInfoVoice()">
+            <span class="btn-voice__icon" aria-hidden="true"></span>
+            <span class="btn-voice__label">Record machine details</span>
+          </button>
+          <span class="machine-voice-hint">Say make, model, hours, or serial — e.g. “160 CAT motor grader, 1200 hours”</span>
+        </div>
+        <textarea id="machineVoiceCapture" class="hidden-accessible" aria-hidden="true" tabindex="-1"></textarea>
+        <div id="voiceParseBanner" class="voice-parse-banner hidden" role="status"></div>
+      </div>
+
+      <div id="workflowCard" class="card hidden">
+        <h2>How do you want to document wear?</h2>
+        <p class="note">Choose a workflow for <strong id="machineTypeLabel"></strong>. You can switch modes anytime before generating the report.</p>
+        <div id="commissioningHelpBar" class="commissioning-help-bar hidden">
+          <button type="button" class="btn btn-secondary" id="commissioningHelpBtn" onclick="openCommissioningHelp()">Commissioning manual — §3.2</button>
+          <p class="commissioning-help-bar__note">Inspection photos appear in guided mode as you work each step. This opens the commissioning manual wording and full PDF only.</p>
+        </div>
+        <p id="workflowOtherNote" class="note hidden" style="background:var(--tc-blue-soft);border:1px solid var(--tc-grey-300);border-radius:8px;padding:10px 12px;">
+          For machines not in the standard list, <strong>I know what I am doing</strong> is recommended — add as many custom wear line items and photos as you need. Guided mode offers generic prompts if helpful.
+        </p>
+        <div class="mode-picker">
+          <div class="mode-option" id="modeExpert" onclick="selectMode('expert')">
+            <strong>I know what I am doing</strong>
+            <span>Add your own line items with notes and a photo for each callout. Use the + button to add as many entries as you need.</span>
+          </div>
+          <div class="mode-option" id="modeGuided" onclick="selectMode('guided')">
+            <strong>Guided inspection</strong>
+            <span>Follow suggested wear areas for this machine type, reference the commissioning diagram, and add extra line items if needed.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="expertPanel" class="card hidden">
+        <h2>Wear callouts — expert mode</h2>
+        <div id="voiceUnsupportedExpert" class="voice-unsupported hidden">Voice dictation needs Chrome or Edge on this device. You can still type wear notes.</div>
+        <div id="voiceStatusBar" class="voice-status hidden" role="status" aria-live="polite">Recording… tap <strong>Stop</strong> when finished.</div>
+        <p class="note">Tap green <strong>Record</strong> for voice notes or the <strong>camera</strong> icon to take a field photo on each line. You can also choose an existing photo from your device.</p>
+        <div id="expertList" class="line-items"></div>
+        <div class="expert-voice-actions">
+          <button type="button" class="btn btn-secondary" onclick="addExpertItem()">+ Add line item</button>
+          <button type="button" class="btn btn-secondary" id="addVoiceLineBtn" onclick="addExpertItemFromVoice()">+ Add line from voice</button>
+        </div>
+      </div>
+
+      <div id="guidedPanel" class="card hidden">
+        <h2>Guided inspection — <span id="guidedMachineLabel"></span></h2>
+        <div id="guidedHelpLinkRow" class="guided-help-link hidden">
+          <button type="button" class="btn-sm" onclick="openCommissioningHelp()">Commissioning manual (§3.2)</button>
+        </div>
+        <div id="voiceUnsupportedGuided" class="voice-unsupported hidden">Voice dictation needs Chrome or Edge on this device. You can still type wear notes.</div>
+        <div id="guidedVoiceBar" class="voice-bar hidden">
+          <div class="voice-bar__info">
+            <span class="voice-bar__label">Current wear area</span>
+            <strong id="guidedVoiceSectionTitle">—</strong>
+            <span id="guidedVoiceSectionProgress" class="voice-bar__progress"></span>
+          </div>
+          <div class="voice-bar__actions">
+            <button type="button" class="btn-voice" id="guidedDictateBtn" onclick="dictateCurrentGuidedSection()">
+              <span class="btn-voice__icon" aria-hidden="true"></span>
+              <span class="btn-voice__label">Record</span>
+            </button>
+            <button type="button" class="btn-camera" id="guidedVoiceCameraBtn" onclick="attachPhotoForCurrentGuidedSection()" aria-label="Take field photo" title="Take photo for this section">
+              <span class="btn-camera__icon" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="btn-sm" onclick="nextGuidedSection()">Next section</button>
+          </div>
+        </div>
+        <div id="voiceStatusBarGuided" class="voice-status hidden" role="status" aria-live="polite">Recording… tap <strong>Stop</strong> when finished.</div>
+        <p class="note" style="margin-bottom:12px;">Each step has a reference photo where available. Use <strong>Record</strong> or the <strong>camera</strong> icon in each section for your notes and field photos. Only your notes and field photos go on the PDF.</p>
+        <div id="guidedAreas"></div>
+        <div class="section-divider">
+          <h3>Additional callouts</h3>
+          <p class="note" style="margin-bottom:10px;">Add extra line items beyond the guided list — same as expert mode.</p>
+          <div id="guidedExtraList" class="line-items"></div>
+          <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="addGuidedExtraItem()">+ Add line item</button>
+        </div>
+      </div>
+
+      <div id="verifyCard" class="card hidden verify-card">
+        <div class="verify-callout">
+          <strong>Verify all information before generating the PDF report</strong>
+          <p>Voice dictation can mishear words. Review every field and wear note below — edit anything that looks wrong before you export.</p>
+        </div>
+        <div id="verifySummary" class="verify-summary"></div>
+        <label class="verify-check">
+          <input type="checkbox" id="verifyConfirm" onchange="updateGenerateButtonState()" />
+          <span>I have verified this information is accurate</span>
+        </label>
+      </div>
+
+      <div id="reportActions" class="actions hidden">
+        <button type="button" class="btn btn-primary" id="generatePdfBtn" onclick="generateReport()" disabled>Generate PDF report</button>
+        <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear form</button>
+      </div>
+      <div id="statusMsg" class="status"></div>
+    </form>
+  </main>
+
+  <div id="commissioningHelpModal" class="help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="commissioningHelpTitle" aria-hidden="true">
+    <div class="help-modal__backdrop" onclick="closeCommissioningHelp()"></div>
+    <div class="help-modal__panel">
+      <header class="help-modal__header">
+        <div>
+          <p class="help-modal__eyebrow" id="commissioningHelpEyebrow"></p>
+          <h2 class="help-modal__title" id="commissioningHelpTitle">Wear check reference</h2>
+        </div>
+        <button type="button" class="help-modal__close" onclick="closeCommissioningHelp()" aria-label="Close">&times;</button>
+      </header>
+      <div class="help-modal__body" id="commissioningHelpBody"></div>
+      <footer class="help-modal__footer">
+        <a id="commissioningHelpPdfLink" class="btn btn-secondary help-modal__pdf" href="#" target="_blank" rel="noopener noreferrer">Open full commissioning manual (PDF)</a>
+        <button type="button" class="btn btn-primary" onclick="closeCommissioningHelp()">Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <input type="file" id="photoInput" accept="image/*" hidden />
+  <input type="file" id="dealerLogoInput" accept="image/*" hidden />
+  <input type="file" id="glossaryImportInput" accept="application/json,.json" hidden />
+
+  <style>
+    .dealer-logo-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .dealer-logo-preview {
+      width: 160px;
+      height: 64px;
+      border: 1px dashed var(--tc-grey-400);
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 6px;
+    }
+    .dealer-logo-preview img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .dealer-logo-preview--empty {
+      font-size: 0.75rem;
+      color: var(--tc-grey-600);
+      text-align: center;
+    }
+    .dealer-logo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .dealer-logo-saved-note {
+      margin: 10px 0 0;
+      font-size: 0.8rem;
+      color: var(--tc-success);
+      font-weight: 600;
+    }
+
+    .voice-unsupported {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: var(--tc-grey-600);
+      background: var(--tc-grey-100);
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+    }
+    .voice-status {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #9b1c1c;
+      background: #fff0f0;
+      border: 1px solid #f0b4b4;
+      border-radius: var(--tc-radius-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .voice-status::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      background: #e0252a;
+      flex-shrink: 0;
+      animation: recorder-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes recorder-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(224, 37, 42, 0.5); opacity: 1; }
+      50% { box-shadow: 0 0 0 6px rgba(224, 37, 42, 0); opacity: 0.85; }
+    }
+    .voice-bar {
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      background: var(--tc-surface);
+      border: 1px solid var(--tc-grey-400);
+      border-radius: var(--tc-radius-lg);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .voice-bar__info {
+      min-width: 0;
+      flex: 1 1 200px;
+    }
+    .voice-bar__label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--tc-grey-600);
+      margin-bottom: 2px;
+    }
+    .voice-bar__info strong {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--tc-blue);
+      line-height: 1.3;
+    }
+    .voice-bar__progress {
+      font-size: 0.78rem;
+      color: var(--tc-grey-600);
+      margin-top: 2px;
+      display: inline-block;
+    }
+    .voice-bar__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-voice {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #9dd4b0;
+      border-radius: 999px;
+      background: #f0faf4;
+      color: #157a3a;
+      font-family: var(--tc-font);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 14px 6px 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .btn-voice:hover {
+      background: #e3f5ea;
+      border-color: #1fad53;
+    }
+    .btn-voice--active {
+      background: #fff0f0;
+      border-color: #f0b4b4;
+      color: #9b1c1c;
+    }
+    .btn-voice--active:hover {
+      background: #fde8e8;
+      border-color: #e0252a;
+    }
+    .btn-voice__icon {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #1fad53;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    }
+    .btn-voice__icon::after {
+      content: "";
+      width: 0;
+      height: 0;
+      margin-left: 2px;
+      border-style: solid;
+      border-width: 6px 0 6px 10px;
+      border-color: transparent transparent transparent #fff;
+    }
+    .btn-voice--active .btn-voice__icon {
+      background: #e0252a;
+      animation: recorder-pulse 1.2s ease-in-out infinite;
+    }
+    .btn-voice--active .btn-voice__icon::after {
+      width: 10px;
+      height: 10px;
+      margin-left: 0;
+      border: none;
+      border-radius: 2px;
+      background: #fff;
+    }
+    .btn-voice__label {
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .line-item__top .btn-voice { align-self: flex-start; margin-top: 2px; }
+    .section-media-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .line-item__top .section-media-bar { align-self: flex-start; margin-top: 2px; }
+    .btn-camera {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid #a8c4e8;
+      border-radius: 50%;
+      background: #eef4fc;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-camera:hover {
+      background: #e0ecfa;
+      border-color: var(--tc-blue);
+    }
+    .btn-camera--has-photo {
+      border-color: #9dd4b0;
+      background: #f0faf4;
+    }
+    .btn-camera--has-photo:hover {
+      border-color: #1fad53;
+      background: #e3f5ea;
+    }
+    .btn-camera__icon {
+      width: 20px;
+      height: 15px;
+      border: 2px solid var(--tc-blue);
+      border-radius: 3px;
+      position: relative;
+      display: block;
+      box-sizing: border-box;
+    }
+    .btn-camera__icon::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 9px;
+      height: 3px;
+      background: var(--tc-blue);
+      border-radius: 2px 2px 0 0;
+    }
+    .btn-camera__icon::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 7px;
+      height: 7px;
+      border: 2px solid var(--tc-blue);
+      border-radius: 50%;
+      box-sizing: border-box;
+    }
+    .btn-camera--has-photo .btn-camera__icon,
+    .btn-camera--has-photo .btn-camera__icon::before {
+      border-color: #157a3a;
+      background: #157a3a;
+    }
+    .btn-camera--has-photo .btn-camera__icon::after {
+      border-color: #157a3a;
+    }
+    .guided-area .section-media-bar {
+      margin: 8px 0 4px;
+    }
+    .guided-area {
+      cursor: pointer;
+    }
+    .guided-area--active {
+      border-color: var(--tc-blue);
+      box-shadow: 0 0 0 1px var(--tc-blue);
+      background: var(--tc-blue-soft);
+    }
+    .expert-voice-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .machine-voice-row {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .machine-voice-hint {
+      font-size: 0.8rem;
+      color: var(--tc-grey-600);
+      line-height: 1.35;
+      flex: 1 1 200px;
+    }
+    .voice-parse-banner {
+      margin-top: 10px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      color: var(--tc-blue-dark);
+      background: #fff8e6;
+      border: 1px solid #f5de94;
+      border-left: 3px solid var(--tc-yellow);
+      border-radius: var(--tc-radius-lg);
+    }
+    .field-auto-filled input {
+      border-color: var(--tc-blue);
+      background: var(--tc-blue-soft);
+    }
+    .verify-card {
+      border-left-color: var(--tc-yellow);
+    }
+    .verify-callout {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      background: #fff8e6;
+      border: 1px solid #f5de94;
+      border-radius: var(--tc-radius-lg);
+    }
+    .verify-callout strong {
+      display: block;
+      color: var(--tc-text);
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+    .verify-callout p {
+      margin: 0;
+      font-size: 0.84rem;
+      color: var(--tc-grey-600);
+      line-height: 1.45;
+    }
+    .verify-summary {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: var(--tc-text);
+      margin-bottom: 14px;
+    }
+    .verify-summary dl {
+      margin: 0 0 12px;
+      display: grid;
+      gap: 6px;
+    }
+    .verify-summary dt {
+      font-weight: 700;
+      color: var(--tc-grey-600);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .verify-summary dd {
+      margin: 0 0 8px;
+      color: var(--tc-text);
+    }
+    .verify-wear-item {
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      background: var(--tc-grey-100);
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius);
+    }
+    .verify-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--tc-text);
+      cursor: pointer;
+    }
+    .verify-check input {
+      width: auto;
+      margin-top: 3px;
+    }
+    #generatePdfBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .hidden-accessible {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+    .glossary-panel {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--tc-grey-300);
+    }
+    .glossary-panel__summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--tc-blue);
+      list-style: none;
+    }
+    .glossary-panel__summary::-webkit-details-marker {
+      display: none;
+    }
+    .glossary-panel__intro {
+      margin: 10px 0 8px;
+    }
+    .glossary-examples {
+      margin-bottom: 12px;
+      padding: 8px 10px;
+      background: var(--tc-grey-100);
+      border-radius: var(--tc-radius);
+      font-size: 0.8rem;
+    }
+    .glossary-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .glossary-row {
+      display: grid;
+      grid-template-columns: 1fr minmax(120px, 140px) 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+    @media (max-width: 640px) {
+      .glossary-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .glossary-row .glossary-row__remove {
+        grid-column: 2;
+        justify-self: end;
+      }
+    }
+    .glossary-row label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--tc-grey-600);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .glossary-row input,
+    .glossary-row select {
+      width: 100%;
+      font-size: 0.86rem;
+    }
+    .glossary-row__remove {
+      align-self: center;
+      margin-top: 18px;
+    }
+    .glossary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .glossary-empty {
+      font-size: 0.84rem;
+      color: var(--tc-grey-600);
+      font-style: italic;
+      padding: 8px 0;
+    }
+    .commissioning-help-bar {
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      background: var(--tc-blue-soft);
+      border: 1px solid var(--tc-grey-300);
+      border-left: 3px solid var(--tc-blue);
+      border-radius: var(--tc-radius-lg);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+    }
+    .commissioning-help-bar__note {
+      margin: 0;
+      flex: 1 1 220px;
+      font-size: 0.82rem;
+      color: var(--tc-grey-600);
+      line-height: 1.4;
+    }
+    .guided-tolerance {
+      margin: -2px 0 8px;
+      padding: 6px 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--tc-blue-dark);
+      background: var(--tc-blue-tint);
+      border-radius: var(--tc-radius);
+      line-height: 1.35;
+    }
+    .help-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .help-modal.hidden {
+      display: none;
+    }
+    .help-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(37, 42, 46, 0.55);
+    }
+    .help-modal__panel {
+      position: relative;
+      width: min(720px, 100%);
+      max-height: min(88vh, 900px);
+      background: var(--tc-surface);
+      border-radius: var(--tc-radius-lg);
+      border: 1px solid var(--tc-grey-400);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .help-modal__header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--tc-grey-300);
+      background: var(--tc-grey-100);
+    }
+    .help-modal__eyebrow {
+      margin: 0 0 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tc-grey-600);
+    }
+    .help-modal__title {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--tc-blue);
+    }
+    .help-modal__close {
+      border: none;
+      background: transparent;
+      font-size: 1.6rem;
+      line-height: 1;
+      color: var(--tc-grey-600);
+      cursor: pointer;
+      padding: 0 4px;
+    }
+    .help-modal__body {
+      padding: 16px 18px;
+      overflow-y: auto;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: var(--tc-text);
+    }
+    .help-modal__intro {
+      margin: 0 0 14px;
+      color: var(--tc-grey-600);
+    }
+    .help-check {
+      margin: 0 0 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--tc-grey-300);
+    }
+    .help-check:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .help-check h3 {
+      margin: 0 0 6px;
+      font-size: 0.92rem;
+      color: var(--tc-text);
+    }
+    .help-check__ref {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--tc-grey-600);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .help-check ul {
+      margin: 6px 0 0;
+      padding-left: 1.2rem;
+    }
+    .help-check li {
+      margin-bottom: 4px;
+    }
+    .help-check__spec {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--tc-blue-tint);
+      border-radius: var(--tc-radius);
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--tc-blue-dark);
+    }
+    .help-check__photo {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      margin: 10px 0 4px;
+      border-radius: var(--tc-radius-lg);
+      border: 1px solid var(--tc-grey-300);
+    }
+    .help-modal__footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 14px 18px;
+      border-top: 1px solid var(--tc-grey-300);
+      background: var(--tc-grey-100);
+    }
+    .help-modal__pdf {
+      margin-right: auto;
+      text-decoration: none;
+    }
+    .guided-help-link {
+      margin: -4px 0 12px;
+    }
+    .guided-reference {
+      margin: 10px 0 12px;
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+      overflow: hidden;
+      background: #fff;
+    }
+    .guided-reference__label {
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tc-grey-600);
+      background: var(--tc-grey-100);
+      border-bottom: 1px solid var(--tc-grey-300);
+    }
+    .guided-reference__img {
+      display: block;
+      width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      background: #fff;
+    }
+    .guided-reference__img--large {
+      max-height: min(520px, 82vh);
+    }
+    .guided-reference__caption {
+      margin: 0;
+      padding: 8px 10px;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      color: var(--tc-grey-600);
+      background: var(--tc-grey-100);
+      border-top: 1px solid var(--tc-grey-300);
+    }
+    .guided-field-label {
+      margin: 12px 0 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tc-grey-600);
+    }
+  </style>
+
+  <script>
+    var TRIMBLE_LOGO_URL = "https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&sz=w400";
+    var dealerLogo = null;
+
+    /** Per-device only — never synced to a server or other users */
+    var DEALER_STORAGE_KEYS = {
+      logo: "tta_preinspection_dealer_logo_v1",
+      dealerName: "tta_preinspection_dealer_name_v1",
+      speechGlossary: "tta_preinspection_speech_glossary_v1"
+    };
+
+    /** Dealer-editable voice phrase mappings — loaded from localStorage */
+    var speechGlossary = [];
+
+    var GLOSSARY_STARTER_EXAMPLES = [
+      { phrase: "yellow iron", target: "replace", value: "CAT" },
+      { phrase: "green machine", target: "replace", value: "John Deere" },
+      { phrase: "road grader", target: "replace", value: "motor grader" },
+      { phrase: "blade", target: "replace", value: "dozer" },
+      { phrase: "hyundai", target: "make", value: "Hyundai" }
+    ];
+
+    /** Commissioning manual §3.2 wear terms — common speech variants → standard wording */
+    var COMMISSIONING_VOICE_GLOSSARY = [
+      { phrase: "mold board", target: "replace", value: "moldboard" },
+      { phrase: "mold bored", target: "replace", value: "moldboard" },
+      { phrase: "mold-board", target: "replace", value: "moldboard" },
+      { phrase: "a frame", target: "replace", value: "A-frame" },
+      { phrase: "a-frame", target: "replace", value: "A-frame" },
+      { phrase: "circle back lash", target: "replace", value: "circle backlash" },
+      { phrase: "circle back last", target: "replace", value: "circle backlash" },
+      { phrase: "circle back clash", target: "replace", value: "circle backlash" },
+      { phrase: "circle play", target: "replace", value: "circle play" },
+      { phrase: "circle wear strips", target: "replace", value: "circle wear strips" },
+      { phrase: "circle wear strip", target: "replace", value: "circle wear strips" },
+      { phrase: "circle shims", target: "replace", value: "circle shims" },
+      { phrase: "circle shoes", target: "replace", value: "circle shoes" },
+      { phrase: "cutting edge", target: "replace", value: "cutting edge" },
+      { phrase: "stringline", target: "replace", value: "string line" },
+      { phrase: "string line", target: "replace", value: "string line" },
+      { phrase: "lift cylinder back lash", target: "replace", value: "lift cylinder backlash" },
+      { phrase: "lift cylinder backlash", target: "replace", value: "lift cylinder backlash" },
+      { phrase: "lift cylinder ball joint", target: "replace", value: "lift cylinder ball joints" },
+      { phrase: "ball joint", target: "replace", value: "ball joints" },
+      { phrase: "trunion", target: "replace", value: "trunnion" },
+      { phrase: "trunyon", target: "replace", value: "trunnion" },
+      { phrase: "trunnion ball", target: "replace", value: "trunnion ball" },
+      { phrase: "a frame trunnion", target: "replace", value: "A-frame trunnion ball" },
+      { phrase: "blade rail shim", target: "replace", value: "blade rail shims" },
+      { phrase: "blade rails", target: "replace", value: "blade rail" },
+      { phrase: "blade rail", target: "replace", value: "blade rail" },
+      { phrase: "wear strip", target: "replace", value: "wear strips" },
+      { phrase: "wear strips", target: "replace", value: "wear strips" },
+      { phrase: "wear bar", target: "replace", value: "wear bar" },
+      { phrase: "pivot pin", target: "replace", value: "pivot pins" },
+      { phrase: "moldboard pivot pin", target: "replace", value: "moldboard pivot pins" },
+      { phrase: "moldboard pivot pins", target: "replace", value: "moldboard pivot pins" },
+      { phrase: "lift cylinder yoke", target: "replace", value: "blade lift cylinder yoke" },
+      { phrase: "blade lift yoke", target: "replace", value: "blade lift cylinder yoke" },
+      { phrase: "overall wear", target: "replace", value: "overall wear check" },
+      { phrase: "horizontal slop", target: "replace", value: "horizontal slop" },
+      { phrase: "hydraswivel", target: "replace", value: "hydraswivel" },
+      { phrase: "hydra swivel", target: "replace", value: "hydraswivel" },
+      { phrase: "hydro swivel", target: "replace", value: "hydraswivel" },
+      { phrase: "hose tray", target: "replace", value: "hose tray" },
+      { phrase: "rs 400", target: "replace", value: "RS400" },
+      { phrase: "r s 400", target: "replace", value: "RS400" },
+      { phrase: "rs400", target: "replace", value: "RS400" },
+      { phrase: "tandem tire", target: "replace", value: "tandem tires" },
+      { phrase: "tandem tires", target: "replace", value: "tandem tires" },
+      { phrase: "draw bar", target: "replace", value: "drawbar" },
+      { phrase: "drawbar", target: "replace", value: "drawbar" },
+      { phrase: "o e m", target: "replace", value: "OEM" },
+      { phrase: "o.e.m.", target: "replace", value: "OEM" },
+      { phrase: "earth works", target: "replace", value: "Earthworks" },
+      { phrase: "earthworks", target: "replace", value: "Earthworks" },
+      { phrase: "relaxed position", target: "replace", value: "relaxed" },
+      { phrase: "compressed position", target: "replace", value: "compressed" },
+      { phrase: "float position", target: "replace", value: "float" },
+      { phrase: "millimeters", target: "replace", value: "mm" },
+      { phrase: "millimeter", target: "replace", value: "mm" },
+      { phrase: "inches", target: "replace", value: "in" }
+    ];
+
+    var GLOSSARY_COMMISSIONING_MERGE_KEY = "tta_preinspection_glossary_commissioning_v1";
+
+    /**
+     * Per machine type: label, optional commissioning diagram (Google Drive file ID),
+     * and predefined guided wear areas. Add diagramFileId when you have the manual image.
+     */
+    var MACHINE_CONFIG = {
+      dozer: {
+        label: "Dozer",
+        diagramFileId: "",
+        diagramCaption: "Commissioning manual — dozer wear reference diagram",
+        guidedAreas: [
+          { id: "dozer_trunnion", label: "Trunnion ball / equalizer bar", hint: "Check for excessive play, cracked welds, and worn bushings." },
+          { id: "dozer_tilt", label: "Tilt cylinder bushings & pins", hint: "Inspect for slack, scoring, and leakage at pin connections." },
+          { id: "dozer_pusharms", label: "Blade push arms & ball joints", hint: "Note wear at ball joints and push arm pin bores." },
+          { id: "dozer_track", label: "Track shoes, rollers & idlers", hint: "Document worn shoes, loose rollers, and idler condition." },
+          { id: "dozer_blade", label: "Cutting edge & blade mounting", hint: "Record edge wear, loose bolts, and cracked blade structure." },
+          { id: "dozer_hyd", label: "Hydraulic lines & cylinder leaks", hint: "Note weeping seals, damaged hoses, and rod scoring." }
+        ]
+      },
+      motor_grader: {
+        label: "Motor grader",
+        diagramFileId: "",
+        diagramCaption: "Trimble Earthworks Grader Commissioning Manual — wear reference (§3.2)",
+        commissioningReference: {
+          manualTitle: "Trimble Earthworks Grader Commissioning Manual",
+          manualVersion: "2.24",
+          manualSection: "3.2 Check machine wear",
+          pdfDriveId: "1_sBGqY3P19bjbnrp2DVXB_dhrCewiTru",
+          intro:
+            "Check and adjust these points so the grade control system can perform accurately. A loose machine cannot produce optimal results. Maintain working condition and component accuracy on an ongoing basis.",
+          checks: [
+            {
+              ref: "3.2.3",
+              title: "Check the cutting edge",
+              spec: "Straight within 0 ± 0.005 m (0.2 in) of a string line.",
+              points: [
+                "Define the edge at points 0.3 m / 12 in in from each end — uneven end wear is acceptable.",
+                "Inconsistent wear or a bent edge (forward/back) will make guidance and cut surfaces inaccurate."
+              ]
+            },
+            {
+              ref: "3.2.4",
+              title: "Check the circle play",
+              points: [
+                "Adjust the circle shims and/or circle wear strips to minimize play in the circle.",
+                "Follow the manufacturer's instructions and recommended tolerances.",
+                "Follow the machine manufacturer's instructions for adjusting the circle wear strips to minimize horizontal slop in the circle and to make sure the circle is centered."
+              ]
+            },
+            {
+              ref: "3.2.5",
+              title: "Check the circle backlash",
+              spec: "Backlash < 12 mm (0.5 in) measured on the outside of the circle.",
+              points: [
+                "Mark an indicator on the A-frame and on the circle to compare movement against RS400 rotation sensor readings.",
+                "Rotate the circle about 10° clockwise, then counterclockwise until the sensor reading changes — measure the distance between marks.",
+                "More than 12 mm will cause accuracy errors projected out to the blade corners.",
+                "Remove play between the hydraswivel and hose tray. Adjust circle shoes/shims and re-check if over tolerance."
+              ]
+            },
+            {
+              ref: "3.2.6",
+              title: "Check the lift cylinder backlash",
+              spec: "Maximum of 3 mm (0.1 in) play between the blade and the circle with the blade lifted off the ground.",
+              points: [
+                "Ensure that the distance between the blade and the circle has a maximum of 3 mm (0.1 in) of play when the blade is lifted off the ground."
+              ]
+            },
+            {
+              ref: "3.2.7",
+              title: "Check the lift cylinder ball joints",
+              spec: "Rod-to-circle height difference < 1 mm (0.04 in) between circle resting on blade vs blade hanging from circle.",
+              points: ["Measure cylinder rod to top of circle in both positions and compare."]
+            },
+            {
+              ref: "3.2.8",
+              title: "Check the blade rail shims",
+              spec: "Moldboard-to-wear-strip clearance ≤ 1 mm (0.04 in).",
+              points: [
+                "Inspect clearance between the moldboard and wear strips.",
+                "If wear is becoming excessive you may start to see brass on the wear bar of the moldboard — this indicates the shims are nearly worn out or are fully worn and require replacement."
+              ]
+            },
+            {
+              ref: "3.2.8",
+              title: "Check tires",
+              points: [
+                "Tandem tires: same make, model, size; even wear; tread aligned; equal inflation — maintain pressure for accurate grading.",
+                "Repeat for front tires.",
+                "On flat level ground, measure wheel rim height — confirm pairs match."
+              ]
+            }
+          ]
+        },
+        guidedAreas: [
+          {
+            id: "mg_cutting_edge",
+            label: "Cutting edge",
+            hint: "Measure 12 in / 0.3 m in from each end. Note bend or uneven wear.",
+            tolerance: "≤ 0.005 m (0.2 in) from string line",
+            diagramDriveId: "1uUuueWmJfxTomwTxr_FiflQ-0h2d1SS3",
+            diagramCaption: "Green dashed line = within spec (±0.005 m / 0.2 in from string line). Measure 12 in / 0.3 m in from each end."
+          },
+          {
+            id: "mg_overall_wear",
+            label: "Overall wear check",
+            hint: "Start here — compare vertical measurement: blade on ground/float vs blade hanging by gravity. Record both values and the total difference, then use the following steps to isolate the largest areas of wear.",
+            tolerance: "≤ 13 mm total vertical difference (relaxed vs compressed)",
+            diagramDriveId: "1typlaRu9dvWCH3D0CgiVAqUudL0uCTdS",
+            diagramCaption: "A good place to start: compare vertical values between relaxed (blade hanging) and compressed (blade on ground/float). Under normal circumstances the total difference should not exceed 13 mm. Blade rail shims, moldboard pivot pins, and circle wear can all contribute to a reading larger than 13 mm — use the steps below to isolate the areas of largest concern for the greatest performance."
+          },
+          {
+            id: "mg_circle_play",
+            label: "Circle play",
+            hint: "Adjust the circle shims and/or circle wear strips to minimize play in the circle. Follow the manufacturer's instructions and recommended tolerances. Follow the machine manufacturer's instructions for adjusting the circle wear strips to minimize horizontal slop in the circle and to make sure the circle is centered.",
+            tolerance: "Per manufacturer instructions and tolerances"
+          },
+          {
+            id: "mg_circle_backlash",
+            label: "Circle backlash",
+            hint: "Mark A-frame and circle — compare to RS400 sensor as you rotate. Record gap; over 12 mm hurts blade corner accuracy.",
+            tolerance: "< 12 mm (0.5 in) on outside of circle",
+            diagramDriveId: "1Aoo867yHyXLhuh8jIGKjR1Bcx-VGW-fx",
+            diagramImageSize: "large",
+            diagramImageWidth: 1600,
+            diagramCaption: "Mark indicators on A-frame and circle — compare against RS400 readings. Over 12 mm causes errors at blade corners."
+          },
+          {
+            id: "mg_aframe_trunnion",
+            label: "A-frame trunnion ball",
+            hint: "Raise/lower A-frame with down pressure — watch ball in socket. Record play in your notes; shims can be removed to tighten.",
+            tolerance: "Record amount of play",
+            diagramDriveId: "186HqP8uGtdabNDFlkH1hFZqrlKevT6lH",
+            diagramCaption: "Trunnion ball pivot — watch for ball movement in/out of socket under A-frame pressure."
+          },
+          {
+            id: "mg_lift_backlash",
+            label: "Lift cylinder backlash",
+            hint: "With the blade lifted off the ground, measure play between the blade and the circle.",
+            tolerance: "≤ 3 mm (0.1 in) maximum play",
+            diagramDriveId: "189ymlNFshrz6qPmiSmY6Bo-KgjCyzrL8",
+            diagramCaption: "Ensure that the distance between the blade and the circle has a maximum of 3 mm (0.1 in) of play when the blade is lifted off the ground."
+          },
+          {
+            id: "mg_lift_ball_joints",
+            label: "Lift cylinder ball joints",
+            hint: "Compare rod-to-circle height: circle on blade vs blade hanging.",
+            tolerance: "< 1 mm (0.04 in) difference",
+            diagramDriveId: "1NnSWYVZspzWOUBSzViQUIUbhrStwhqA8",
+            diagramCaption: "Compare rod-to-circle height in both positions."
+          },
+          {
+            id: "mg_lift_yoke",
+            label: "Blade lift cylinder yoke",
+            hint: "Push blade to ground with hydraulics — watch yoke on frame. Visible raise/lower means worn yoke bushings.",
+            tolerance: "No visible movement",
+            diagramDriveId: "1bp6dLD1rex2eG9o2E-59o8RRCXauoY35",
+            diagramVersion: 4,
+            diagramCaption: "Lift cylinder yoke on the frame (blue circle). Push blade down and watch for movement — none expected if bushings are good."
+          },
+          {
+            id: "mg_moldboard_pivot_pins",
+            label: "Moldboard pivot pins",
+            hint: "Blade down pressure with hydraulics — watch pivot pins as pressure is applied and released. Visible play means wear.",
+            tolerance: "No visible play",
+            diagramDriveId: "1QQ37Cewtan-o9GHXZxw5_lkQgwcG7LCd",
+            diagramCaption: "Moldboard pivot pins — watch for play when adding or removing blade down pressure."
+          },
+          {
+            id: "mg_blade_rail",
+            label: "Blade rail shims",
+            hint: "Moldboard to wear strips — note excess clearance. Visible brass on the moldboard wear bar means shims are nearly or fully worn and need replacement.",
+            tolerance: "≤ 1 mm (0.04 in)",
+            diagramDriveId: "1rpfNkmposFeqM19Fg-rEwDepOS4hkLoG",
+            diagramCaption: "Maximum clearance between moldboard and wear strips — ≤ 1 mm (0.04 in). If wear is becoming excessive you may start to see brass on the wear bar of the moldboard; this indicates the shims are nearly worn out or are fully worn and require replacement."
+          },
+          {
+            id: "mg_tires",
+            label: "Tires (tandem & front)",
+            hint: "Tandem and front tires: same make, model, and size; even wear; tread aligned; equal inflation. On level ground, confirm rim height matches per pair.",
+            tolerance: "Equal inflation & rim height"
+          }
+        ]
+      },
+      excavator: {
+        label: "Excavator",
+        diagramFileId: "",
+        diagramCaption: "Commissioning manual — excavator wear reference diagram",
+        guidedAreas: [
+          { id: "exc_boom", label: "Boom & stick bushings / pins", hint: "Check pin play, bushing wear, and grease retention." },
+          { id: "exc_bucket", label: "Bucket cutting edge & teeth", hint: "Document edge wear, adapter cracks, and missing teeth." },
+          { id: "exc_slew", label: "Slew ring / swing bearing area", hint: "Note play, grease condition, and mounting bolt torque concerns." },
+          { id: "exc_track", label: "Track, rollers & idlers (if tracked)", hint: "Inspect shoe wear, roller leaks, and idler play." },
+          { id: "exc_counter", label: "Counterweight & frame mounts", hint: "Check for cracks, loose mounts, and impact damage." },
+          { id: "exc_hyd", label: "Hydraulic leaks", hint: "Record hose abrasion, cylinder leaks, and fitting seepage." }
+        ]
+      },
+      pile_driver: {
+        label: "Pile driver",
+        diagramFileId: "",
+        diagramCaption: "Commissioning manual — pile driver wear reference diagram",
+        guidedAreas: [
+          { id: "pd_mast", label: "Mast / leader & rails", hint: "Alignment, rail wear, and structural cracks or looseness." },
+          { id: "pd_hammer", label: "Hammer / driving head", hint: "Impact surfaces, mounting, and excessive wear or damage." },
+          { id: "pd_cables", label: "Cables, hoses & umbilicals", hint: "Fraying, leaks, rub points, and connection condition." },
+          { id: "pd_carrier", label: "Base carrier & undercarriage", hint: "Track or tire wear, frame mounts, and stability concerns." },
+          { id: "pd_hyd", label: "Hydraulics & cylinders", hint: "Rod scoring, seal leaks, and hose condition." }
+        ]
+      },
+      other: {
+        label: "Other machine type",
+        diagramFileId: "",
+        diagramCaption: "Machine-specific reference diagram not available — use expert line items or the generic guided prompts below.",
+        expertRecommended: true,
+        guidedAreas: [
+          { id: "oth_general", label: "General machine condition", hint: "Overall structural integrity, leaks, and operational concerns." },
+          { id: "oth_structure", label: "Frame, mounts & structural wear", hint: "Cracks, welds, loose hardware, and impact damage." },
+          { id: "oth_linkage", label: "Pins, bushings & linkage", hint: "Play, scoring, and worn connection points." },
+          { id: "oth_hyd", label: "Hydraulics & hoses", hint: "Cylinder condition, hose rub, and fitting seepage." },
+          { id: "oth_attach", label: "Attachment / tooling wear", hint: "Cutting edges, teeth, bits, or working-end components." }
+        ]
+      }
+    };
+
+    function buildCommissioningTermsFromConfig() {
+      var entries = [];
+      var seen = {};
+      function addReplace(phrase, value) {
+        phrase = String(phrase).trim();
+        value = String(value).trim();
+        if (!phrase || !value) return;
+        var key = phrase.toLowerCase();
+        if (seen[key]) return;
+        seen[key] = true;
+        entries.push({ phrase: phrase, target: "replace", value: value });
+      }
+
+      var cfg = MACHINE_CONFIG.motor_grader;
+      if (!cfg) return entries;
+
+      if (cfg.guidedAreas) {
+        cfg.guidedAreas.forEach(function (area) {
+          addReplace(area.label, area.label);
+          area.label.split(/\s*[\/&]\s*/).forEach(function (part) {
+            part = part.replace(/^\s+|\s+$/g, "");
+            if (part.length > 3) addReplace(part, part);
+          });
+          if (area.hint) {
+            ["moldboard", "wear strips", "wear bar", "pivot pins", "ball joints", "circle backlash", "circle play"].forEach(function (term) {
+              if (area.hint.toLowerCase().indexOf(term) !== -1) addReplace(term, term);
+            });
+          }
+        });
+      }
+
+      if (cfg.commissioningReference && cfg.commissioningReference.checks) {
+        cfg.commissioningReference.checks.forEach(function (check) {
+          var title = check.title.replace(/^Check (the )?/i, "");
+          addReplace(title, title);
+        });
+      }
+
+      return entries;
+    }
+
+    function getBuiltinGlossaryEntries() {
+      return GLOSSARY_STARTER_EXAMPLES.concat(COMMISSIONING_VOICE_GLOSSARY).concat(buildCommissioningTermsFromConfig());
+    }
+
+    function mergeGlossaryEntries(entries) {
+      var added = false;
+      entries.forEach(function (ex) {
+        var exists = speechGlossary.some(function (e) {
+          return e.phrase.toLowerCase() === ex.phrase.toLowerCase() && e.target === ex.target;
+        });
+        if (!exists) {
+          var normalized = normalizeGlossaryEntry(Object.assign({ id: nextGlossaryId() }, ex));
+          if (normalized) {
+            speechGlossary.push(normalized);
+            added = true;
+          }
+        }
+      });
+      return added;
+    }
+
+    function seedSpeechGlossaryFromDefaults() {
+      speechGlossary = getBuiltinGlossaryEntries()
+        .map(function (ex) {
+          return normalizeGlossaryEntry(Object.assign({ id: nextGlossaryId() }, ex));
+        })
+        .filter(Boolean);
+      saveSpeechGlossaryToDevice();
+    }
+
+    function ensureCommissioningGlossaryMerged() {
+      try {
+        if (localStorage.getItem(GLOSSARY_COMMISSIONING_MERGE_KEY)) return false;
+      } catch (err) {
+        return false;
+      }
+      var added = mergeGlossaryEntries(
+        COMMISSIONING_VOICE_GLOSSARY.concat(buildCommissioningTermsFromConfig())
+      );
+      if (added) saveSpeechGlossaryToDevice();
+      try {
+        localStorage.setItem(GLOSSARY_COMMISSIONING_MERGE_KEY, "1");
+      } catch (err) {}
+      return added;
+    }
+
+    var currentMode = "";
+    var photoTargetKey = null;
+    var itemIdCounter = 0;
+    /** key -> { text, photo: { name, dataUrl } | null } */
+    var lineItemData = {};
+
+    var guidedSectionKeys = [];
+    var guidedSectionLabels = [];
+    var guidedVoiceIndex = 0;
+
+    var voiceState = {
+      supported: false,
+      recognition: null,
+      activeKey: null,
+      activeTextarea: null,
+      baseText: "",
+      finalText: ""
+    };
+
+    var VOICE_KEY_MACHINE = "__machine_info__";
+
+    var SPEECH_MAKE_PATTERNS = [
+      { re: /\bcaterpillar\b/i, value: "CAT" },
+      { re: /\bcat\b/i, value: "CAT" },
+      { re: /\bjohn deere\b/i, value: "John Deere" },
+      { re: /\bdeere\b/i, value: "John Deere" },
+      { re: /\bkomatsu\b/i, value: "Komatsu" },
+      { re: /\bvolvo\b/i, value: "Volvo" },
+      { re: /\bcase\b/i, value: "Case" },
+      { re: /\bkobelco\b/i, value: "Kobelco" },
+      { re: /\bhitachi\b/i, value: "Hitachi" },
+      { re: /\bliebherr\b/i, value: "Liebherr" },
+      { re: /\bbobcat\b/i, value: "Bobcat" },
+      { re: /\bjcb\b/i, value: "JCB" }
+    ];
+
+    var SPEECH_TYPE_PATTERNS = [
+      { re: /\bmotor\s*grader\b/i, value: "motor_grader", label: "Motor grader" },
+      { re: /\bgrader\b/i, value: "motor_grader", label: "Motor grader" },
+      { re: /\bdozer\b/i, value: "dozer", label: "Dozer" },
+      { re: /\bexcavator\b/i, value: "excavator", label: "Excavator" },
+      { re: /\bpile\s*driver\b/i, value: "pile_driver", label: "Pile driver" },
+      { re: /\bdrill\b/i, value: "other", label: "Drill" },
+      { re: /\bmarine\s*excavator\b/i, value: "other", label: "Marine excavator" }
+    ];
+
+    function parseSpeechToMachineFields(text) {
+      var result = {
+        make: "",
+        model: "",
+        hours: "",
+        serial: "",
+        machineType: "",
+        machineTypeOther: "",
+        autoFilled: []
+      };
+      if (!text || !String(text).trim()) return result;
+
+      var t = applyGlossaryTextReplacements(String(text).trim());
+      var i;
+
+      var hoursMatch = t.match(/\b(\d{1,5})\s*(?:machine\s*)?(hours|hrs|hr)\b/i);
+      if (hoursMatch) result.hours = hoursMatch[1] + " hours";
+
+      var serialMatch = t.match(/\b(?:serial(?:\s*number)?|s\/n|sn)\s*(?:is|:)?\s*([A-Z0-9][A-Z0-9-]{4,})\b/i);
+      if (serialMatch) result.serial = serialMatch[1].toUpperCase();
+
+      for (i = 0; i < SPEECH_MAKE_PATTERNS.length; i++) {
+        if (SPEECH_MAKE_PATTERNS[i].re.test(t)) {
+          result.make = SPEECH_MAKE_PATTERNS[i].value;
+          break;
+        }
+      }
+
+      for (i = 0; i < SPEECH_TYPE_PATTERNS.length; i++) {
+        if (SPEECH_TYPE_PATTERNS[i].re.test(t)) {
+          result.machineType = SPEECH_TYPE_PATTERNS[i].value;
+          if (result.machineType === "other") {
+            result.machineTypeOther = SPEECH_TYPE_PATTERNS[i].label;
+          }
+          break;
+        }
+      }
+
+      if (result.make) {
+        var makeEsc = result.make.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        var afterMake = t.match(new RegExp(makeEsc + "\\s+([A-Z0-9][A-Z0-9-]{1,12})", "i"));
+        var beforeMake = t.match(new RegExp("([A-Z0-9][A-Z0-9-]{1,12})\\s+" + makeEsc, "i"));
+        if (afterMake) result.model = afterMake[1].toUpperCase();
+        else if (beforeMake) result.model = beforeMake[1].toUpperCase();
+      }
+
+      if (!result.model) {
+        var modelMatch = t.match(/\b([DZ]\d{1,3}[A-Z]?\d?|\d{3}[A-Z]?)\b/i);
+        if (modelMatch && !/hour|hrs|hr/i.test(modelMatch[0])) {
+          result.model = modelMatch[1].toUpperCase();
+        }
+      }
+
+      applyGlossaryDirectFields(result, t);
+      return result;
+    }
+
+    function escapeRegexFragment(s) {
+      return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function glossaryPhraseRegex(phrase) {
+      return new RegExp("\\b" + escapeRegexFragment(String(phrase).trim()) + "\\b", "i");
+    }
+
+    function applyGlossaryTextReplacements(text) {
+      var t = text;
+      var replacements = getActiveGlossaryEntries()
+        .filter(function (e) {
+          return e.target === "replace";
+        })
+        .sort(function (a, b) {
+          return b.phrase.length - a.phrase.length;
+        });
+      for (var i = 0; i < replacements.length; i++) {
+        t = t.replace(glossaryPhraseRegex(replacements[i].phrase), replacements[i].value);
+      }
+      return t;
+    }
+
+    function applyGlossaryDirectFields(result, text) {
+      getActiveGlossaryEntries().forEach(function (entry) {
+        if (entry.target === "replace") return;
+        if (!glossaryPhraseRegex(entry.phrase).test(text)) return;
+        if (entry.target === "make" && !result.make) result.make = entry.value;
+        else if (entry.target === "model" && !result.model) result.model = entry.value;
+        else if (entry.target === "hours" && !result.hours) result.hours = entry.value;
+        else if (entry.target === "serial" && !result.serial) result.serial = entry.value.toUpperCase();
+        else if (entry.target === "machineType" && !result.machineType) {
+          result.machineType = entry.value;
+          if (entry.value === "other" && entry.valueLabel && !result.machineTypeOther) {
+            result.machineTypeOther = entry.valueLabel;
+          }
+        } else if (entry.target === "machineTypeOther" && !result.machineTypeOther) {
+          result.machineTypeOther = entry.value;
+          if (!result.machineType) result.machineType = "other";
+        }
+      });
+    }
+
+    function getActiveGlossaryEntries() {
+      return speechGlossary.map(normalizeGlossaryEntry).filter(Boolean);
+    }
+
+    function normalizeGlossaryEntry(raw) {
+      if (!raw || !raw.phrase || !raw.target) return null;
+      var phrase = String(raw.phrase).trim();
+      if (!phrase) return null;
+      var target = String(raw.target).trim();
+      var allowed = ["replace", "make", "model", "hours", "serial", "machineType", "machineTypeOther"];
+      if (allowed.indexOf(target) === -1) return null;
+      var value = raw.value != null ? String(raw.value).trim() : "";
+      if (!value) return null;
+      return {
+        id: raw.id || nextGlossaryId(),
+        phrase: phrase,
+        target: target,
+        value: value,
+        valueLabel: raw.valueLabel ? String(raw.valueLabel).trim() : ""
+      };
+    }
+
+    function nextGlossaryId() {
+      return "g_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+    }
+
+    function loadSpeechGlossaryFromDevice() {
+      try {
+        var raw = localStorage.getItem(DEALER_STORAGE_KEYS.speechGlossary);
+        if (!raw) return [];
+        var parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(normalizeGlossaryEntry).filter(Boolean);
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function saveSpeechGlossaryToDevice() {
+      try {
+        localStorage.setItem(DEALER_STORAGE_KEYS.speechGlossary, JSON.stringify(speechGlossary));
+        var note = document.getElementById("glossarySavedNote");
+        if (note) {
+          note.classList.remove("hidden");
+          window.setTimeout(function () {
+            note.classList.add("hidden");
+          }, 2500);
+        }
+      } catch (err) {
+        alert("Could not save glossary on this device. Storage may be full.");
+      }
+    }
+
+    function persistGlossaryFromUi() {
+      saveSpeechGlossaryToDevice();
+    }
+
+    function glossaryTargetOptions(selected) {
+      var opts = [
+        { v: "replace", l: "Replace phrase (then auto-detect)" },
+        { v: "make", l: "Make" },
+        { v: "model", l: "Model" },
+        { v: "machineType", l: "Machine type" },
+        { v: "machineTypeOther", l: "Other machine description" },
+        { v: "hours", l: "Hours" },
+        { v: "serial", l: "Serial number" }
+      ];
+      return opts
+        .map(function (o) {
+          var sel = o.v === selected ? " selected" : "";
+          return '<option value="' + o.v + '"' + sel + ">" + escapeHtml(o.l) + "</option>";
+        })
+        .join("");
+    }
+
+    function glossaryMachineTypeOptions(selected) {
+      var keys = ["dozer", "motor_grader", "excavator", "pile_driver", "other"];
+      return keys
+        .map(function (k) {
+          var sel = k === selected ? " selected" : "";
+          return (
+            '<option value="' +
+            k +
+            '"' +
+            sel +
+            ">" +
+            escapeHtml(MACHINE_CONFIG[k] ? MACHINE_CONFIG[k].label : k) +
+            "</option>"
+          );
+        })
+        .join("");
+    }
+
+    function renderGlossaryUi() {
+      var list = document.getElementById("glossaryList");
+      if (!list) return;
+      if (!speechGlossary.length) {
+        list.innerHTML = '<p class="glossary-empty">No custom phrases yet. Add your shop slang or load starter examples.</p>';
+        return;
+      }
+      list.innerHTML = speechGlossary
+        .map(function (entry) {
+          var valueField;
+          if (entry.target === "machineType") {
+            valueField =
+              '<select data-glossary-id="' +
+              entry.id +
+              '" data-glossary-field="value" onchange="onGlossaryFieldChange(\'' +
+              entry.id +
+              '\', \'value\', this.value)">' +
+              glossaryMachineTypeOptions(entry.value) +
+              "</select>";
+          } else {
+            valueField =
+              '<input type="text" data-glossary-id="' +
+              entry.id +
+              '" data-glossary-field="value" value="' +
+              escapeAttr(entry.value) +
+              '" placeholder="e.g. CAT, 160, motor grader" oninput="onGlossaryFieldChange(\'' +
+              entry.id +
+              '\', \'value\', this.value)" />';
+          }
+          return (
+            '<div class="glossary-row" data-glossary-row="' +
+            entry.id +
+            '">' +
+            '<div><label>When they say</label><input type="text" value="' +
+            escapeAttr(entry.phrase) +
+            '" placeholder="e.g. yellow iron" oninput="onGlossaryFieldChange(\'' +
+            entry.id +
+            '\', \'phrase\', this.value)" /></div>' +
+            '<div><label>Maps to</label><select onchange="onGlossaryTargetChange(\'' +
+            entry.id +
+            '\', this.value)">' +
+            glossaryTargetOptions(entry.target) +
+            "</select></div>" +
+            '<div><label>Value</label>' +
+            valueField +
+            "</div>" +
+            '<button type="button" class="btn-sm glossary-row__remove" onclick="removeGlossaryRow(\'' +
+            entry.id +
+            '\')" aria-label="Remove phrase">Remove</button>' +
+            "</div>"
+          );
+        })
+        .join("");
+    }
+
+    function onGlossaryFieldChange(id, field, value) {
+      var entry = speechGlossary.find(function (e) {
+        return e.id === id;
+      });
+      if (!entry) return;
+      entry[field] = value;
+      persistGlossaryFromUi();
+    }
+
+    function onGlossaryTargetChange(id, target) {
+      var entry = speechGlossary.find(function (e) {
+        return e.id === id;
+      });
+      if (!entry) return;
+      entry.target = target;
+      if (target === "machineType" && !entry.value) entry.value = "dozer";
+      if (target === "replace" && !entry.value) entry.value = "";
+      persistGlossaryFromUi();
+      renderGlossaryUi();
+    }
+
+    function addGlossaryRow() {
+      speechGlossary.push({
+        id: nextGlossaryId(),
+        phrase: "",
+        target: "replace",
+        value: ""
+      });
+      renderGlossaryUi();
+      var panel = document.getElementById("glossaryPanel");
+      if (panel) panel.open = true;
+    }
+
+    function removeGlossaryRow(id) {
+      speechGlossary = speechGlossary.filter(function (e) {
+        return e.id !== id;
+      });
+      persistGlossaryFromUi();
+      renderGlossaryUi();
+    }
+
+    function loadGlossaryStarterExamples() {
+      if (
+        speechGlossary.length &&
+        !confirm("Add starter and commissioning manual phrases to your glossary? Existing entries will be kept.")
+      ) {
+        return;
+      }
+      if (!speechGlossary.length) {
+        seedSpeechGlossaryFromDefaults();
+      } else {
+        mergeGlossaryEntries(getBuiltinGlossaryEntries());
+        saveSpeechGlossaryToDevice();
+      }
+      persistGlossaryFromUi();
+      renderGlossaryUi();
+      var panel = document.getElementById("glossaryPanel");
+      if (panel) panel.open = true;
+    }
+
+    function exportGlossaryJson() {
+      if (!speechGlossary.length) {
+        alert("Nothing to export yet. Add phrases to the glossary first.");
+        return;
+      }
+      var payload = JSON.stringify(speechGlossary, null, 2);
+      var blob = new Blob([payload], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "trimble-voice-glossary.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importGlossaryJson() {
+      document.getElementById("glossaryImportInput").click();
+    }
+
+    function handleGlossaryImportFile(file) {
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          var parsed = JSON.parse(e.target.result);
+          if (!Array.isArray(parsed)) throw new Error("Expected a JSON array");
+          var imported = parsed.map(normalizeGlossaryEntry).filter(Boolean);
+          if (!imported.length) {
+            alert("No valid glossary entries found in that file.");
+            return;
+          }
+          var replaceAll =
+            !speechGlossary.length ||
+            confirm(
+              "Import " +
+                imported.length +
+                " phrase(s).\n\nOK = replace current glossary\nCancel = merge (skip duplicates)"
+            );
+          if (replaceAll) {
+            speechGlossary = imported;
+          } else {
+            imported.forEach(function (entry) {
+              var dup = speechGlossary.some(function (e) {
+                return e.phrase.toLowerCase() === entry.phrase.toLowerCase() && e.target === entry.target;
+              });
+              if (!dup) speechGlossary.push(entry);
+            });
+          }
+          persistGlossaryFromUi();
+          renderGlossaryUi();
+          var panel = document.getElementById("glossaryPanel");
+          if (panel) panel.open = true;
+        } catch (err) {
+          alert("Could not read glossary file. Use Export JSON from another device to get the correct format.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function setFieldIfEmpty(id, value, fieldKey, parsed, onlyIfEmpty) {
+      if (!value) return;
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (onlyIfEmpty && el.value.trim()) return;
+      el.value = value;
+      parsed.autoFilled.push(fieldKey);
+      el.closest(".field").classList.add("field-auto-filled");
+    }
+
+    function applyParsedMachineFields(parsed, onlyIfEmpty) {
+      if (!parsed) return [];
+      onlyIfEmpty = onlyIfEmpty !== false;
+      parsed.autoFilled = [];
+
+      setFieldIfEmpty("machineMake", parsed.make, "make", parsed, onlyIfEmpty);
+      setFieldIfEmpty("machineModel", parsed.model, "model", parsed, onlyIfEmpty);
+      setFieldIfEmpty("machineHours", parsed.hours, "hours", parsed, onlyIfEmpty);
+      setFieldIfEmpty("serialNumber", parsed.serial, "serial", parsed, onlyIfEmpty);
+
+      var typeEl = document.getElementById("machineType");
+      if (parsed.machineType && typeEl && (!onlyIfEmpty || !typeEl.value)) {
+        typeEl.value = parsed.machineType;
+        parsed.autoFilled.push("machine type");
+        onMachineTypeChange();
+        if (parsed.machineType === "other" && parsed.machineTypeOther) {
+          var otherEl = document.getElementById("machineTypeOther");
+          if (otherEl && (!onlyIfEmpty || !otherEl.value.trim())) {
+            otherEl.value = parsed.machineTypeOther;
+            parsed.autoFilled.push("machine description");
+            onMachineTypeOtherInput();
+          }
+        }
+      }
+
+      return parsed.autoFilled;
+    }
+
+    function showVoiceParseBanner(messages) {
+      var banner = document.getElementById("voiceParseBanner");
+      if (!banner) return;
+      if (!messages || !messages.length) {
+        banner.classList.add("hidden");
+        banner.innerHTML = "";
+        return;
+      }
+      banner.innerHTML = "<strong>Auto-filled from speech:</strong> " + escapeHtml(messages.join(", ")) + ". Please verify above.";
+      banner.classList.remove("hidden");
+    }
+
+    function processSpeechText(text, sourceKey) {
+      if (!text || !text.trim()) return;
+      var parsed = parseSpeechToMachineFields(text);
+      var filled = applyParsedMachineFields(parsed, true);
+      if (filled.length) {
+        var labels = filled.map(function (f) {
+          return f.charAt(0).toUpperCase() + f.slice(1);
+        });
+        showVoiceParseBanner(labels);
+      }
+      refreshVerifySummary();
+    }
+
+    function toggleMachineInfoVoice() {
+      if (!voiceState.supported) return;
+      if (voiceState.activeKey === VOICE_KEY_MACHINE) {
+        stopVoice();
+        return;
+      }
+      startVoiceForKey(VOICE_KEY_MACHINE);
+    }
+
+    function refreshVerifySummary() {
+      var box = document.getElementById("verifySummary");
+      if (!box || !currentMode) return;
+
+      var data = getFormData();
+      var wearHtml = "";
+      if (data.lineItems.length) {
+        wearHtml = data.lineItems
+          .map(function (item, idx) {
+            var title = item.key.indexOf("guided_") === 0 ? item.label : "Callout " + (idx + 1);
+            var note = item.text || "(no notes)";
+            var photo = item.photo ? " · Photo attached" : "";
+            return (
+              '<div class="verify-wear-item"><strong>' +
+              escapeHtml(title) +
+              "</strong><br>" +
+              escapeHtml(note) +
+              photo +
+              "</div>"
+            );
+          })
+          .join("");
+      } else {
+        wearHtml = '<p style="margin:0;color:var(--tc-grey-600);">No wear callouts recorded yet.</p>';
+      }
+
+      box.innerHTML =
+        "<dl>" +
+        "<dt>Dealer</dt><dd>" +
+        escapeHtml(data.dealerName || "—") +
+        "</dd>" +
+        "<dt>Technician</dt><dd>" +
+        escapeHtml(data.techName || "—") +
+        "</dd>" +
+        "<dt>Machine type</dt><dd>" +
+        escapeHtml(data.machineType || "—") +
+        "</dd>" +
+        "<dt>Make / Model</dt><dd>" +
+        escapeHtml((data.machineMake || "—") + " / " + (data.machineModel || "—")) +
+        "</dd>" +
+        "<dt>Serial / Hours</dt><dd>" +
+        escapeHtml((data.serialNumber || "—") + " / " + (data.machineHours || "—")) +
+        "</dd>" +
+        "<dt>Documentation mode</dt><dd>" +
+        escapeHtml(data.workflowMode || "—") +
+        "</dd>" +
+        "</dl>" +
+        "<dt style=\"font-weight:700;color:var(--tc-grey-600);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;\">Wear callouts</dt>" +
+        wearHtml;
+    }
+
+    function updateGenerateButtonState() {
+      var btn = document.getElementById("generatePdfBtn");
+      var chk = document.getElementById("verifyConfirm");
+      if (btn && chk) btn.disabled = !chk.checked;
+    }
+
+    function showReportReviewUi() {
+      document.getElementById("verifyCard").classList.remove("hidden");
+      document.getElementById("reportActions").classList.remove("hidden");
+      var chk = document.getElementById("verifyConfirm");
+      if (chk) chk.checked = false;
+      updateGenerateButtonState();
+      refreshVerifySummary();
+    }
+
+    function initVoiceDictation() {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        voiceState.supported = false;
+        updateVoiceAvailabilityUi();
+        return;
+      }
+      voiceState.supported = true;
+      var rec = new SR();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = "en-US";
+      rec.maxAlternatives = 1;
+
+      rec.onresult = function (event) {
+        if (!voiceState.activeKey || !voiceState.activeTextarea) return;
+        var interim = "";
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+          var piece = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            voiceState.finalText += piece;
+          } else {
+            interim += piece;
+          }
+        }
+        var combined = voiceState.baseText + voiceState.finalText + interim;
+        voiceState.activeTextarea.value = combined;
+        if (voiceState.activeKey !== VOICE_KEY_MACHINE) {
+          onLineTextChange(voiceState.activeKey, combined);
+        }
+      };
+
+      rec.onend = function () {
+        if (voiceState.activeKey) {
+          try {
+            rec.start();
+          } catch (err) {
+            finishVoiceUi();
+          }
+        } else {
+          finishVoiceUi();
+        }
+      };
+
+      rec.onerror = function (event) {
+        if (event.error === "not-allowed") {
+          alert("Microphone access was blocked. Allow the mic in your browser settings to use voice dictation.");
+        } else if (event.error !== "aborted" && event.error !== "no-speech") {
+          console.warn("Speech error:", event.error);
+        }
+        stopVoice();
+      };
+
+      voiceState.recognition = rec;
+      updateVoiceAvailabilityUi();
+    }
+
+    function updateVoiceAvailabilityUi() {
+      var supported = voiceState.supported;
+      ["voiceUnsupportedExpert", "voiceUnsupportedGuided"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle("hidden", supported);
+      });
+      var addVoiceBtn = document.getElementById("addVoiceLineBtn");
+      if (addVoiceBtn) addVoiceBtn.classList.toggle("hidden", !supported);
+      var guidedBar = document.getElementById("guidedVoiceBar");
+      if (guidedBar && currentMode === "guided") {
+        guidedBar.classList.toggle("hidden", !supported);
+      }
+      var machineRow = document.getElementById("machineVoiceRow");
+      if (machineRow) machineRow.classList.toggle("hidden", !supported);
+    }
+
+    function voiceMicButtonHtml(key) {
+      if (!voiceState.supported) return "";
+      var active = voiceState.activeKey === key ? " btn-voice--active" : "";
+      return (
+        '<button type="button" class="btn-voice' + active + '" data-voice-key="' + key + '" onclick="toggleVoiceForKey(\'' + key + '\')" aria-label="Start recording">' +
+        '<span class="btn-voice__icon" aria-hidden="true"></span>' +
+        '<span class="btn-voice__label">Record</span></button>'
+      );
+    }
+
+    function cameraButtonHtml(key) {
+      var item = ensureLineItem(key);
+      var hasPhoto = !!(item && item.photo);
+      return (
+        '<button type="button" class="btn-camera' + (hasPhoto ? " btn-camera--has-photo" : "") + '" ' +
+        'onclick="attachPhoto(\'' + key + '\', true)" ' +
+        'aria-label="' + (hasPhoto ? "Retake field photo" : "Take field photo") + '" ' +
+        'title="' + (hasPhoto ? "Retake photo" : "Take photo") + '">' +
+        '<span class="btn-camera__icon" aria-hidden="true"></span></button>'
+      );
+    }
+
+    function sectionMediaBarHtml(key) {
+      var parts = [];
+      if (voiceState.supported) parts.push(voiceMicButtonHtml(key));
+      parts.push(cameraButtonHtml(key));
+      return '<div class="section-media-bar">' + parts.join("") + "</div>";
+    }
+
+    function buildPhotoActionsInnerHtml(key, item) {
+      var photoHtml = item.photo
+        ? '<img class="photo-thumb" src="' + item.photo.dataUrl + '" alt="">'
+        : '<div class="photo-empty">No photo</div>';
+      return (
+        photoHtml +
+        '<button type="button" class="btn-sm" onclick="attachPhoto(\'' + key + '\', false)">' +
+        (item.photo ? "Choose different photo" : "Choose photo") +
+        "</button>" +
+        (item.photo ? '<button type="button" class="btn-sm" onclick="clearPhoto(\'' + key + '\')">Remove photo</button>' : "")
+      );
+    }
+
+    function refreshPhotoUi(key) {
+      var el = document.querySelector('[data-key="' + key + '"]');
+      if (!el) return;
+      var item = ensureLineItem(key);
+      var actions = el.querySelector(".line-item__actions");
+      if (actions) {
+        actions.innerHTML = buildPhotoActionsInnerHtml(key, item);
+      }
+      var cam = el.querySelector(".btn-camera");
+      if (cam) {
+        cam.classList.toggle("btn-camera--has-photo", !!item.photo);
+        cam.setAttribute("aria-label", item.photo ? "Retake field photo" : "Take field photo");
+        cam.setAttribute("title", item.photo ? "Retake photo" : "Take photo");
+      }
+      updateGuidedVoiceBar();
+    }
+
+    function updateVoiceButtonLabels() {
+      document.querySelectorAll(".btn-voice").forEach(function (btn) {
+        var isActive = btn.classList.contains("btn-voice--active");
+        var labelEl = btn.querySelector(".btn-voice__label");
+        var customLabel = btn.getAttribute("data-voice-label");
+        if (labelEl) {
+          if (customLabel) {
+            labelEl.textContent = isActive ? "Stop recording" : customLabel;
+          } else {
+            labelEl.textContent = isActive ? "Stop" : "Record";
+          }
+        }
+        btn.setAttribute("aria-label", isActive ? "Stop recording" : "Start recording");
+      });
+    }
+
+    function updateMicButtons() {
+      document.querySelectorAll(".btn-voice[data-voice-key]").forEach(function (btn) {
+        var key = btn.getAttribute("data-voice-key");
+        btn.classList.toggle("btn-voice--active", voiceState.activeKey === key);
+      });
+      var guidedBtn = document.getElementById("guidedDictateBtn");
+      if (guidedBtn && guidedSectionKeys[guidedVoiceIndex]) {
+        guidedBtn.classList.toggle("btn-voice--active", voiceState.activeKey === guidedSectionKeys[guidedVoiceIndex]);
+      }
+      var machineBtn = document.getElementById("machineDictateBtn");
+      if (machineBtn) {
+        machineBtn.classList.toggle("btn-voice--active", voiceState.activeKey === VOICE_KEY_MACHINE);
+      }
+      updateVoiceButtonLabels();
+    }
+
+    function showVoiceStatus(show) {
+      var expertBar = document.getElementById("voiceStatusBar");
+      var guidedBar = document.getElementById("voiceStatusBarGuided");
+      if (expertBar) expertBar.classList.toggle("hidden", !show || currentMode !== "expert");
+      if (guidedBar) guidedBar.classList.toggle("hidden", !show || currentMode !== "guided");
+    }
+
+    function finishVoiceUi() {
+      showVoiceStatus(false);
+      updateMicButtons();
+    }
+
+    function getTextareaForKey(key) {
+      if (key === VOICE_KEY_MACHINE) {
+        return document.getElementById("machineVoiceCapture");
+      }
+      var block = document.querySelector('[data-key="' + key + '"]');
+      if (!block) return null;
+      return block.querySelector(".line-text");
+    }
+
+    function toggleVoiceForKey(key) {
+      if (!voiceState.supported) return;
+      if (voiceState.activeKey === key) {
+        stopVoice();
+        return;
+      }
+      startVoiceForKey(key);
+    }
+
+    function startVoiceForKey(key) {
+      if (!voiceState.supported) return;
+      stopVoice(false);
+
+      var textarea = getTextareaForKey(key);
+      if (!textarea) return;
+
+      voiceState.activeKey = key;
+      voiceState.activeTextarea = textarea;
+      var existing = textarea.value.trim();
+      voiceState.baseText = existing ? existing + " " : "";
+      voiceState.finalText = "";
+
+      textarea.focus();
+      updateMicButtons();
+      showVoiceStatus(true);
+
+      try {
+        voiceState.recognition.start();
+      } catch (err) {
+        try {
+          voiceState.recognition.stop();
+          voiceState.recognition.start();
+        } catch (err2) {
+          alert("Could not start the microphone. Try again or type your notes.");
+          stopVoice();
+        }
+      }
+    }
+
+    function stopVoice(resetUi) {
+      if (resetUi === undefined) resetUi = true;
+      var finishedKey = voiceState.activeKey;
+      var finishedText = "";
+
+      if (voiceState.recognition && voiceState.activeKey) {
+        try {
+          voiceState.recognition.stop();
+        } catch (err) {}
+      }
+      if (voiceState.activeKey && voiceState.activeTextarea) {
+        finishedText = (voiceState.baseText + voiceState.finalText).trim();
+        if (finishedKey !== VOICE_KEY_MACHINE) {
+          finishedText = applyGlossaryTextReplacements(finishedText);
+          voiceState.activeTextarea.value = finishedText;
+          onLineTextChange(finishedKey, finishedText);
+        } else {
+          voiceState.activeTextarea.value = finishedText;
+        }
+      }
+
+      if (finishedText) {
+        processSpeechText(finishedText, finishedKey);
+      }
+
+      voiceState.activeKey = null;
+      voiceState.activeTextarea = null;
+      voiceState.baseText = "";
+      voiceState.finalText = "";
+      if (resetUi) finishVoiceUi();
+    }
+
+    function addExpertItemFromVoice() {
+      var key = nextId("expert");
+      ensureLineItem(key);
+      document.getElementById("expertList").appendChild(
+        renderLineItemEl(key, "e.g. Trunnion ball has excessive wear")
+      );
+      startVoiceForKey(key);
+    }
+
+    function updateGuidedVoiceBar() {
+      var title = document.getElementById("guidedVoiceSectionTitle");
+      var progress = document.getElementById("guidedVoiceSectionProgress");
+      if (!title || !guidedSectionKeys.length) return;
+      title.textContent = guidedSectionLabels[guidedVoiceIndex] || "—";
+      progress.textContent = "Section " + (guidedVoiceIndex + 1) + " of " + guidedSectionKeys.length;
+      var camBtn = document.getElementById("guidedVoiceCameraBtn");
+      if (camBtn) {
+        var key = guidedSectionKeys[guidedVoiceIndex];
+        var item = key ? lineItemData[key] : null;
+        var hasPhoto = !!(item && item.photo);
+        camBtn.classList.toggle("btn-camera--has-photo", hasPhoto);
+        camBtn.setAttribute("aria-label", hasPhoto ? "Retake field photo" : "Take field photo");
+        camBtn.setAttribute("title", hasPhoto ? "Retake photo for this section" : "Take photo for this section");
+      }
+    }
+
+    function highlightGuidedSection() {
+      document.querySelectorAll(".guided-area").forEach(function (el, idx) {
+        el.classList.toggle("guided-area--active", idx === guidedVoiceIndex);
+      });
+      var active = document.querySelector(".guided-area--active");
+      if (active) {
+        active.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      updateGuidedVoiceBar();
+      updateMicButtons();
+    }
+
+    function dictateCurrentGuidedSection() {
+      var key = guidedSectionKeys[guidedVoiceIndex];
+      if (key) toggleVoiceForKey(key);
+    }
+
+    function attachPhotoForCurrentGuidedSection() {
+      var key = guidedSectionKeys[guidedVoiceIndex];
+      if (key) attachPhoto(key, true);
+    }
+
+    function nextGuidedSection() {
+      stopVoice();
+      if (guidedVoiceIndex < guidedSectionKeys.length - 1) {
+        guidedVoiceIndex += 1;
+        highlightGuidedSection();
+      }
+    }
+
+    function getDrivePhotoFallbackUrl(id) {
+      return "https://lh3.googleusercontent.com/d/" + encodeURIComponent(id) + "=w1200";
+    }
+
+    function handleGuidedPhotoError(img) {
+      var id = img.getAttribute("data-drive-id");
+      if (!id || img.dataset.fallbackTried === "1") return;
+      img.dataset.fallbackTried = "1";
+      img.src = getDrivePhotoFallbackUrl(id);
+    }
+
+    function buildGuidedReferenceHtml(area) {
+      var url = getWearDiagramUrl(area);
+      if (!url || !area) return "";
+      var driveAttr = area.diagramDriveId
+        ? ' data-drive-id="' + escapeAttr(area.diagramDriveId) + '" onerror="handleGuidedPhotoError(this)"'
+        : "";
+      var captionHtml = area.diagramCaption
+        ? '<p class="guided-reference__caption">' + escapeHtml(area.diagramCaption) + "</p>"
+        : "";
+      var imgClass = "guided-reference__img";
+      if (area.diagramImageSize === "large") {
+        imgClass += " guided-reference__img--large";
+      }
+      return (
+        '<div class="guided-reference">' +
+        '<p class="guided-reference__label">Reference photo</p>' +
+        '<img class="' +
+        imgClass +
+        '" src="' +
+        escapeAttr(url) +
+        '" alt="' +
+        escapeAttr(area.label) +
+        ' reference"' +
+        driveAttr +
+        ' referrerpolicy="no-referrer" loading="lazy">' +
+        captionHtml +
+        "</div>"
+      );
+    }
+
+    function getDrivePhotoUrl(id, maxWidth, version) {
+      return driveThumb(id, maxWidth || 1200, version);
+    }
+
+    function driveThumb(id, w, version) {
+      var url = "https://drive.google.com/thumbnail?id=" + encodeURIComponent(id) + "&sz=w" + w;
+      if (version) url += "&v=" + encodeURIComponent(String(version));
+      return url;
+    }
+
+    function getWearDiagramUrl(area) {
+      if (!area) return "";
+      if (area.diagramDriveId) {
+        return getDrivePhotoUrl(area.diagramDriveId, area.diagramImageWidth || 1200, area.diagramVersion);
+      }
+      if (area.diagramSrc) return area.diagramSrc;
+      return "";
+    }
+
+    function nextId(prefix) {
+      itemIdCounter += 1;
+      return prefix + "_" + itemIdCounter;
+    }
+
+    function escapeAttr(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    function escapeHtml(s) {
+      if (s == null || s === "") return "";
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function getMachineType() {
+      return document.getElementById("machineType").value;
+    }
+
+    function getMachineConfig() {
+      var t = getMachineType();
+      return t ? MACHINE_CONFIG[t] : null;
+    }
+
+    function getMachineDisplayLabel() {
+      var cfg = getMachineConfig();
+      if (!cfg) return "";
+      if (getMachineType() === "other") {
+        var custom = document.getElementById("machineTypeOther").value.trim();
+        return custom ? "Other — " + custom : cfg.label;
+      }
+      return cfg.label;
+    }
+
+    function onMachineTypeOtherInput() {
+      var label = document.getElementById("machineTypeLabel");
+      if (label && getMachineType() === "other") {
+        label.textContent = getMachineDisplayLabel();
+      }
+    }
+
+    function updateCommissioningHelpBar() {
+      var cfg = getMachineConfig();
+      var ref = cfg && cfg.commissioningReference;
+      var bar = document.getElementById("commissioningHelpBar");
+      if (bar) bar.classList.toggle("hidden", !ref);
+      var btn = document.getElementById("commissioningHelpBtn");
+      if (btn && ref) {
+        var sectionRef = ref.manualSection ? ref.manualSection.split(" ")[0] : "";
+        btn.textContent = sectionRef ? "Commissioning manual (" + sectionRef + ")" : "Commissioning manual";
+      }
+    }
+
+    function getCommissioningPdfUrl(ref) {
+      if (!ref) return "";
+      if (ref.pdfPath) return ref.pdfPath;
+      if (ref.pdfDriveId) {
+        return "https://drive.google.com/file/d/" + ref.pdfDriveId + "/view";
+      }
+      return "";
+    }
+
+    function openCommissioningHelp() {
+      var cfg = getMachineConfig();
+      if (!cfg || !cfg.commissioningReference) return;
+      var ref = cfg.commissioningReference;
+
+      document.getElementById("commissioningHelpEyebrow").textContent =
+        ref.manualTitle + (ref.manualVersion ? " · v" + ref.manualVersion : "");
+      document.getElementById("commissioningHelpTitle").textContent = ref.manualSection || "Wear check reference";
+
+      var body = document.getElementById("commissioningHelpBody");
+      var html = '<p class="help-modal__intro">' + escapeHtml(ref.intro) + "</p>";
+      ref.checks.forEach(function (check) {
+        html += '<section class="help-check">';
+        html += '<div class="help-check__ref">' + escapeHtml(check.ref) + "</div>";
+        html += "<h3>" + escapeHtml(check.title) + "</h3>";
+        if (check.spec) {
+          html += '<div class="help-check__spec">Spec: ' + escapeHtml(check.spec) + "</div>";
+        }
+        html += "<ul>";
+        check.points.forEach(function (point) {
+          html += "<li>" + escapeHtml(point) + "</li>";
+        });
+        html += "</ul></section>";
+      });
+      body.innerHTML = html;
+
+      var pdfLink = document.getElementById("commissioningHelpPdfLink");
+      if (pdfLink) {
+        var pdfUrl = getCommissioningPdfUrl(ref);
+        if (pdfUrl) {
+          pdfLink.href = pdfUrl;
+          pdfLink.classList.remove("hidden");
+        } else {
+          pdfLink.classList.add("hidden");
+        }
+      }
+
+      var modal = document.getElementById("commissioningHelpModal");
+      modal.classList.remove("hidden");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeCommissioningHelp() {
+      var modal = document.getElementById("commissioningHelpModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    function onMachineTypeChange() {
+      var cfg = getMachineConfig();
+      var otherGroup = document.getElementById("machineTypeOtherGroup");
+      var isOther = getMachineType() === "other";
+      otherGroup.classList.toggle("hidden", !isOther);
+
+      currentMode = "";
+      stopVoice();
+      lineItemData = {};
+      itemIdCounter = 0;
+
+      document.getElementById("modeExpert").classList.remove("selected");
+      document.getElementById("modeGuided").classList.remove("selected");
+      document.getElementById("expertPanel").classList.add("hidden");
+      document.getElementById("guidedPanel").classList.add("hidden");
+      document.getElementById("reportActions").classList.add("hidden");
+      document.getElementById("verifyCard").classList.add("hidden");
+      var verifyChk = document.getElementById("verifyConfirm");
+      if (verifyChk) verifyChk.checked = false;
+      updateGenerateButtonState();
+      document.getElementById("expertList").innerHTML = "";
+      document.getElementById("guidedAreas").innerHTML = "";
+      document.getElementById("guidedExtraList").innerHTML = "";
+
+      if (!cfg) {
+        document.getElementById("workflowCard").classList.add("hidden");
+        otherGroup.classList.add("hidden");
+        return;
+      }
+
+      document.getElementById("workflowCard").classList.remove("hidden");
+      document.getElementById("machineTypeLabel").textContent = getMachineDisplayLabel();
+
+      var workflowNote = document.getElementById("workflowOtherNote");
+      if (workflowNote) {
+        workflowNote.classList.toggle("hidden", !isOther);
+      }
+      updateCommissioningHelpBar();
+    }
+
+    function selectMode(mode) {
+      var cfg = getMachineConfig();
+      if (!cfg) return;
+
+      stopVoice();
+      currentMode = mode;
+      lineItemData = {};
+      itemIdCounter = 0;
+
+      document.getElementById("modeExpert").classList.toggle("selected", mode === "expert");
+      document.getElementById("modeGuided").classList.toggle("selected", mode === "guided");
+      document.getElementById("expertPanel").classList.toggle("hidden", mode !== "expert");
+      document.getElementById("guidedPanel").classList.toggle("hidden", mode !== "guided");
+      showReportReviewUi();
+
+      if (mode === "expert") {
+        document.getElementById("expertList").innerHTML = "";
+        addExpertItem();
+      } else {
+        renderGuidedPanel(cfg);
+      }
+      updateVoiceAvailabilityUi();
+    }
+
+    function ensureLineItem(key) {
+      if (!lineItemData[key]) {
+        lineItemData[key] = { text: "", photo: null };
+      }
+      return lineItemData[key];
+    }
+
+    function renderLineItemEl(key, placeholder) {
+      var item = ensureLineItem(key);
+      var wrap = document.createElement("div");
+      wrap.className = "line-item";
+      wrap.dataset.key = key;
+
+      wrap.innerHTML =
+        '<div class="line-item__top">' +
+        '<textarea class="line-text" placeholder="' + escapeAttr(placeholder) + '" oninput="onLineTextChange(\'' + key + '\', this.value)">' +
+        escapeHtml(item.text) +
+        "</textarea>" +
+        sectionMediaBarHtml(key) +
+        '<button type="button" class="btn-icon btn-icon--danger" title="Remove line" onclick="removeLineItem(\'' + key + '\')">&times;</button>' +
+        "</div>" +
+        '<div class="line-item__actions">' +
+        buildPhotoActionsInnerHtml(key, item) +
+        "</div>";
+
+      return wrap;
+    }
+
+    function onLineTextChange(key, value) {
+      ensureLineItem(key).text = value;
+      refreshVerifySummary();
+    }
+
+    function attachPhoto(key, useCamera) {
+      photoTargetKey = key;
+      var input = document.getElementById("photoInput");
+      if (useCamera) {
+        input.setAttribute("capture", "environment");
+      } else {
+        input.removeAttribute("capture");
+      }
+      input.click();
+    }
+
+    function clearPhoto(key) {
+      ensureLineItem(key).photo = null;
+      refreshPhotoUi(key);
+      refreshVerifySummary();
+    }
+
+    function removeLineItem(key) {
+      if (voiceState.activeKey === key) stopVoice();
+      delete lineItemData[key];
+      var el = document.querySelector('[data-key="' + key + '"]');
+      if (el) el.remove();
+    }
+
+    function handlePhotoFile(file) {
+      if (!file || !photoTargetKey) return;
+      if (!file.type || file.type.indexOf("image/") !== 0) return;
+      var key = photoTargetKey;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        ensureLineItem(key).photo = { name: file.name, dataUrl: e.target.result };
+        refreshPhotoUi(key);
+        refreshVerifySummary();
+        photoTargetKey = null;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addExpertItem() {
+      var key = nextId("expert");
+      ensureLineItem(key);
+      document.getElementById("expertList").appendChild(
+        renderLineItemEl(key, "e.g. Trunnion ball has excessive wear")
+      );
+    }
+
+    function addGuidedExtraItem() {
+      var key = nextId("extra");
+      ensureLineItem(key);
+      document.getElementById("guidedExtraList").appendChild(
+        renderLineItemEl(key, "Additional wear note or observation")
+      );
+    }
+
+    function renderGuidedPanel(cfg) {
+      document.getElementById("guidedMachineLabel").textContent = cfg.label;
+
+      var areasEl = document.getElementById("guidedAreas");
+      areasEl.innerHTML = "";
+      guidedSectionKeys = [];
+      guidedSectionLabels = [];
+      guidedVoiceIndex = 0;
+
+      cfg.guidedAreas.forEach(function (area, idx) {
+        var key = "guided_" + area.id;
+        guidedSectionKeys.push(key);
+        guidedSectionLabels.push(area.label);
+        ensureLineItem(key);
+        var block = document.createElement("div");
+        block.className = "guided-area";
+        block.dataset.key = key;
+        block.dataset.sectionIndex = String(idx);
+
+        var item = lineItemData[key];
+
+        var toleranceHtml = area.tolerance
+          ? '<p class="guided-tolerance">Spec: ' + escapeHtml(area.tolerance) + "</p>"
+          : "";
+        var referenceHtml = buildGuidedReferenceHtml(area);
+
+        block.innerHTML =
+          "<label>" + escapeHtml(area.label) + "</label>" +
+          '<p class="guided-hint">' + escapeHtml(area.hint) + "</p>" +
+          toleranceHtml +
+          referenceHtml +
+          '<p class="guided-field-label">Your notes</p>' +
+          '<textarea class="line-text" placeholder="Leave blank if OK or N/A" oninput="onLineTextChange(\'' + key + '\', this.value)">' +
+          escapeHtml(item.text) +
+          "</textarea>" +
+          sectionMediaBarHtml(key) +
+          '<p class="guided-field-label">Your field photo</p>' +
+          '<div class="line-item__actions" style="margin-top:6px;">' +
+          buildPhotoActionsInnerHtml(key, item) +
+          "</div>";
+
+        block.addEventListener("click", function (e) {
+          if (e.target.closest("textarea, button, a, input, .guided-reference, .section-media-bar")) return;
+          stopVoice();
+          guidedVoiceIndex = idx;
+          highlightGuidedSection();
+        });
+
+        areasEl.appendChild(block);
+      });
+
+      document.getElementById("guidedExtraList").innerHTML = "";
+      var guidedHelp = document.getElementById("guidedHelpLinkRow");
+      if (guidedHelp) guidedHelp.classList.toggle("hidden", !cfg.commissioningReference);
+      highlightGuidedSection();
+      updateVoiceAvailabilityUi();
+    }
+
+    function collectLineItems(prefixFilter) {
+      var out = [];
+      Object.keys(lineItemData).forEach(function (key) {
+        if (prefixFilter && key.indexOf(prefixFilter) !== 0) return;
+        var item = lineItemData[key];
+        if (!item.text.trim() && !item.photo) return;
+        var label = key;
+        if (key.indexOf("guided_") === 0) {
+          var areaId = key.replace("guided_", "");
+          var cfg = getMachineConfig();
+          if (cfg) {
+            cfg.guidedAreas.forEach(function (a) {
+              if (a.id === areaId) label = a.label;
+            });
+          }
+        }
+        out.push({ key: key, label: label, text: item.text.trim(), photo: item.photo });
+      });
+      return out;
+    }
+
+    function getFormData() {
+      var cfg = getMachineConfig();
+      var items = [];
+      if (currentMode === "expert") {
+        items = collectLineItems("expert_");
+      } else if (currentMode === "guided") {
+        items = collectLineItems("guided_").concat(collectLineItems("extra_"));
+      }
+
+      return {
+        dealerName: document.getElementById("dealerName").value.trim(),
+        techName: document.getElementById("techName").value.trim(),
+        dealerLogo: dealerLogo,
+        machineType: getMachineDisplayLabel(),
+        machineTypeOther: getMachineType() === "other" ? document.getElementById("machineTypeOther").value.trim() : "",
+        machineMake: document.getElementById("machineMake").value.trim(),
+        machineModel: document.getElementById("machineModel").value.trim(),
+        serialNumber: document.getElementById("serialNumber").value.trim(),
+        machineHours: document.getElementById("machineHours").value.trim(),
+        workflowMode: currentMode === "expert" ? "Expert — I know what I am doing" : "Guided inspection",
+        lineItems: items,
+        generatedAt: new Date().toLocaleString()
+      };
+    }
+
+    function buildLineItemsPdfHtml(items) {
+      if (!items.length) return "<p><em>No wear callouts recorded.</em></p>";
+      return items.map(function (item, i) {
+        var photoBlock = item.photo
+          ? '<div style="margin-top:8px;"><img src="' + item.photo.dataUrl + '" style="max-width:100%;max-height:280px;border:1px solid #d9dee7;border-radius:6px;" /><div style="font-size:11px;color:#6b7280;margin-top:4px;">' + escapeHtml(item.photo.name) + "</div></div>"
+          : "";
+        var title = item.label.indexOf("expert_") === 0 || item.label.indexOf("extra_") === 0
+          ? "Callout " + (i + 1)
+          : item.label;
+        if (item.key.indexOf("expert_") === 0 || item.key.indexOf("extra_") === 0) {
+          title = "Callout " + (i + 1);
+        } else if (item.key.indexOf("guided_") === 0) {
+          title = item.label;
+        }
+        return (
+          '<div style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #e8ecf1;page-break-inside:avoid;">' +
+          '<div style="font-weight:700;color:#005f9e;font-size:13px;margin-bottom:4px;">' + escapeHtml(title) + "</div>" +
+          '<div style="font-size:13px;line-height:1.45;">' + (escapeHtml(item.text) || "<em>No notes entered.</em>") + "</div>" +
+          photoBlock +
+          "</div>"
+        );
+      }).join("");
+    }
+
+    function buildPdfHeaderHtml(data) {
+      var dealerSlot = data.dealerLogo
+        ? '<img class="dealer-logo" src="' + data.dealerLogo.dataUrl + '" alt="' + escapeHtml(data.dealerName || "Dealer logo") + '" />'
+        : '<div class="dealer-logo-slot" aria-hidden="true"></div>';
+
+      return (
+        '<div class="rpt-hdr">' +
+        '<div class="rpt-hdr__brands">' +
+        '<img class="trimble-logo" src="' + TRIMBLE_LOGO_URL + '" alt="Trimble" />' +
+        '<div class="dealer-logo-wrap">' + dealerSlot + "</div>" +
+        "</div>" +
+        "<h1>Pre-Inspection / Machine Wear Report</h1>" +
+        "<p>Generated " + escapeHtml(data.generatedAt) + "</p>" +
+        "</div>"
+      );
+    }
+
+    function buildPdfHtml(data) {
+      return (
+        "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Pre-Inspection Report</title>" +
+        "<link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'>" +
+        "<style>" +
+        "body{font-family:'Open Sans','Segoe UI',Tahoma,sans-serif;color:#252a2e;margin:0;padding:0;}" +
+        ".rpt-hdr{background:#fff;padding:20px 24px 16px;border-bottom:3px solid #005f9e;}" +
+        ".rpt-hdr__brands{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:14px;}" +
+        ".trimble-logo{height:32px;width:auto;display:block;}" +
+        ".dealer-logo-wrap{flex:0 0 180px;min-height:52px;display:flex;align-items:center;justify-content:flex-end;}" +
+        ".dealer-logo{max-width:180px;max-height:52px;object-fit:contain;}" +
+        ".dealer-logo-slot{width:180px;height:52px;}" +
+        ".rpt-hdr h1{margin:0;font-size:20px;color:#005f9e;font-weight:700;}" +
+        ".rpt-hdr p{margin:6px 0 0;font-size:13px;color:#6a6e79;}" +
+        ".body{padding:24px;}" +
+        "h2{font-size:14px;color:#005f9e;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #e0e1e9;padding-bottom:6px;margin:24px 0 12px;}" +
+        "table{width:100%;border-collapse:collapse;margin-bottom:8px;}" +
+        "td{padding:8px 10px;border:1px solid #e0e1e9;font-size:13px;vertical-align:top;}" +
+        "td.lbl{width:38%;background:#f7f8fa;font-weight:700;color:#6a6e79;}" +
+        ".footer{margin-top:32px;padding-top:12px;border-top:1px solid #e0e1e9;font-size:11px;color:#6a6e79;}" +
+        "@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}" +
+        "</style></head><body>" +
+        buildPdfHeaderHtml(data) +
+        '<div class="body">' +
+        "<h2>Job details</h2>" +
+        "<table>" +
+        row("Dealer", data.dealerName) +
+        row("Technician", data.techName) +
+        row("Documentation mode", data.workflowMode) +
+        "</table>" +
+        "<h2>Machine information</h2>" +
+        "<table>" +
+        row("Machine type", data.machineType) +
+        row("Make", data.machineMake) +
+        row("Model", data.machineModel) +
+        row("Serial number", data.serialNumber) +
+        row("Machine hours", data.machineHours) +
+        "</table>" +
+        "<h2>Wear callouts &amp; photos</h2>" +
+        buildLineItemsPdfHtml(data.lineItems) +
+        '<div class="footer">Trimble Technician Assistant — Pre-Inspection Report. Confidential machine documentation.</div>' +
+        "</div></body></html>"
+      );
+
+      function row(label, value) {
+        return "<tr><td class='lbl'>" + escapeHtml(label) + "</td><td>" + (escapeHtml(value) || "—") + "</td></tr>";
+      }
+    }
+
+    function generateReport() {
+      stopVoice();
+      if (!document.getElementById("verifyConfirm").checked) {
+        alert("Please review the verification summary and confirm the information is accurate.");
+        document.getElementById("verifyCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        return;
+      }
+      var data = getFormData();
+      if (!getMachineType()) {
+        alert("Please select a machine type.");
+        return;
+      }
+      if (!currentMode) {
+        alert("Please choose expert or guided documentation mode.");
+        return;
+      }
+      var popup = window.open("", "_blank");
+      if (!popup) {
+        alert("Popup blocked. Allow popups to generate the PDF report.");
+        return;
+      }
+      popup.document.open();
+      popup.document.write(buildPdfHtml(data));
+      popup.document.close();
+      popup.focus();
+      setTimeout(function () { popup.print(); }, 500);
+
+      var status = document.getElementById("statusMsg");
+      status.style.display = "block";
+      status.textContent = "Report opened — use Print / Save as PDF in the print dialog.";
+    }
+
+    function uploadDealerLogo() {
+      document.getElementById("dealerLogoInput").click();
+    }
+
+    function compressImageForStorage(file, maxWidth, callback) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+          var w = img.width;
+          var h = img.height;
+          if (w > maxWidth) {
+            h = Math.round(h * (maxWidth / w));
+            w = maxWidth;
+          }
+          var canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          var dataUrl = canvas.toDataURL("image/png");
+          if (dataUrl.length > 900000) {
+            dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+          }
+          callback({ name: file.name, dataUrl: dataUrl });
+        };
+        img.onerror = function () {
+          alert("Could not read that image. Try a different PNG or JPG file.");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveDealerLogoToDevice(logo) {
+      try {
+        localStorage.setItem(DEALER_STORAGE_KEYS.logo, JSON.stringify(logo));
+        return true;
+      } catch (err) {
+        alert(
+          "Could not save the logo on this device (storage may be full). It will still be used for this report, but you may need to upload again next time."
+        );
+        return false;
+      }
+    }
+
+    function loadDealerLogoFromDevice() {
+      try {
+        var raw = localStorage.getItem(DEALER_STORAGE_KEYS.logo);
+        if (!raw) return null;
+        var parsed = JSON.parse(raw);
+        if (!parsed || !parsed.dataUrl) return null;
+        return parsed;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function clearDealerLogoFromDevice() {
+      try {
+        localStorage.removeItem(DEALER_STORAGE_KEYS.logo);
+      } catch (err) {}
+    }
+
+    function saveDealerNameToDevice(name) {
+      var trimmed = (name || "").trim();
+      try {
+        if (trimmed) {
+          localStorage.setItem(DEALER_STORAGE_KEYS.dealerName, trimmed);
+        } else {
+          localStorage.removeItem(DEALER_STORAGE_KEYS.dealerName);
+        }
+      } catch (err) {}
+    }
+
+    function loadDealerNameFromDevice() {
+      try {
+        return localStorage.getItem(DEALER_STORAGE_KEYS.dealerName) || "";
+      } catch (err) {
+        return "";
+      }
+    }
+
+    function updateDealerLogoSavedNote() {
+      var note = document.getElementById("dealerLogoSavedNote");
+      if (!note) return;
+      note.classList.toggle("hidden", !dealerLogo || !loadDealerLogoFromDevice());
+    }
+
+    function renderDealerLogoPreview() {
+      var box = document.getElementById("dealerLogoPreview");
+      var clearBtn = document.getElementById("clearDealerLogoBtn");
+      if (dealerLogo) {
+        box.className = "dealer-logo-preview";
+        box.innerHTML = '<img src="' + dealerLogo.dataUrl + '" alt="Dealer logo preview">';
+        clearBtn.classList.remove("hidden");
+      } else {
+        box.className = "dealer-logo-preview dealer-logo-preview--empty";
+        box.textContent = "No dealer logo";
+        clearBtn.classList.add("hidden");
+      }
+      updateDealerLogoSavedNote();
+    }
+
+    function clearDealerLogo() {
+      if (!confirm("Remove the saved dealer logo from this device?")) return;
+      dealerLogo = null;
+      clearDealerLogoFromDevice();
+      renderDealerLogoPreview();
+    }
+
+    function handleDealerLogoFile(file) {
+      if (!file || !file.type || file.type.indexOf("image/") !== 0) return;
+      compressImageForStorage(file, 480, function (logo) {
+        dealerLogo = logo;
+        saveDealerLogoToDevice(logo);
+        var dealerField = document.getElementById("dealerName");
+        if (dealerField && dealerField.value.trim()) {
+          saveDealerNameToDevice(dealerField.value.trim());
+        }
+        renderDealerLogoPreview();
+      });
+    }
+
+    function loadSavedDealerBranding() {
+      var savedLogo = loadDealerLogoFromDevice();
+      if (savedLogo) {
+        dealerLogo = savedLogo;
+        renderDealerLogoPreview();
+      }
+      var savedName = loadDealerNameFromDevice();
+      var dealerField = document.getElementById("dealerName");
+      if (savedName && dealerField && !dealerField.value.trim()) {
+        dealerField.value = savedName;
+      }
+    }
+
+    function clearForm() {
+      if (!confirm("Clear all fields, wear notes, and photos? Your saved dealer logo and voice glossary on this device will be kept.")) return;
+      stopVoice();
+      document.querySelectorAll(".field-auto-filled").forEach(function (el) {
+        el.classList.remove("field-auto-filled");
+      });
+      showVoiceParseBanner(null);
+      document.getElementById("verifyCard").classList.add("hidden");
+      document.getElementById("verifyConfirm").checked = false;
+      updateGenerateButtonState();
+      var savedDealerName = loadDealerNameFromDevice();
+      document.getElementById("reportForm").reset();
+      if (savedDealerName) {
+        document.getElementById("dealerName").value = savedDealerName;
+      }
+      lineItemData = {};
+      itemIdCounter = 0;
+      currentMode = "";
+      onMachineTypeChange();
+      document.getElementById("statusMsg").style.display = "none";
+    }
+
+    document.getElementById("photoInput").addEventListener("change", function () {
+      if (this.files && this.files[0]) handlePhotoFile(this.files[0]);
+      this.value = "";
+    });
+
+    document.getElementById("dealerLogoInput").addEventListener("change", function () {
+      if (this.files && this.files[0]) handleDealerLogoFile(this.files[0]);
+      this.value = "";
+    });
+
+    document.getElementById("glossaryImportInput").addEventListener("change", function () {
+      if (this.files && this.files[0]) handleGlossaryImportFile(this.files[0]);
+      this.value = "";
+    });
+
+    document.getElementById("dealerName").addEventListener("change", function () {
+      saveDealerNameToDevice(this.value);
+      refreshVerifySummary();
+    });
+
+    ["techName", "machineMake", "machineModel", "serialNumber", "machineHours", "machineTypeOther"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener("input", refreshVerifySummary);
+    });
+    document.getElementById("machineType").addEventListener("change", refreshVerifySummary);
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeCommissioningHelp();
+    });
+
+    loadSavedDealerBranding();
+    renderDealerLogoPreview();
+    speechGlossary = loadSpeechGlossaryFromDevice();
+    if (!speechGlossary.length) {
+      seedSpeechGlossaryFromDefaults();
+    } else {
+      ensureCommissioningGlossaryMerged();
+    }
+    renderGlossaryUi();
+    initVoiceDictation();
+  </script>
+</body>
+</html>

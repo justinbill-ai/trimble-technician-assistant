@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300" role="img" aria-label="Lift cylinder ball joints">
+  <defs>
+    <style>
+      .ink { fill: none; stroke: #1a1a1a; stroke-width: 2; stroke-linejoin: round; }
+      .ink-thin { fill: none; stroke: #1a1a1a; stroke-width: 1.2; }
+      .meas { stroke: #005f9e; stroke-width: 2; }
+      .label { font: 600 13px 'Open Sans', Arial, sans-serif; fill: #252a2e; }
+      .small { font: 600 11px 'Open Sans', Arial, sans-serif; fill: #4b5563; }
+    </style>
+  </defs>
+  <rect width="560" height="300" fill="#fff"/>
+  <text class="label" x="24" y="32">Lift cylinder ball joints (ß3.2.7)</text>
+  <text class="small" x="24" y="52">Rod-to-circle height: two positions ∑ diff &lt; 1 mm (0.04 in)</text>
+  <!-- Position A: circle on blade -->
+  <text class="small" x="70" y="82">A  circle on blade</text>
+  <ellipse class="ink-thin" cx="140" cy="130" rx="42" ry="42"/>
+  <rect class="ink" x="95" y="168" width="90" height="18"/>
+  <rect class="ink" x="125" y="110" width="14" height="58"/>
+  <line class="meas" x1="155" y1="110" x2="155" y2="168"/>
+  <text class="small" fill="#005f9e" x="162" y="142">hÅ</text>
+  <!-- Position B: blade hanging -->
+  <text class="small" x="330" y="82">B  blade hanging</text>
+  <ellipse class="ink-thin" cx="400" cy="118" rx="42" ry="42"/>
+  <rect class="ink" x="355" y="168" width="90" height="18"/>
+  <rect class="ink" x="385" y="98" width="14" height="70"/>
+  <line class="meas" x1="415" y1="98" x2="415" y2="168"/>
+  <text class="small" fill="#005f9e" x="422" y="138">hÇ</text>
+  <text class="label" x="200" y="250">|hÅ  hÇ| &lt; 1 mm (0.04 in)</text>
+</svg>

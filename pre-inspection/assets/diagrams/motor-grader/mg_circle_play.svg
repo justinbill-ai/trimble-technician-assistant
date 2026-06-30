@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 300" role="img" aria-label="Circle play check">
+  <defs>
+    <style>
+      .ink { fill: none; stroke: #1a1a1a; stroke-width: 2; stroke-linejoin: round; }
+      .ink-thin { fill: none; stroke: #1a1a1a; stroke-width: 1.2; }
+      .highlight { fill: none; stroke: #005f9e; stroke-width: 2.5; }
+      .label { font: 600 13px 'Open Sans', Arial, sans-serif; fill: #252a2e; }
+      .small { font: 600 11px 'Open Sans', Arial, sans-serif; fill: #4b5563; }
+    </style>
+  </defs>
+  <rect width="560" height="300" fill="#fff"/>
+  <text class="label" x="24" y="32">Circle play (§3.2.4)</text>
+  <text class="small" x="24" y="52">Minimize slop  adjust shims &amp; wear strips per OEM</text>
+  <ellipse class="ink" cx="280" cy="165" rx="95" ry="95"/>
+  <ellipse class="ink-thin" cx="280" cy="165" rx="72" ry="72"/>
+  <!-- Wear strips -->
+  <path class="highlight" d="M185 165 A95 95 0 0 1 280 70"/>
+  <path class="highlight" d="M375 165 A95 95 0 0 1 280 260"/>
+  <text class="small" fill="#005f9e" x="120" y="100">wear strips</text>
+  <text class="small" fill="#005f9e" x="360" y="250">shims</text>
+  <!-- Drawbar -->
+  <path class="ink" d="M80 200 L185 175 L185 155"/>
+  <path class="ink" d="M80 130 L185 155"/>
+  <text class="small" x="24" y="280">Keep circle centered · follow manufacturer tolerances</text>
+</svg>

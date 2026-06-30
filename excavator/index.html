@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trimble Earthworks Excavator Tuning Assistant</title>
+
+  <meta name="theme-color" content="#005f9e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Excavator Tuning" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+/* Excavator-specific UI (tuning map, capture, matrix) */
+main{max-width:980px}
+textarea{min-height:80px;resize:vertical}
+.capture-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.capture-preview img{width:120px;height:80px;object-fit:cover;border:1px solid var(--tc-grey-300);border-radius:var(--tc-radius)}
+.capture-table-wrap{margin-top:8px}
+.capture-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.capture-table th,.capture-table td{border:1px solid var(--tc-grey-300);padding:6px}
+.capture-table th{background:var(--tc-grey-100);text-align:left}
+.capture-table input{width:100%;border:1px solid var(--tc-grey-400);border-radius:var(--tc-radius);padding:4px}
+.saved-attachments{margin-top:10px;display:grid;gap:8px}
+.viz-wrap{margin-top:10px;padding:10px;border:1px solid var(--tc-grey-300);border-radius:var(--tc-radius-lg);background:var(--tc-surface)}
+.reference-image-wrap{position:relative;width:100%;border:1px solid var(--tc-grey-300);border-radius:var(--tc-radius-lg);background:var(--tc-surface);margin-top:6px;overflow:hidden}
+.reference-image{width:100%;height:auto;display:block}
+.reference-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.section-line{stroke:#9b9faa;stroke-width:5;stroke-linecap:round}
+.section-line.active{stroke:#005f9e}
+.apex-marker{stroke:#9b9faa;stroke-width:4}
+.apex-marker.active{stroke:#d97706}
+.section-ruler{display:grid;grid-template-columns:1.3fr 1fr 1fr .9fr 1fr;gap:6px;margin-top:8px}
+.section-chip{border:1px solid var(--tc-grey-400);border-radius:var(--tc-radius-lg);background:var(--tc-grey-100);color:var(--tc-text);font-weight:700;text-align:center;padding:8px 6px;font-size:.9rem}
+.section-chip.active{border-color:var(--tc-blue);background:var(--tc-blue-tint);color:var(--tc-blue-dark)}
+.apex-chip.active{border-color:#d97706;background:#ffefcf;color:#7a4b00}
+.influence-grid{display:grid;grid-template-columns:1.8fr repeat(5,1fr);border:1px solid var(--tc-grey-300);border-radius:var(--tc-radius-lg);overflow:hidden;margin-top:8px}
+.grid-head{background:var(--tc-grey-100);border-bottom:1px solid var(--tc-grey-300);border-right:1px solid var(--tc-grey-300);padding:8px 6px;font-weight:700;text-align:center;font-size:.85rem;color:var(--tc-blue)}
+.grid-label{border-top:1px solid var(--tc-grey-300);border-right:1px solid var(--tc-grey-300);padding:8px 6px;font-weight:600;background:var(--tc-surface)}
+.matrix-cell{min-height:36px;border-top:1px solid var(--tc-grey-300);border-right:1px solid var(--tc-grey-300);background:var(--tc-surface)}
+.matrix-cell.tone-warm{background:#fff6e8}
+.matrix-cell.tone-green{background:#ecf9ec}
+.matrix-cell.tone-teal{background:#e6f8f6}
+.matrix-cell.active.tone-warm{background:linear-gradient(180deg,#ffe5b8 0,#ffcc76 100%);box-shadow:inset 0 0 0 2px #e39619}
+.matrix-cell.active.tone-green{background:linear-gradient(180deg,#dff4df 0,#9fdc7b 100%);box-shadow:inset 0 0 0 2px #4ca845}
+.matrix-cell.active.tone-teal{background:linear-gradient(180deg,#d4f2ed 0,#67c2b4 100%);box-shadow:inset 0 0 0 2px #1f8c7f}
+.matrix-cell.active:not(.tone-warm):not(.tone-green):not(.tone-teal){background:linear-gradient(180deg,#ebf3ff 0,#c9def8 100%);box-shadow:inset 0 0 0 2px #4e8ec9}
+.matrix-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:8px}
+.legend-item{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--tc-grey-600)}
+.legend-swatch{width:14px;height:14px;border-radius:3px;border:1px solid var(--tc-grey-400);display:inline-block}
+.legend-swatch.tone-warm{background:#ffd68e;border-color:#e39619}
+.legend-swatch.tone-green{background:#9fdc7b;border-color:#4ca845}
+.legend-swatch.tone-teal{background:#67c2b4;border-color:#1f8c7f}
+.profile-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:8px}
+.profile-card{border:1px solid var(--tc-grey-300);border-radius:var(--tc-radius-lg);padding:10px;background:var(--tc-grey-100)}
+.profile-card.active{border-color:var(--tc-blue);background:var(--tc-blue-tint);box-shadow:inset 0 0 0 1px var(--tc-grey-400)}
+.order-callout ol{margin:8px 0 2px 20px;padding:0}.order-callout li{margin:2px 0}
+details summary{list-style:none}
+details summary::-webkit-details-marker{display:none}
+.pri{margin:4px 0;line-height:1.25rem}
+  </style>
+</head>
+<body>
+<header class="tc-app-header">
+  <a class="tc-back-link" href="../index.html">&larr; Technician Assistant</a>
+  <div class="tc-header__inner">
+    <div class="tc-header__brand">
+      <img
+        class="tc-header__logo"
+        src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
+        alt="Trimble"
+      />
+      <div class="tc-header__titles">
+        <h1 class="tc-header__product">Excavator Tuning Assistant</h1>
+        <p class="tc-header__sub">Checklist, symptom diagnosis, and recommended slider direction</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="prestart">1) Prestart Checklist</button>
+    <button id="assistant-tab-btn" class="tab-btn" data-tab="assistant" disabled>2) Symptom Assistant</button>
+  </div>
+
+  <section id="prestart" class="card">
+    <h2>Prestart Checklist</h2>
+    <div class="alert">Only optimize in 2D (Depth/Slope mode) and keep personnel clear of moving linkage.</div>
+    <p class="note">Derived from commissioning and installation checklists and optimization prep. All checks must be confirmed before assistant access unlocks.</p>
+
+    <div class="grid grid-2">
+      <div class="check-group">
+        <h4>Machine and Install Readiness</h4>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Machine hydraulics respond correctly in manual operation.</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Front linkage and pin play inspected (5 mm total play max guideline).</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Cab + front linkage components installed and connected (including valve block / VM510 / switches).</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Required Autos licenses are installed and active.</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Measure-up and sensor calibration validation completed.</label>
+      </div>
+      <div class="check-group">
+        <h4>Optimization Setup (2D)</h4>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> GNSS receivers off (Depth/Slope mode), 2D level/slight slope plane and bench elevation created.</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Text ribbon set to center C/F only and focus set to center.</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Work area prepared: loose material, firm/stable machine platform.</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Hydraulic oil warmed to operating range (55 C / 130 F minimum).</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Machine in high power and max practical throttle, auto-idle disabled.</label>
+        <label class="check-item"><input type="checkbox" class="pre-req-check" /> Baseline pass speed established (target 8-10 second full pass).</label>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <span id="critical-status" class="badge badge-warning">Checklist incomplete</span>
+      <span class="small" id="check-progress">0 / 11 checked</span>
+    </div>
+
+    <div class="btn-row">
+      <button id="unlock-btn" class="btn-primary" disabled>Complete All Checklist Items</button>
+      <button id="reset-checklist-btn" class="btn-secondary" type="button">Reset Checklist</button>
+    </div>
+  </section>
+
+  <section id="assistant" class="card hidden">
+    <h2>Symptom Assistant</h2>
+    <p class="note">Enter symptoms observed during pass. Recommendations are ranked by confidence and manual alignment.</p>
+
+    <div class="meta-box">
+      <div class="grid grid-2">
+        <div><label for="machine-id">Machine ID</label><input id="machine-id" type="text" placeholder="Example: ZX350LC-07 #12" /></div>
+        <div><label for="attachment-id">Attachment</label><input id="attachment-id" type="text" placeholder="Example: 1500 mm clean-up bucket" /></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:8px;">
+        <div><label for="tech-name">Technician Name (optional)</label><input id="tech-name" type="text" /></div>
+        <div><label for="dealer-name">Dealer (optional)</label><input id="dealer-name" type="text" /></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:8px;">
+        <div><label for="machine-model">Machine Model (optional)</label><input id="machine-model" type="text" /></div>
+        <div><label for="machine-config">Machine Configuration (optional)</label><input id="machine-config" type="text" /></div>
+      </div>
+      <label for="tech-notes" style="margin-top:8px;">Technician Notes</label>
+      <textarea id="tech-notes" placeholder="Optional notes"></textarea>
+
+      <div class="manual-access">
+        <strong>Excavator Commissioning Manual</strong>
+        <div class="small">Use this link for full manual procedure and detailed step logic.</div>
+        <div class="btn-row" style="margin-top:6px;">
+          <a id="manual-link" class="btn-secondary manual-link-btn" href="https://drive.google.com/file/d/18mQ3QyeP_n4Phh5c8NgMe8ikOUkin3OD/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Open Commissioning Manual</a>
+        </div>
+      </div>
+
+      <div class="capture-box">
+        <h3 style="margin:6px 0;">Attachment Capture (Optional)</h3>
+        <p class="small">Upload slider screenshots, extract values, and add attachments to one PDF report.</p>
+        <div class="grid grid-2">
+          <div><label for="capture-attachment-name">Attachment Name</label><input id="capture-attachment-name" type="text" /></div>
+          <div><label for="capture-images">Slider Screenshots</label><input id="capture-images" type="file" accept="image/*" multiple /></div>
+        </div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button id="extract-attachment-btn" class="btn-secondary" type="button">Extract Values From Images</button>
+          <button id="add-attachment-btn" class="btn-secondary" type="button">Add Attachment To Report</button>
+        </div>
+        <div id="ocr-status" class="small"></div>
+        <div id="capture-preview" class="capture-preview"></div>
+        <div id="capture-sliders-table" class="capture-table-wrap"></div>
+        <div id="saved-attachments" class="saved-attachments"></div>
+      </div>
+
+      <div class="btn-row" style="margin-top:8px;">
+        <button id="export-pdf-btn" class="btn-secondary" type="button">Export PDF Report</button>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div>
+        <label for="movement">Pass Type</label>
+        <select id="movement">
+          <option value="">Any</option>
+          <option value="rake-in">Rake In (stick in)</option>
+          <option value="rake-in-above">Rake In from Above</option>
+          <option value="rake-out">Rake Out (stick out)</option>
+          <option value="flat-in">Flat Attachment In</option>
+          <option value="flat-out">Flat Attachment Out</option>
+          <option value="cross-section">Cross Section</option>
+        </select>
+      </div>
+      <div>
+        <label for="zone">Pass Zone</label>
+        <select id="zone">
+          <option value="">Any</option>
+          <option value="section-a">Section A / Start</option>
+          <option value="section-b">Section B / Mid / Apex entry</option>
+          <option value="before-apex">Before apex (Rake-in focus)</option>
+          <option value="apex">Apex and around apex</option>
+          <option value="section-c">Section C / After apex</option>
+          <option value="start">Start of pull</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <label for="manual-step-mode">Manual Step Mode</label>
+      <select id="manual-step-mode">
+        <option value="">All steps (default)</option>
+        <option value="Step 1">Step 1 - Rake In (7.2.4)</option>
+        <option value="Step 2">Step 2 - Attack Angle (7.2.5)</option>
+        <option value="Step 3">Step 3 - Rake Out (7.2.6)</option>
+        <option value="Step 4">Step 4 - Flat In Boom (7.2.7)</option>
+        <option value="Step 5">Step 5 - Flat In Attachment (7.2.8)</option>
+        <option value="Step 6">Step 6 - Flat Out Boom (7.2.9)</option>
+        <option value="Step 7">Step 7 - Flat Out Attachment (7.2.10)</option>
+        <option value="Step 8">Step 8 - Takeoff/Movement Speeds (7.2.11)</option>
+        <option value="Step 9">Step 9 - Section B Apex Entry (7.2.12)</option>
+        <option value="Step 10">Step 10 - Apex/After-Apex (7.2.13)</option>
+        <option value="Step 11">Step 11 - Flat Attachment Angle (7.2.14)</option>
+        <option value="Step 12">Step 12 - Rake-in/Rake-out Difference (7.2.15)</option>
+      </select>
+    </div>
+
+    <div class="viz-wrap">
+      <h3 style="margin:8px 0 6px;">Tuning Influence Map (flowchart style)</h3>
+      <p class="small">Selecting zone/movement highlights where tuning influence is strongest.</p>
+      <div class="reference-image-wrap" role="img" aria-label="Excavator reference image with highlighted sections">
+        <img class="reference-image" src="https://lh3.googleusercontent.com/d/1WpnsS4Y97-85fB0mQ7uwZcnFge-5ngsU" alt="Excavator reference with sections A, B, C and apex" />
+        <svg class="reference-overlay" viewBox="0 0 507 266" preserveAspectRatio="none">
+          <line id="top-start" x1="8" y1="244" x2="28" y2="244" class="section-line"></line>
+          <line id="top-a" x1="8" y1="244" x2="60" y2="244" class="section-line"></line>
+          <line id="top-b" x1="60" y1="244" x2="174" y2="244" class="section-line"></line>
+          <line id="top-c" x1="174" y1="244" x2="284" y2="244" class="section-line"></line>
+          <line id="top-apex" x1="174" y1="238" x2="174" y2="254" class="apex-marker"></line>
+        </svg>
+      </div>
+
+      <div class="section-ruler">
+        <div id="seg-start" class="section-chip">Start (1-2 m)</div>
+        <div id="seg-a" class="section-chip">A</div>
+        <div id="seg-b" class="section-chip">B</div>
+        <div id="seg-apex" class="section-chip apex-chip">Apex</div>
+        <div id="seg-c" class="section-chip">C</div>
+      </div>
+
+      <div class="influence-grid" aria-label="Parameter influence by section">
+        <div class="grid-head">Parameter</div><div class="grid-head">Start</div><div class="grid-head">A</div><div class="grid-head">B</div><div class="grid-head">Apex</div><div class="grid-head">C</div>
+        <div class="grid-label">Boom Takeoff Speed</div><div id="cell-takeoff-start" class="matrix-cell tone-warm"></div><div id="cell-takeoff-a" class="matrix-cell tone-warm"></div><div id="cell-takeoff-b" class="matrix-cell tone-warm"></div><div class="matrix-cell"></div><div class="matrix-cell"></div>
+        <div class="grid-label">Joystick Response Speed</div><div id="cell-joystick-start" class="matrix-cell tone-warm"></div><div id="cell-joystick-a" class="matrix-cell tone-warm"></div><div id="cell-joystick-b" class="matrix-cell tone-warm"></div><div class="matrix-cell"></div><div class="matrix-cell"></div>
+        <div class="grid-label">Boom Raise Response</div><div id="cell-raise-response-start" class="matrix-cell tone-green"></div><div id="cell-raise-response-a" class="matrix-cell tone-green"></div><div id="cell-raise-response-b" class="matrix-cell tone-green"></div><div class="matrix-cell"></div><div class="matrix-cell"></div>
+        <div class="grid-label">Boom Raise Speed</div><div class="matrix-cell"></div><div id="cell-raise-speed-a" class="matrix-cell tone-green"></div><div id="cell-raise-speed-b" class="matrix-cell tone-green"></div><div id="cell-raise-speed-apex" class="matrix-cell tone-green"></div><div class="matrix-cell"></div>
+        <div class="grid-label">Boom Transition Time</div><div class="matrix-cell"></div><div class="matrix-cell"></div><div id="cell-transition-b" class="matrix-cell tone-teal"></div><div id="cell-transition-apex" class="matrix-cell tone-teal"></div><div class="matrix-cell"></div>
+        <div class="grid-label">Boom Lower Speed</div><div class="matrix-cell"></div><div class="matrix-cell"></div><div id="cell-lower-speed-b" class="matrix-cell tone-warm"></div><div id="cell-lower-speed-apex" class="matrix-cell tone-warm"></div><div id="cell-lower-speed-c" class="matrix-cell tone-warm"></div>
+        <div class="grid-label">Boom Lower Response</div><div class="matrix-cell"></div><div class="matrix-cell"></div><div class="matrix-cell"></div><div id="cell-lower-response-apex" class="matrix-cell tone-warm"></div><div id="cell-lower-response-c" class="matrix-cell tone-warm"></div>
+        <div class="grid-label">Bucket Dump Speed/Response</div><div class="matrix-cell"></div><div id="cell-dump-a" class="matrix-cell tone-green"></div><div id="cell-dump-b" class="matrix-cell tone-green"></div><div id="cell-dump-apex" class="matrix-cell tone-green"></div><div class="matrix-cell"></div>
+      </div>
+
+      <div class="matrix-legend">
+        <div class="legend-item"><span class="legend-swatch tone-warm"></span>Orange: Start/takeoff and lower control influence</div>
+        <div class="legend-item"><span class="legend-swatch tone-green"></span>Green: Raise and flat-in shaping influence</div>
+        <div class="legend-item"><span class="legend-swatch tone-teal"></span>Teal: Transition and apex crossover influence</div>
+      </div>
+
+      <div class="profile-row">
+        <div id="viz-rake" class="profile-card"><strong>Rake Profile</strong><div class="small">Bucket pitched in raked orientation</div></div>
+        <div id="viz-flat" class="profile-card"><strong>Flat Bottom Profile</strong><div class="small">Bucket kept flatter on design plane</div></div>
+      </div>
+    </div>
+
+    <div id="oscillation-callout" class="priority-callout">
+      <strong>Priority Rule:</strong> If oscillation is present, address oscillation first before tuning high/low cut behavior.
+    </div>
+
+    <div class="priority-callout order-callout">
+      <strong>Technician Tuning Order (quick field view):</strong>
+      <ol>
+        <li><strong>Oscillation First:</strong> stabilize oscillation before tuning cut profile.</li>
+        <li><strong>Primary Shape Sliders (Manual Step 1-7):</strong> set rake-in/rake-out/flat behavior first.</li>
+        <li><strong>Secondary Response Sliders (Manual Step 8-12):</strong> refine takeoff, apex transition, and after-apex behavior.</li>
+        <li><strong>Validate & Save (Manual Step 13):</strong> verify repeatable passes and save final settings.</li>
+      </ol>
+      <div class="small">For full decision logic and machine-specific detail, reference the Commissioning Manual link above.</div>
+    </div>
+
+    <label for="symptom-text" style="margin-top:10px;">Symptom description</label>
+    <textarea id="symptom-text" placeholder="Example: boom oscillates at start of pull, then bucket cuts low entering section B"></textarea>
+
+    <div class="btn-row">
+      <button id="analyze-btn" class="btn-primary">Analyze Symptom</button>
+      <button id="clear-btn" class="btn-secondary" type="button">Clear</button>
+    </div>
+
+    <div id="results-wrap" class="hidden">
+      <div id="result-summary" class="note" style="margin-top:10px;"></div>
+      <div id="recommendations"></div>
+    </div>
+
+    <details style="margin-top:12px;">
+      <summary class="btn-secondary" style="display:inline-block;cursor:pointer;padding:10px 12px;">Show Slider Reference</summary>
+      <div style="margin-top:10px;">
+        <p class="note">Direction guidance used by the assistant. Adjust one variable at a time, then recheck 2-3 passes.</p>
+        <ul>
+          <li><strong>Rake In Before/After Apex:</strong> increase to lift if cutting low; decrease if cutting high.</li>
+          <li><strong>Rake Out Before/After Apex:</strong> increase to lift if cutting low; decrease if cutting high.</li>
+          <li><strong>Boom Takeoff Speed:</strong> increase if not driving to grade early/cutting low; decrease if diving/oscillating at start.</li>
+          <li><strong>Boom Raise Response + Speed:</strong> primary levers for Section A and entry to Section B.</li>
+          <li><strong>Boom Lower Speed + Response:</strong> primary levers around apex and after-apex behavior.</li>
+          <li><strong>Bucket Dump/Curl Speed + Response:</strong> flat profile shaping inward/outward passes.</li>
+          <li><strong>Joystick Response Speed:</strong> secondary adjustment when oscillation persists after primary sliders.</li>
+        </ul>
+        <div class="small">Always cross-check final slider direction against the Commissioning Manual before handoff.</div>
+      </div>
+    </details>
+  </section>
+</main>
+
+<script>
+const STORAGE_KEY = "earthworks_tuning_prestart_v1";
+const SESSION_KEY = "earthworks_tuning_session_v1";
+const FIXED_MANUAL_LINK = "https://drive.google.com/file/d/18mQ3QyeP_n4Phh5c8NgMe8ikOUkin3OD/view?usp=drive_link";
+
+const checks = Array.from(document.querySelectorAll(".pre-req-check"));
+const unlockBtn = document.getElementById("unlock-btn");
+const checkProgress = document.getElementById("check-progress");
+const criticalStatus = document.getElementById("critical-status");
+const assistantTabButton = document.getElementById("assistant-tab-btn");
+
+let latestMatches = [];
+let attachmentRecords = [];
+let currentCapture = { sliders: {}, images: [], attachmentNameGuess: "" };
+
+const sliderNames = [
+  "Boom Raise Response","Boom Takeoff Speed","Boom Raise Speed","Boom Lower Speed","Boom Lower Response","Boom Joystick Response Speed",
+  "Bucket Dump Speed","Bucket Dump Response","Bucket Curl Speed","Bucket Curl Response","Rake In Before Apex","Rake In After Apex",
+  "Rake Out Before Apex","Rake Out After Apex","Attack Angle"
+];
+
+const captureSliderSpecs = [
+  { key: "boom_takeoff_speed", label: "Boom Takeoff Speed", patterns: ["boom takeoff speed"] },
+  { key: "joystick_response_speed", label: "Joystick Response Speed", patterns: ["joystick response speed","boom joystick response speed"] },
+  { key: "boom_raise_response", label: "Boom Raise Response", patterns: ["boom raise response"] },
+  { key: "boom_raise_speed", label: "Boom Raise Speed", patterns: ["boom raise speed"] },
+  { key: "boom_transition_time", label: "Boom Transition Time", patterns: ["boom transition time"] },
+  { key: "boom_lower_speed", label: "Boom Lower Speed", patterns: ["boom lower speed"] },
+  { key: "boom_lower_response", label: "Boom Lower Response", patterns: ["boom lower response"] },
+  { key: "bucket_dump_speed", label: "Bucket Dump Speed", patterns: ["bucket dump speed","attachment dump speed"] },
+  { key: "bucket_dump_response", label: "Bucket Dump Response", patterns: ["bucket dump response","attachment dump response"] },
+  { key: "bucket_curl_speed", label: "Bucket Curl Speed", patterns: ["bucket curl speed","attachment curl speed"] },
+  { key: "bucket_curl_response", label: "Bucket Curl Response", patterns: ["bucket curl response","attachment curl response"] },
+  { key: "attack_angle", label: "Attack Angle", patterns: ["attack angle","bucket attack angle","attachment attack angle"] }
+];
+
+const movementAliasMap = { "rake-in-above": "rake-in", "cross-section": "rake-in" };
+
+const scenarios = [
+  { id:"m7_2_4_s1",tier:"primary",manualRef:"Step 1 / 7.2.4 Scenario 1",movement:"rake-in",zone:"before-apex",keywords:["before apex","full reach","to apex","cuts low","below"],title:"Rake In before apex cutting low",actions:["Increase Rake In Before Apex"],note:"Primary slider group first." },
+  { id:"m7_2_4_s2",tier:"primary",manualRef:"Step 1 / 7.2.4 Scenario 2",movement:"rake-in",zone:"before-apex",keywords:["before apex","full reach","to apex","cuts high","above"],title:"Rake In before apex cutting high",actions:["Decrease Rake In Before Apex"],note:"Primary slider group first." },
+  { id:"m7_2_4_s3",tier:"primary",manualRef:"Step 1 / 7.2.4 Scenario 3",movement:"rake-in",zone:"section-c",keywords:["after apex","apex to crowded","cuts low","below"],title:"Rake In after apex cutting low",actions:["Increase Rake In After Apex"],note:"Primary slider group first." },
+  { id:"m7_2_4_s4",tier:"primary",manualRef:"Step 1 / 7.2.4 Scenario 4",movement:"rake-in",zone:"section-c",keywords:["after apex","apex to crowded","cuts high","above"],title:"Rake In after apex cutting high",actions:["Decrease Rake In After Apex"],note:"Primary slider group first." },
+  { id:"m7_2_5_s1",tier:"primary",manualRef:"Step 2 / 7.2.5 Scenario 1",movement:"rake-in",zone:"before-apex",keywords:["back of attachment drops","back drops","attack angle","below cutting edge"],title:"Attack angle too low (back drops below cutting edge)",actions:["Increase Attack Angle"],note:"Use Step 2 attack angle adjustment." },
+  { id:"m7_2_5_s2",tier:"primary",manualRef:"Step 2 / 7.2.5 Scenario 2",movement:"rake-in",zone:"before-apex",keywords:["back rises above cutting edge","back rises","attack angle"],title:"Attack angle too high (back rises above cutting edge)",actions:["Decrease Attack Angle"],note:"Use Step 2 attack angle adjustment." },
+  { id:"m7_2_6_s1",tier:"primary",manualRef:"Step 3 / 7.2.6 Scenario 1",movement:"rake-out",zone:"before-apex",keywords:["rake out","before apex","crowded to apex","cuts low","below"],title:"Rake Out before apex cutting low",actions:["Increase Rake Out Before Apex"],note:"For rake-out, before-apex is crowded to vertical stick." },
+  { id:"m7_2_6_s2",tier:"primary",manualRef:"Step 3 / 7.2.6 Scenario 2",movement:"rake-out",zone:"before-apex",keywords:["rake out","before apex","crowded to apex","cuts high","above"],title:"Rake Out before apex cutting high",actions:["Decrease Rake Out Before Apex"],note:"For rake-out, before-apex is crowded to vertical stick." },
+  { id:"m7_2_6_s3",tier:"primary",manualRef:"Step 3 / 7.2.6 Scenario 3",movement:"rake-out",zone:"section-c",keywords:["rake out","after apex","apex to full reach","cuts low","below"],title:"Rake Out after apex cutting low",actions:["Increase Rake Out After Apex"],note:"Primary rake-out tuning." },
+  { id:"m7_2_6_s4",tier:"primary",manualRef:"Step 3 / 7.2.6 Scenario 4",movement:"rake-out",zone:"section-c",keywords:["rake out","after apex","apex to full reach","cuts high","above"],title:"Rake Out after apex cutting high",actions:["Decrease Rake Out After Apex"],note:"Primary rake-out tuning." },
+  { id:"m7_2_7",tier:"primary",manualRef:"Step 4 / 7.2.7",movement:"flat-in",zone:"before-apex",keywords:["flat in","boom","before apex","cuts low","below","cuts high","above"],title:"Flat In boom height issue",actions:["If before-apex low: Increase Flat Attachment In (Boom) Before Apex","If before-apex high: Decrease Flat Attachment In (Boom) Before Apex","If after-apex low: Increase Flat Attachment In (Boom) After Apex","If after-apex high: Decrease Flat Attachment In (Boom) After Apex"],note:"Map symptom by before/after apex and high/low." },
+  { id:"m7_2_8",tier:"primary",manualRef:"Step 5 / 7.2.8",movement:"flat-in",zone:"before-apex",keywords:["flat in","attachment angle","stays flat","too slowly","too quickly","oscillate"],title:"Flat In attachment angle speed issue",actions:["If before-apex too slow/low: Increase Flat Attachment In (Attachment) Before Apex","If before-apex too quick/high: Decrease Flat Attachment In (Attachment) Before Apex","If after-apex too slow/low: Increase Flat Attachment In (Attachment) After Apex","If after-apex too quick/high: Decrease Flat Attachment In (Attachment) After Apex"],note:"Use attachment subgroup in Flat Attachment In." },
+  { id:"m7_2_9",tier:"primary",manualRef:"Step 6 / 7.2.9",movement:"flat-out",zone:"before-apex",keywords:["flat out","boom","moving away","cuts low","cuts high"],title:"Flat Out boom height issue",actions:["If before-apex low: Increase Flat Attachment Out (Boom) Before Apex","If before-apex high: Decrease Flat Attachment Out (Boom) Before Apex","If after-apex low: Increase Flat Attachment Out (Boom) After Apex","If after-apex high: Decrease Flat Attachment Out (Boom) After Apex"],note:"Map by before/after apex and high/low." },
+  { id:"m7_2_10",tier:"primary",manualRef:"Step 7 / 7.2.10",movement:"flat-out",zone:"before-apex",keywords:["flat out","attachment angle","too slowly","too quickly","oscillate"],title:"Flat Out attachment angle speed issue",actions:["If before-apex too slow/low: Increase Flat Attachment Out (Attachment) Before Apex","If before-apex too quick/high: Decrease Flat Attachment Out (Attachment) Before Apex","If after-apex too slow/low: Increase Flat Attachment Out (Attachment) After Apex","If after-apex too quick/high: Decrease Flat Attachment Out (Attachment) After Apex"],note:"Use attachment subgroup in Flat Attachment Out." },
+  { id:"m7_2_11_s1",tier:"secondary",manualRef:"Step 8 / 7.2.11 Scenario 1",movement:"rake-in",zone:"section-a",oscillationScenario:true,keywords:["oscillat","bounce","up and down","start"],title:"Boom oscillates at start of pull",actions:["Decrease Boom Raise Response","Decrease Boom Takeoff Speed","Decrease Boom Raise Speed","If still oscillating, decrease Boom Joystick Response Speed slightly"],note:"Secondary tuning after primary groups; oscillation still takes priority." },
+  { id:"m7_2_11_s2",tier:"secondary",manualRef:"Step 8 / 7.2.11 Scenario 2",movement:"rake-in",zone:"section-a",keywords:["section a","cuts low","below","smooth"],title:"Section A cutting low (smooth)",actions:["Increase Boom Takeoff Speed"],note:"Step 8 tuning for first 1-2 m and entry toward section B." },
+  { id:"m7_2_11_s3",tier:"secondary",manualRef:"Step 8 / 7.2.11 Scenario 3",movement:"rake-in",zone:"section-a",keywords:["section a","cuts high","above","start","takeoff"],startTakeoffScenario:true,title:"Section A cutting high / aggressive takeoff",actions:["Decrease Boom Takeoff Speed","If still aggressive, decrease Boom Raise Response slightly"],note:"Expected adjustment for start-of-pull high behavior." },
+  { id:"m7_2_12_s1",tier:"secondary",manualRef:"Step 9 / 7.2.12 Scenario 1",movement:"rake-in",zone:"section-b",keywords:["section b","entry","cuts low","below"],title:"Section B entry cutting low",actions:["Increase Boom Raise Response","If oscillation returns, restore response and increase Boom Raise Speed"],note:"Raise response may re-introduce Section A oscillation." },
+  { id:"m7_2_12_s2",tier:"secondary",manualRef:"Step 9 / 7.2.12 Scenario 2",movement:"rake-in",zone:"section-b",keywords:["section b","entry","cuts high","above","taper"],title:"Section B entry cutting high",actions:["Decrease Boom Raise Speed","Increase Boom Lower Speed"],note:"Manual sequence for high entry into section B." },
+  { id:"m7_2_13_s1",tier:"secondary",manualRef:"Step 10 / 7.2.13 Scenario 1",movement:"rake-in",zone:"apex",keywords:["high","above","before apex","after apex","remains high"],title:"High approaching and after apex",actions:["Decrease Boom Raise Speed","Increase Boom Lower Speed","Increase Boom Lower Response"],note:"Raise speed first, then lower speed, then lower response." },
+  { id:"m7_2_13_s2",tier:"secondary",manualRef:"Step 10 / 7.2.13 Scenario 2",movement:"rake-in",zone:"apex",keywords:["high","toward apex","then low","after apex"],title:"High toward apex then low after apex",actions:["Increase Boom Lower Speed slightly","Decrease Boom Lower Response","If section A/B turns low, increase Boom Takeoff Speed slightly"],note:"Lower-speed changes can affect section A/B." },
+  { id:"m7_2_14_s1",tier:"secondary",manualRef:"Step 11 / 7.2.14 Scenario 1",movement:"flat-in",zone:"before-apex",keywords:["flat","tip not on design plane","dumps too slowly","not staying flat"],title:"Flat attachment not staying on design plane (dump too slow)",actions:["Increase Bucket Dump Speed"],note:"Manual Step 11 scenario." },
+  { id:"m7_2_14_s2",tier:"secondary",manualRef:"Step 11 / 7.2.14 Scenario 2",movement:"flat-in",zone:"start",keywords:["flat","attachment oscillates","bucket oscillates","start of pass"],title:"Flat attachment oscillates at start",actions:["Decrease Bucket Dump Response"],note:"Manual Step 11 scenario." },
+  { id:"m7_2_14_s3",tier:"secondary",manualRef:"Step 11 / 7.2.14 Scenario 3",movement:"flat-in",zone:"start",keywords:["unexpected movement","jerk","jump"],title:"Unexpected attachment movement entering design plane",actions:["Adjust Bucket Dump Response and Bucket Dump Speed together","Start by decreasing both, then test increasing"],note:"Can require iterative tuning." },
+  { id:"m7_2_15_s1",tier:"secondary",manualRef:"Step 12 / 7.2.15 Scenario 1",movement:"rake-out",zone:"section-a",oscillationScenario:true,keywords:["rake out","moving away","oscillat","boom"],title:"Rake-out oscillation moving away",actions:["Decrease Boom Lower Response","Reduce stick velocity slightly","Check material consistency (hard to loose transitions)"],note:"Do not degrade Step 9 behavior while adjusting." },
+  { id:"m7_2_15_s2",tier:"secondary",manualRef:"Step 12 / 7.2.15 Scenario 2",movement:"flat-out",zone:"section-c",keywords:["moving away","flat","cutting edge below grade","below"],title:"Flat moving away below grade",actions:["Increase Bucket Curl Speed","Increase Bucket Curl Response"],note:"Manual Step 12 scenario." }
+];
+
+function q(id){ return document.getElementById(id); }
+
+function saveChecklist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(checks.map(cb=>cb.checked))); }
+
+function getSessionSnapshot(){
+  return {
+    machineId:q("machine-id").value.trim(), attachmentId:q("attachment-id").value.trim(),
+    techName:q("tech-name").value.trim(), dealerName:q("dealer-name").value.trim(),
+    machineModel:q("machine-model").value.trim(), machineConfig:q("machine-config").value.trim(),
+    notes:q("tech-notes").value.trim(), movement:q("movement").value, zone:q("zone").value,
+    manualStepMode:q("manual-step-mode").value, symptomText:q("symptom-text").value.trim(),
+    latestMatches:latestMatches.map(m=>({id:m.id,title:m.title,manualRef:m.manualRef,score:m.score,confidence:m.confidence,actions:m.actions,note:m.note,reasons:m.reasons})),
+    attachments:attachmentRecords, timestampUtc:new Date().toISOString(), appVersion:"1.3.0"
+  };
+}
+function saveSessionToStorage(){ localStorage.setItem(SESSION_KEY, JSON.stringify(getSessionSnapshot())); }
+
+function applyManualLinkToUi(linkValue){
+  const el=q("manual-link"); if(el) el.setAttribute("href",(linkValue||FIXED_MANUAL_LINK).trim());
+}
+
+function normalize(t){ return (t||"").toLowerCase().replace(/[^a-z0-9\s-]/g," "); }
+function hasOscillationSignal(t){ t=normalize(t); return t.includes("oscillat")||t.includes("bounce")||t.includes("bouncy")||t.includes("up and down")||t.includes("up-down"); }
+
+function updateChecklistUi(){
+  const checkedCount = checks.filter(cb=>cb.checked).length;
+  const allDone = checkedCount === checks.length;
+  checkProgress.textContent = checkedCount+" / "+checks.length+" checked";
+  unlockBtn.disabled = !allDone;
+  unlockBtn.textContent = allDone ? "Open Symptom Assistant" : "Complete All Checklist Items";
+  assistantTabButton.disabled = !allDone;
+  if(allDone){ criticalStatus.className="badge badge-ok"; criticalStatus.textContent="Checklist complete"; }
+  else { criticalStatus.className="badge badge-warning"; criticalStatus.textContent="Checklist incomplete"; }
+}
+
+function activateTab(tabName){
+  document.querySelectorAll(".tab-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===tabName));
+  ["prestart","assistant"].forEach(id=>q(id).classList.toggle("hidden",id!==tabName));
+}
+
+function scoreScenario(s,movement,zone,symptomText){
+  let score=0;
+  const text=normalize(symptomText), canonical=movementAliasMap[movement]||movement, oscillation=hasOscillationSignal(symptomText);
+  if(s.tier==="primary") score+=4; if(s.tier==="secondary") score-=1;
+  if(canonical&&s.movement===canonical) score+=5;
+  if(zone&&s.zone===zone) score+=4;
+  for(const k of s.keywords){ if(text.includes(k)) score+=3; }
+  if(s.oscillationScenario&&oscillation) score+=12;
+  if(s.oscillationScenario&&!oscillation) score-=8;
+  if(s.startTakeoffScenario&&(text.includes("start")||text.includes("start of pull"))&&(text.includes("high")||text.includes("lifts")||text.includes("rises"))) score+=7;
+  if(text.includes("after apex")&&s.zone==="section-b") score-=4;
+  if(text.includes("moving away")&&s.movement==="rake-in") score-=5;
+  return score;
+}
+function getManualStepFromRef(ref){ const m=(ref||"").match(/Step\s+\d+/i); return m?m[0]:""; }
+function getConfidencePercent(s,movement,zone,symptomText){
+  const canonical=movementAliasMap[movement]||movement;
+  const max=(canonical?3:0)+(zone?2:0)+(s.keywords.length*2);
+  if(!max) return 0;
+  return Math.max(0,Math.min(100,Math.round(scoreScenario(s,movement,zone,symptomText)/max*100)));
+}
+function inferMovement(t){
+  t=normalize(t);
+  if(t.includes("moving away")||t.includes("rake out")||t.includes("stick out")) return "rake-out";
+  if(t.includes("flat")&&(t.includes("out")||t.includes("away"))) return "flat-out";
+  if(t.includes("flat")) return "flat-in";
+  if(t.includes("rake")||t.includes("apex")||t.includes("section b")) return "rake-in";
+  return "";
+}
+function inferZone(t){
+  t=normalize(t);
+  if(t.includes("section a")||t.includes("start")) return "section-a";
+  if(t.includes("before apex")) return "before-apex";
+  if(t.includes("entry b")||t.includes("section b")||t.includes("toward apex")) return "section-b";
+  if(t.includes("apex")) return "apex";
+  if(t.includes("section c")||t.includes("after apex")) return "section-c";
+  return "";
+}
+function dedupeMatches(arr){
+  const seen=new Set(),out=[];
+  for(const item of arr){
+    const sig=(item.actions||[]).slice(0,2).join("|");
+    if(seen.has(sig)) continue;
+    seen.add(sig); out.push(item);
+  }
+  return out;
+}
+function getMatchReasons(s,m,z,text){
+  const reasons=[], t=normalize(text), mk=s.keywords.filter(k=>t.includes(k)), cm=movementAliasMap[m]||m;
+  if(cm&&s.movement===cm) reasons.push("movement aligned");
+  if(z&&s.zone===z) reasons.push("zone aligned");
+  if(mk.length) reasons.push("keywords: "+mk.slice(0,6).join(", "));
+  if(s.manualRef) reasons.push("manual ref: "+s.manualRef);
+  return reasons;
+}
+function annotateAction(action){
+  const matches=sliderNames.filter(n=>action.includes(n));
+  if(!matches.length) return action;
+  return action + '<div class="small" style="margin-top:2px;">Field slider: ' + matches.map(n=>'<span class="chip">'+n+"</span>").join("") + "</div>";
+}
+function updateOscillationCallout(t){
+  const el=q("oscillation-callout"); if(el) el.classList.toggle("active",hasOscillationSignal(t||""));
+}
+function updateVisualization(movement,zone){
+  const canonical=movementAliasMap[movement]||movement;
+  const zoneMap={"section-a":["seg-start","seg-a","top-start","top-a"],"section-b":["seg-b","top-b"],"before-apex":["seg-start","seg-a","seg-b","top-start","top-a","top-b"],"section-c":["seg-c","top-c"],"apex":["seg-apex","top-apex"],"start":["seg-start","top-start"]};
+  const cellMap={"start":["cell-takeoff-start","cell-joystick-start","cell-raise-response-start"],"section-a":["cell-takeoff-a","cell-joystick-a","cell-raise-response-a","cell-raise-speed-a"],"section-b":["cell-takeoff-b","cell-joystick-b","cell-raise-response-b","cell-raise-speed-b","cell-transition-b","cell-lower-speed-b"],"before-apex":["cell-takeoff-start","cell-takeoff-a","cell-takeoff-b","cell-joystick-start","cell-joystick-a","cell-joystick-b","cell-raise-response-start","cell-raise-response-a","cell-raise-response-b","cell-raise-speed-a","cell-raise-speed-b","cell-transition-b"],"apex":["cell-transition-apex","cell-raise-speed-apex","cell-lower-speed-apex","cell-lower-response-apex"],"section-c":["cell-lower-speed-c","cell-lower-response-c"]};
+
+  ["seg-start","seg-a","seg-b","seg-c","seg-apex","top-start","top-a","top-b","top-c","top-apex"].forEach(id=>{const el=q(id); if(el) el.classList.remove("active");});
+  document.querySelectorAll(".matrix-cell.active").forEach(el=>el.classList.remove("active"));
+  if(zone&&zoneMap[zone]) zoneMap[zone].forEach(id=>{const el=q(id); if(el) el.classList.add("active");});
+  if(zone&&cellMap[zone]) cellMap[zone].forEach(id=>{const el=q(id); if(el) el.classList.add("active");});
+
+  const rake=q("viz-rake"), flat=q("viz-flat");
+  if(rake) rake.classList.remove("active");
+  if(flat) flat.classList.remove("active");
+  if(canonical&&canonical.includes("rake")&&rake) rake.classList.add("active");
+  if(canonical&&canonical.includes("flat")&&flat) flat.classList.add("active");
+  if(canonical==="flat-in"){ ["cell-dump-a","cell-dump-b","cell-dump-apex"].forEach(id=>{const el=q(id); if(el) el.classList.add("active");}); }
+}
+function renderRecommendations(matches){
+  const wrap=q("results-wrap"), summary=q("result-summary"), target=q("recommendations");
+  if(!matches.length){
+    wrap.classList.remove("hidden");
+    summary.textContent="No strong match found. Add movement, section, and high/low/oscillation detail.";
+    target.innerHTML="";
+    return;
+  }
+  const top=dedupeMatches(matches).slice(0,3);
+  latestMatches=top;
+  wrap.classList.remove("hidden");
+  summary.textContent="Top matches are manual-aligned (primary groups first, then secondary fine-tuning). Adjust one variable at a time and run 2-3 passes before next change.";
+  target.innerHTML=top.map((item,index)=>{
+    const reasons=(item.reasons&&item.reasons.length)?item.reasons.join(" | "):"closest scoring scenario";
+    return (
+      '<div class="rec">'+
+      "<h4>Match "+(index+1)+": "+item.title+"</h4>"+
+      '<div class="small"><strong>Confidence:</strong> '+(item.confidence||0)+'%</div>'+
+      '<div class="small"><strong>Manual Step:</strong> '+(item.manualRef||"manual-aligned scenario")+'</div>'+
+      '<div class="small"><strong>Why this match:</strong> '+reasons+'</div>'+
+      item.actions.map((a,i)=>'<div class="pri"><strong>Priority #'+(i+1)+":</strong> "+annotateAction(a)+"</div>").join("")+
+      '<div class="small">Operator note: '+(item.note||"")+"</div>"+
+      "</div>"
+    );
+  }).join("");
+  saveSessionToStorage();
+}
+
+function parseSliderValuesFromText(rawText){
+  const text=(rawText||"").toLowerCase(), lines=text.split(/\r?\n/), values={};
+  for(const line of lines){
+    for(const spec of captureSliderSpecs){
+      if(!spec.patterns.find(p=>line.includes(p))) continue;
+      const nums=line.match(/-?\d+(\.\d+)?/g);
+      if(!nums||!nums.length) continue;
+      values[spec.key]=nums[nums.length-1];
+    }
+  }
+  return values;
+}
+function guessAttachmentNameFromText(rawText){
+  const m=(rawText||"").match(/(?:attachment|bucket)\s*[:\-]\s*([^\n\r]+)/i);
+  return m?m[1].trim():"";
+}
+function readFileAsDataUrl(file){
+  return new Promise((resolve,reject)=>{const r=new FileReader(); r.onload=()=>resolve(String(r.result||"")); r.onerror=reject; r.readAsDataURL(file);});
+}
+function renderCapturePreview(images){
+  const w=q("capture-preview"); if(!w) return;
+  w.innerHTML=(images||[]).map(src=>'<img src="'+src+'" alt="Attachment screenshot preview" />').join("");
+}
+function renderCaptureTable(values){
+  const t=q("capture-sliders-table"); if(!t) return;
+  const rows=captureSliderSpecs.map(spec=>"<tr><td>"+spec.label+'</td><td><input data-slider-key="'+spec.key+'" value="'+(values[spec.key]||"")+'" /></td></tr>').join("");
+  t.innerHTML='<table class="capture-table"><thead><tr><th>Slider</th><th>Value</th></tr></thead><tbody>'+rows+"</tbody></table>";
+}
+function getCaptureTableValues(){
+  const values={};
+  document.querySelectorAll("#capture-sliders-table input[data-slider-key]").forEach(input=>{
+    const key=input.getAttribute("data-slider-key"), val=input.value.trim();
+    if(key&&val) values[key]=val;
+  });
+  return values;
+}
+function renderSavedAttachments(){
+  const t=q("saved-attachments"); if(!t) return;
+  if(!attachmentRecords.length){ t.innerHTML='<div class="small">No attachments saved to report yet.</div>'; return; }
+  t.innerHTML=attachmentRecords.map((att,idx)=>
+    '<div class="attachment-card"><strong>'+(att.name||("Attachment "+(idx+1)))+'</strong>'+
+    '<div class="small">Screenshots: '+((att.images||[]).length)+" | Sliders captured: "+Object.keys(att.sliders||{}).length+"</div>"+
+    '<button class="btn-secondary remove-attachment-btn" type="button" data-attachment-index="'+idx+'" style="margin-top:6px;">Remove</button></div>'
+  ).join("");
+}
+async function extractAttachmentFromImages(){
+  const input=q("capture-images"), status=q("ocr-status");
+  const files=input&&input.files?Array.from(input.files):[];
+  if(!files.length){ alert("Select one or more screenshots first."); return; }
+
+  status.textContent="Reading screenshots...";
+  const imageUrls=[];
+  for(const f of files){ imageUrls.push(await readFileAsDataUrl(f)); }
+  renderCapturePreview(imageUrls);
+
+  let values={}, guessed="";
+  if(window.Tesseract&&window.Tesseract.recognize){
+    status.textContent="Running OCR (this may take a minute on phone)...";
+    for(let i=0;i<imageUrls.length;i++){
+      status.textContent="Running OCR image "+(i+1)+" of "+imageUrls.length+"...";
+      try{
+        const result=await window.Tesseract.recognize(imageUrls[i],"eng");
+        const text=result&&result.data?result.data.text:"";
+        values={...values,...parseSliderValuesFromText(text)};
+        if(!guessed) guessed=guessAttachmentNameFromText(text);
+      }catch(_){}
+    }
+    status.textContent="OCR complete. Review/edit extracted values before adding attachment.";
+  }else{
+    status.textContent="OCR library unavailable. Enter values manually.";
+  }
+
+  currentCapture={sliders:values,images:imageUrls,attachmentNameGuess:guessed};
+  if(guessed&&!q("capture-attachment-name").value.trim()) q("capture-attachment-name").value=guessed;
+  renderCaptureTable(values);
+}
+function addCapturedAttachment(){
+  const nameInput=q("capture-attachment-name");
+  const name=nameInput.value.trim()||currentCapture.attachmentNameGuess||("Attachment "+(attachmentRecords.length+1));
+  const sliders=getCaptureTableValues();
+
+  if(!currentCapture.images.length){ alert("Upload and extract screenshots first."); return; }
+
+  attachmentRecords.push({name,sliders,images:currentCapture.images.slice(0,6)});
+  renderSavedAttachments();
+  saveSessionToStorage();
+
+  nameInput.value=""; q("capture-images").value=""; q("ocr-status").textContent="Attachment added to report.";
+  q("capture-preview").innerHTML=""; q("capture-sliders-table").innerHTML="";
+  currentCapture={sliders:{},images:[],attachmentNameGuess:""};
+}
+function buildPdfHtml(session){
+  const created=new Date(session.timestampUtc||Date.now()).toLocaleString();
+  return "<!doctype html><html><head><meta charset='utf-8'><title>Excavator Tuning Report</title><link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'></head><body style='font-family:\"Open Sans\",\"Segoe UI\",Arial,sans-serif;padding:20px;'><h2>Trimble Earthworks - Excavator Tuning Report</h2><div><strong>Generated:</strong> "+created+"</div><div><strong>Machine:</strong> "+(session.machineId||"N/A")+"</div><div><strong>Model:</strong> "+(session.machineModel||"N/A")+"</div><div><strong>Technician:</strong> "+(session.techName||"N/A")+"</div><div><strong>Dealer:</strong> "+(session.dealerName||"N/A")+"</div><hr/><h3>Recommendations</h3>"+(session.latestMatches||[]).slice(0,3).map((m,i)=>"<div><strong>"+(i+1)+". "+m.title+"</strong><ul>"+(m.actions||[]).map(a=>"<li>"+a+"</li>").join("")+"</ul></div>").join("")+"</body></html>";
+}
+function exportSessionPdf(){
+  const popup=window.open("","_blank");
+  if(!popup){ alert("Popup blocked. Please allow popups to export PDF."); return; }
+  popup.document.open(); popup.document.write(buildPdfHtml(getSessionSnapshot())); popup.document.close(); popup.focus(); popup.print();
+}
+
+function loadChecklist(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const state=JSON.parse(raw);
+    if(!Array.isArray(state)||state.length!==checks.length) return;
+    checks.forEach((cb,i)=>cb.checked=!!state[i]);
+  }catch(_){}
+}
+function loadSessionFromStorage(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY); if(!raw) return;
+    const d=JSON.parse(raw)||{};
+    q("machine-id").value=d.machineId||""; q("attachment-id").value=d.attachmentId||"";
+    q("tech-name").value=d.techName||""; q("dealer-name").value=d.dealerName||"";
+    q("machine-model").value=d.machineModel||""; q("machine-config").value=d.machineConfig||"";
+    q("tech-notes").value=d.notes||""; q("movement").value=d.movement||""; q("zone").value=d.zone||"";
+    q("manual-step-mode").value=d.manualStepMode||""; q("symptom-text").value=d.symptomText||"";
+    attachmentRecords=Array.isArray(d.attachments)?d.attachments:[];
+    renderSavedAttachments();
+  }catch(_){}
+}
+
+/* Events */
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(btn.dataset.tab==="assistant" && assistantTabButton.disabled){
+      alert("Complete all checklist items before using Symptom Assistant.");
+      return;
+    }
+    activateTab(btn.dataset.tab);
+  });
+});
+checks.forEach(cb=>cb.addEventListener("change",()=>{saveChecklist();updateChecklistUi();}));
+unlockBtn.addEventListener("click",()=>{ if(unlockBtn.disabled) return; activateTab("assistant"); });
+q("reset-checklist-btn").addEventListener("click",()=>{ checks.forEach(cb=>cb.checked=false); saveChecklist(); updateChecklistUi(); });
+
+q("analyze-btn").addEventListener("click",()=>{
+  const selectedMovement=q("movement").value, selectedZone=q("zone").value, selectedStep=q("manual-step-mode").value, symptom=q("symptom-text").value.trim();
+  updateOscillationCallout(symptom);
+  if(!symptom){ renderRecommendations([]); return; }
+
+  const effectiveMovement=selectedMovement||inferMovement(symptom), effectiveZone=selectedZone||inferZone(symptom);
+  const scored=scenarios.map(s=>({
+    ...s,
+    manualStep:getManualStepFromRef(s.manualRef),
+    score:scoreScenario(s,effectiveMovement,effectiveZone,symptom),
+    confidence:getConfidencePercent(s,effectiveMovement,effectiveZone,symptom),
+    reasons:getMatchReasons(s,effectiveMovement,effectiveZone,symptom)
+  }))
+  .filter(s=>!selectedStep || s.manualStep===selectedStep)
+  .filter(s=>s.score>0)
+  .sort((a,b)=>b.score-a.score);
+
+  renderRecommendations(scored);
+  updateVisualization(effectiveMovement,effectiveZone);
+});
+
+q("clear-btn").addEventListener("click",()=>{
+  q("movement").value=""; q("zone").value=""; q("symptom-text").value="";
+  q("results-wrap").classList.add("hidden"); q("recommendations").innerHTML=""; q("result-summary").textContent="";
+  latestMatches=[]; updateOscillationCallout(""); saveSessionToStorage();
+});
+
+q("movement").addEventListener("change",()=>updateVisualization(q("movement").value,q("zone").value));
+q("zone").addEventListener("change",()=>updateVisualization(q("movement").value,q("zone").value));
+
+q("export-pdf-btn").addEventListener("click",exportSessionPdf);
+q("extract-attachment-btn").addEventListener("click",extractAttachmentFromImages);
+q("add-attachment-btn").addEventListener("click",addCapturedAttachment);
+
+q("saved-attachments").addEventListener("click",e=>{
+  const btn=e.target.closest(".remove-attachment-btn"); if(!btn) return;
+  const idx=Number(btn.dataset.attachmentIndex); if(Number.isNaN(idx)) return;
+  attachmentRecords=attachmentRecords.filter((_,i)=>i!==idx);
+  renderSavedAttachments(); saveSessionToStorage();
+});
+
+["machine-id","attachment-id","tech-name","dealer-name","machine-model","machine-config","tech-notes","movement","zone","symptom-text","manual-step-mode"].forEach(id=>{
+  const el=q(id); el.addEventListener("input",saveSessionToStorage); el.addEventListener("change",saveSessionToStorage);
+});
+q("symptom-text").addEventListener("input",e=>updateOscillationCallout(e.target.value||""));
+
+/* Init */
+loadChecklist();
+applyManualLinkToUi(FIXED_MANUAL_LINK);
+loadSessionFromStorage();
+renderSavedAttachments();
+updateChecklistUi();
+updateVisualization(q("movement").value,q("zone").value);
+updateOscillationCallout(q("symptom-text").value||"");
+</script>
+</body>
+</html>

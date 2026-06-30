@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trimble Technician Assistant</title>
+
+  <meta name="theme-color" content="#005f9e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tech Assistant" />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+  <link rel="manifest" href="./app.webmanifest" />
+  <link rel="stylesheet" href="./assets/trimble-connect.css" />
+</head>
+<body>
+  <header class="tc-app-header">
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img
+          class="tc-header__logo"
+          src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
+          alt="Trimble"
+        />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Technician Assistant</h1>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main">
+    <p class="intro tc-intro">
+      Choose a product category, then open the field tool you need. More tools can be added under each category as workflows grow.
+    </p>
+
+    <div class="category-grid">
+
+      <!-- Earthworks Excavator category -->
+      <section class="category-tile category-tile--earthworks" aria-labelledby="cat-earthworks-title">
+        <div class="category-tile__banner">
+          <span class="category-badge">Category</span>
+          <h2 class="category-tile__title" id="cat-earthworks-title">Earthworks Excavator</h2>
+          <p class="category-tile__desc">
+            Autos optimization, commissioning support, and field diagnostics for Earthworks excavator machine control.
+          </p>
+        </div>
+        <div class="category-tile__body">
+          <p class="tools-label">Tools in this category</p>
+          <ul class="tool-list">
+            <li>
+              <a class="tool-link" href="./excavator/index.html">
+                <span class="tool-link__icon" aria-hidden="true">ET</span>
+                <span class="tool-link__text">
+                  <span class="tool-link__name">Excavator Tuning Assistant</span>
+                  <span class="tool-link__summary">Prestart checklist, symptom assistant, tuning map, and attachment capture</span>
+                </span>
+                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+              </a>
+            </li>
+            <!-- Add future Earthworks tools here, e.g.:
+            <li>
+              <a class="tool-link" href="./excavator/some-new-tool/index.html">...</a>
+            </li>
+            -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- Siteworks Machine Guidance category -->
+      <section class="category-tile category-tile--siteworks" aria-labelledby="cat-siteworks-title">
+        <div class="category-tile__banner">
+          <span class="category-badge">Category</span>
+          <h2 class="category-tile__title" id="cat-siteworks-title">Siteworks Machine Guidance</h2>
+          <p class="category-tile__desc">
+            Survey-based setup, measure-up calculations, and reporting for Siteworks CTL and related guidance workflows.
+          </p>
+        </div>
+        <div class="category-tile__body">
+          <p class="tools-label">Tools in this category</p>
+          <ul class="tool-list">
+            <li>
+              <a class="tool-link" href="./measure-up/index.html">
+                <span class="tool-link__icon" aria-hidden="true">MU</span>
+                <span class="tool-link__text">
+                  <span class="tool-link__name">CTL Measure-Up Calculator</span>
+                  <span class="tool-link__summary">CSV survey upload, receiver-to-centerline, attachment width, and PDF reporting</span>
+                </span>
+                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+              </a>
+            </li>
+            <!-- Example future slot (uncomment and edit when ready):
+            <li>
+              <span class="tool-link tool-link--soon">
+                <span class="tool-link__icon" aria-hidden="true">EX</span>
+                <span class="tool-link__text">
+                  <span class="tool-link__name">Excavator Measure-Up</span>
+                  <span class="tool-link__summary">Siteworks excavator kinematics workflow</span>
+                </span>
+                <span class="tool-link__tag">Soon</span>
+              </span>
+            </li>
+            -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- Pre-Installation Reports category -->
+      <section class="category-tile category-tile--inspection" aria-labelledby="cat-inspection-title">
+        <div class="category-tile__banner">
+          <span class="category-badge">Category</span>
+          <h2 class="category-tile__title" id="cat-inspection-title">Pre-Installation Reports</h2>
+          <p class="category-tile__desc">
+            Document machine condition and wear before installing Trimble machine control on any supported product line.
+          </p>
+        </div>
+        <div class="category-tile__body">
+          <p class="tool-howto">
+            <strong>How to use:</strong> Select machine type, then choose <strong>expert mode</strong> (your own wear line items) or <strong>guided inspection</strong> (step-by-step wear areas with reference photos). On each line or step, use green <strong>Record</strong> / red <strong>Stop</strong> for voice notes or the <strong>camera</strong> icon to take field photos. Generate a Trimble-branded PDF when finished. Dealer logo and voice glossary save on this device only.
+          </p>
+          <p class="tools-label">Tools in this category</p>
+          <ul class="tool-list">
+            <li>
+              <a class="tool-link" href="./pre-inspection/index.html">
+                <span class="tool-link__icon" aria-hidden="true">PI</span>
+                <span class="tool-link__text">
+                  <span class="tool-link__name">Pre-Inspection / Machine Wear Report</span>
+                  <span class="tool-link__summary">Expert or guided wear documentation with per-line photos and Trimble-branded PDF export</span>
+                </span>
+                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="tc-footer">Trimble Technician Assistant — test deployment. Production Apps Script apps remain unchanged.</footer>
+</body>
+</html>

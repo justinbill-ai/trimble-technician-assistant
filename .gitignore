@@ -1,0 +1,6 @@
+SETUP-LOCAL-FOLDER.ps1
+GENERATE-ICONS.ps1
+FILE-CHECKLIST.txt
+*.gscript
+.DS_Store
+Thumbs.db

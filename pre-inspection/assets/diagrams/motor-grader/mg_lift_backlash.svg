@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 280" role="img" aria-label="Lift cylinder backlash">
+  <defs>
+    <style>
+      .ink { fill: none; stroke: #1a1a1a; stroke-width: 2; stroke-linejoin: round; }
+      .gap { stroke: #e0252a; stroke-width: 2.5; stroke-dasharray: 4 4; }
+      .dim { stroke: #005f9e; stroke-width: 2; }
+      .label { font: 600 13px 'Open Sans', Arial, sans-serif; fill: #252a2e; }
+      .small { font: 600 11px 'Open Sans', Arial, sans-serif; fill: #4b5563; }
+    </style>
+  </defs>
+  <rect width="560" height="280" fill="#fff"/>
+  <text class="label" x="24" y="32">Lift cylinder backlash (§3.2.6)</text>
+  <text class="small" x="24" y="52">Blade off ground  measure blade-to-circle play</text>
+  <ellipse class="ink" cx="280" cy="95" rx="70" ry="70"/>
+  <path class="ink" d="M210 165 L210 220 L350 220 L350 165"/>
+  <path class="ink" d="M230 220 L230 245 L330 245 L330 220"/>
+  <line class="ink" x1="180" y1="130" x2="210" y2="165"/>
+  <line class="ink" x1="380" y1="130" x2="350" y2="165"/>
+  <!-- Gap between circle and blade -->
+  <line class="gap" x1="250" y1="165" x2="250" y2="178"/>
+  <line class="gap" x1="310" y1="165" x2="310" y2="178"/>
+  <line class="dim" x1="255" y1="150" x2="305" y2="150"/>
+  <text class="small" fill="#005f9e" x="312" y="154">d 3 mm (0.1 in)</text>
+  <line class="ink" x1="40" y1="255" x2="520" y2="255"/>
+  <text class="small" x="24" y="272">Ground</text>
+</svg>
