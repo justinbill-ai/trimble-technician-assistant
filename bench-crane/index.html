@@ -92,12 +92,16 @@
             <button class="btn-icon viewer-close" id="closeViewerBtn" type="button" aria-label="Close">✕</button>
           </div>
         </div>
-        <div class="viewer-body">
+        <div class="viewer-body" id="viewerBody">
           <iframe id="viewerFrame" title="TMC Bench Crane 360° model" allowfullscreen></iframe>
           <div class="viewer-fallback" id="viewerFallback">
-            <p class="note">If the model doesn’t load below, your browser may block the embedded viewer.</p>
-            <a class="btn-primary" id="viewerFallbackLink" href="#" target="_blank" rel="noopener">
-              Open 360° view in new tab ↗
+            <p class="viewer-fallback__icon" aria-hidden="true">360°</p>
+            <p class="viewer-fallback__title">Open the interactive model</p>
+            <p class="note viewer-fallback__text" id="viewerFallbackText">
+              Fusion’s 360° viewer can’t run inside the app on phones — tap below to open it in your browser.
+            </p>
+            <a class="btn-primary viewer-fallback__btn" id="viewerFallbackLink" href="#" target="_blank" rel="noopener noreferrer">
+              Open 360° viewer ↗
             </a>
           </div>
         </div>
@@ -105,7 +109,22 @@
     </div>
 
     <div class="crane-layout">
-      <nav class="seg-nav" id="sidebar" aria-label="Assembly segments"></nav>
+      <div class="seg-nav-shell" id="segNavShell">
+        <button
+          class="seg-nav-toggle"
+          id="segNavToggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="sidebar"
+        >
+          <span class="seg-nav-toggle__text">
+            <span class="seg-nav-toggle__eyebrow">Assembly sections</span>
+            <span class="seg-nav-toggle__label" id="segNavToggleLabel">Open menu</span>
+          </span>
+          <span class="seg-nav-toggle__chevron" aria-hidden="true"></span>
+        </button>
+        <nav class="seg-nav" id="sidebar" aria-label="Assembly segments"></nav>
+      </div>
       <main class="crane-main" id="main">
         <div class="welcome card" id="welcome">
           <span class="category-badge">TMC Bench Crane</span>

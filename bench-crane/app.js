@@ -103,19 +103,27 @@ function getSection(id) {
   return GUIDE.sections[id];
 }
 
+function isMobileViewer() {
+  return window.matchMedia('(max-width: 820px)').matches ||
+    window.matchMedia('(pointer: coarse)').matches;
+}
+
 function initViewer3d() {
   const v = GUIDE.viewer3d;
   if (!v) return;
 
   const modal = document.getElementById('viewerModal');
   const frame = document.getElementById('viewerFrame');
+  const viewerBody = document.getElementById('viewerBody');
   const openBtn = document.getElementById('openViewerBtn');
   const closeBtn = document.getElementById('closeViewerBtn');
   const backdrop = document.getElementById('viewerBackdrop');
   const external = document.getElementById('viewerOpenExternal');
   const fallbackLink = document.getElementById('viewerFallbackLink');
+  const fallbackText = document.getElementById('viewerFallbackText');
   const title = document.getElementById('viewerTitle');
   const desc = document.getElementById('viewerDesc');
+  var embedFailTimer = null;
 
   if (!title || !desc || !external || !fallbackLink) return;
 
@@ -123,9 +131,40 @@ function initViewer3d() {
   desc.textContent = v.description;
   external.href = v.url;
   fallbackLink.href = v.url;
+  if (fallbackText) {
+    fallbackText.textContent = isMobileViewer()
+      ? 'Fusion’s 360° viewer can’t run inside the app on phones — tap below to open it in your browser.'
+      : 'If the model doesn’t load below, your browser may block the embedded viewer. Use the button to open Fusion directly.';
+  }
+
+  function clearEmbedFailTimer() {
+    if (embedFailTimer) {
+      clearTimeout(embedFailTimer);
+      embedFailTimer = null;
+    }
+  }
+
+  function showEmbedFallback() {
+    if (!viewerBody) return;
+    viewerBody.classList.add('viewer-body--embed-failed');
+    frame.src = '';
+  }
 
   function openViewer() {
-    frame.src = v.embedUrl || v.url;
+    clearEmbedFailTimer();
+    if (viewerBody) {
+      viewerBody.classList.remove('viewer-body--embed-failed');
+    }
+
+    if (isMobileViewer()) {
+      if (viewerBody) viewerBody.classList.add('viewer-body--external');
+      frame.src = '';
+    } else {
+      if (viewerBody) viewerBody.classList.remove('viewer-body--external');
+      frame.src = v.embedUrl || v.url;
+      embedFailTimer = setTimeout(showEmbedFallback, 4500);
+    }
+
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('viewer-open');
@@ -133,11 +172,19 @@ function initViewer3d() {
   }
 
   function closeViewer() {
+    clearEmbedFailTimer();
     modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('viewer-open');
     frame.src = '';
+    if (viewerBody) {
+      viewerBody.classList.remove('viewer-body--external', 'viewer-body--embed-failed');
+    }
   }
+
+  frame?.addEventListener('load', function () {
+    clearEmbedFailTimer();
+  });
 
   openBtn?.addEventListener('click', openViewer);
   document.getElementById('welcomeViewerBtn')?.addEventListener('click', openViewer);
@@ -201,6 +248,33 @@ function renderViewerPrompt() {
     </div>`;
 }
 
+function closeSegNav() {
+  const shell = document.getElementById('segNavShell');
+  const toggle = document.getElementById('segNavToggle');
+  if (!shell) return;
+  shell.classList.remove('is-open');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleSegNav() {
+  const shell = document.getElementById('segNavShell');
+  const toggle = document.getElementById('segNavToggle');
+  if (!shell || !toggle) return;
+  const open = shell.classList.toggle('is-open');
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function updateSegNavToggle() {
+  const label = document.getElementById('segNavToggleLabel');
+  if (!label) return;
+  if (!state.currentSection) {
+    label.textContent = 'Open menu';
+    return;
+  }
+  const section = getSection(state.currentSection);
+  label.textContent = section ? section.title : 'Open menu';
+}
+
 function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -228,6 +302,7 @@ function renderSidebar() {
   sidebar.querySelectorAll('.seg-nav-item').forEach(btn => {
     btn.addEventListener('click', () => showSection(btn.dataset.section));
   });
+  updateSegNavToggle();
 }
 
 function updateProgress() {
@@ -867,6 +942,7 @@ function showSection(id, tab = 'assemble') {
   } else {
     state.currentTab = tab;
   }
+  closeSegNav();
   persist();
   const hash = state.currentTab === 'assemble' || section?.kind === 'overview'
     ? `#${id}`
@@ -928,6 +1004,10 @@ function render() {
 
 function bindCraneUi() {
   var app = document.getElementById('app');
+  var segNavToggle = document.getElementById('segNavToggle');
+  if (segNavToggle) {
+    segNavToggle.addEventListener('click', toggleSegNav);
+  }
   if (app) {
     app.addEventListener('click', function (e) {
       var sectionBtn = e.target.closest('[data-crane-section]');
