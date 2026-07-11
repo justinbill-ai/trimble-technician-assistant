@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TMC Bench Crane — Assembly Guide</title>
+  <meta name="theme-color" content="#005f9e" />
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/tmc-access.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="access-locked">
+  <div id="accessGate" class="access-gate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
+    <div class="access-gate__backdrop"></div>
+    <div class="access-gate__panel card">
+      <img
+        class="access-gate__logo"
+        src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w200"
+        alt="Trimble"
+        width="120"
+        height="32"
+      />
+      <h2 id="accessGateTitle" class="access-gate__title">TMC Bench Crane Assembly Guide</h2>
+      <p class="access-gate__lead">
+        Enter your email to continue.
+      </p>
+      <form id="accessGateForm" class="access-gate__form" novalidate>
+        <label class="access-gate__label" for="accessEmail">Email</label>
+        <input
+          class="access-gate__input"
+          id="accessEmail"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder="Email address"
+          required
+        />
+        <label class="access-gate__remember">
+          <input type="checkbox" id="accessRemember" checked />
+          Remember on this device for 30 days
+        </label>
+        <p class="access-gate__error" id="accessGateError" hidden role="alert"></p>
+        <button class="btn-primary access-gate__submit" type="submit">Continue</button>
+      </form>
+      <p class="access-gate__note note">
+        Authorized personnel only.
+      </p>
+      <a class="access-gate__back" href="../index.html">&larr; Back to Technician Assistant</a>
+    </div>
+  </div>
+
+  <div id="app">
+    <header class="tc-app-header">
+      <a class="tc-back-link" href="../index.html">&larr; Technician Assistant</a>
+      <div class="tc-header__inner tc-header__inner--crane">
+        <div class="tc-header__brand">
+          <img
+            class="tc-header__logo"
+            src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
+            alt="Trimble"
+          />
+          <div class="tc-header__titles">
+            <p class="tc-header__sub">TMC Bench Crane</p>
+            <h1 class="tc-header__product">Assembly Guide</h1>
+          </div>
+        </div>
+        <div class="tc-header__actions">
+          <button class="btn-header-ghost btn-header-ghost--subtle" id="accessSignOut" type="button" title="Sign out" hidden>
+            Sign out
+          </button>
+          <span class="progress-chip" id="progressSummary">0 / 6 segments complete</span>
+          <button class="btn-header-ghost" id="openViewerBtn" type="button" title="Open 360° 3D model">
+            360° 3D View
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="viewer-modal" id="viewerModal" hidden aria-hidden="true">
+      <div class="viewer-backdrop" id="viewerBackdrop"></div>
+      <div class="viewer-panel card" role="dialog" aria-labelledby="viewerTitle" aria-modal="true">
+        <div class="viewer-header">
+          <div>
+            <h2 id="viewerTitle">360° 3D View</h2>
+            <p id="viewerDesc" class="note"></p>
+          </div>
+          <div class="viewer-header-actions">
+            <a class="btn-primary" id="viewerOpenExternal" href="#" target="_blank" rel="noopener">
+              Open in Fusion ↗
+            </a>
+            <button class="btn-icon viewer-close" id="closeViewerBtn" type="button" aria-label="Close">✕</button>
+          </div>
+        </div>
+        <div class="viewer-body">
+          <iframe id="viewerFrame" title="TMC Bench Crane 360° model" allowfullscreen></iframe>
+          <div class="viewer-fallback" id="viewerFallback">
+            <p class="note">If the model doesn’t load below, your browser may block the embedded viewer.</p>
+            <a class="btn-primary" id="viewerFallbackLink" href="#" target="_blank" rel="noopener">
+              Open 360° view in new tab ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crane-layout">
+      <nav class="seg-nav" id="sidebar" aria-label="Assembly segments"></nav>
+      <main class="crane-main" id="main">
+        <div class="welcome card" id="welcome">
+          <span class="category-badge">TMC Bench Crane</span>
+          <h2 class="welcome-title">Interactive assembly guide</h2>
+          <p class="intro tc-intro">
+            Work through each segment in order. Read the Overview first for required tools and the master parts list.
+          </p>
+          <div class="actions">
+            <a class="btn-primary" id="startBtn" href="#overview" data-crane-section="overview">Open Overview →</a>
+            <button class="btn-secondary" id="welcomeViewerBtn" type="button" data-crane-viewer>Explore 360° 3D model</button>
+          </div>
+          <p class="note welcome-viewer-note">
+            Rotate and zoom the full crane assembly while you build — same Fusion link you share with builders today.
+          </p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <footer class="tc-footer">TMC Bench Crane Assembly Guide · Trimble Technician Assistant</footer>
+
+  <div class="image-lightbox" id="imageLightbox" hidden aria-hidden="true">
+    <button class="image-lightbox-backdrop" id="imageLightboxBackdrop" type="button" aria-label="Close enlarged image"></button>
+    <div class="image-lightbox-panel" role="dialog" aria-modal="true" aria-labelledby="imageLightboxCaption">
+      <button class="btn-icon image-lightbox-close" id="imageLightboxClose" type="button" aria-label="Close">✕</button>
+      <img class="image-lightbox-img" id="imageLightboxImg" alt="" />
+      <p class="image-lightbox-caption" id="imageLightboxCaption"></p>
+      <p class="image-lightbox-hint note">Esc to close</p>
+    </div>
+  </div>
+
+  <script src="../assets/tmc-access.js"></script>
+  <script src="drive-images.js"></script>
+  <script src="hardware-catalog.js"></script>
+  <script src="guide-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

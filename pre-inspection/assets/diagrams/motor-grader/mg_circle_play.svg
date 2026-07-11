@@ -9,7 +9,7 @@
     </style>
   </defs>
   <rect width="560" height="300" fill="#fff"/>
-  <text class="label" x="24" y="32">Circle play (§3.2.4)</text>
+  <text class="label" x="24" y="32">Circle play (ï¿½3.2.4)</text>
   <text class="small" x="24" y="52">Minimize slop  adjust shims &amp; wear strips per OEM</text>
   <ellipse class="ink" cx="280" cy="165" rx="95" ry="95"/>
   <ellipse class="ink-thin" cx="280" cy="165" rx="72" ry="72"/>
@@ -21,5 +21,5 @@
   <!-- Drawbar -->
   <path class="ink" d="M80 200 L185 175 L185 155"/>
   <path class="ink" d="M80 130 L185 155"/>
-  <text class="small" x="24" y="280">Keep circle centered · follow manufacturer tolerances</text>
+  <text class="small" x="24" y="280">Keep circle centered ï¿½ follow manufacturer tolerances</text>
 </svg>

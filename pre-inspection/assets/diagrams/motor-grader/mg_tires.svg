@@ -10,8 +10,8 @@
     </style>
   </defs>
   <rect width="560" height="280" fill="#fff"/>
-  <text class="label" x="24" y="32">Tires  tandem &amp; front (§3.2.8)</text>
-  <text class="small" x="24" y="52">Same make/size · even wear · equal pressure · rim height per pair</text>
+  <text class="label" x="24" y="32">Tires  tandem &amp; front (ï¿½3.2.8)</text>
+  <text class="small" x="24" y="52">Same make/size ï¿½ even wear ï¿½ equal pressure ï¿½ rim height per pair</text>
   <rect class="floor" x="40" y="210" width="480" height="48"/>
   <!-- Rear tandem -->
   <circle class="ink" cx="160" cy="210" r="38"/><circle class="ink-thin" cx="160" cy="210" r="22"/>

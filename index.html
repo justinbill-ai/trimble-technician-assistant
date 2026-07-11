@@ -10,14 +10,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Tech Assistant" />
 
+  <link rel="icon" type="image/png" sizes="192x192" href="./app-icon-192.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+  <link rel="shortcut icon" href="./favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
   <link rel="manifest" href="./app.webmanifest" />
   <link rel="stylesheet" href="./assets/trimble-connect.css" />
+  <link rel="stylesheet" href="./assets/landing-help.css" />
+  <link rel="stylesheet" href="./assets/tmc-access.css" />
 </head>
 <body>
   <header class="tc-app-header">
-    <div class="tc-header__inner">
+    <div class="tc-header__inner tc-header__inner--with-help">
       <div class="tc-header__brand">
         <img
           class="tc-header__logo"
@@ -28,20 +32,44 @@
           <h1 class="tc-header__product">Technician Assistant</h1>
         </div>
       </div>
+      <button class="help-trigger" type="button" data-open-help aria-label="How to use Technician Assistant" title="How to use this app">
+        <svg class="help-trigger__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+        </svg>
+      </button>
     </div>
   </header>
 
   <main class="tc-main">
-    <p class="intro tc-intro">
-      Choose a product category, then open the field tool you need. More tools can be added under each category as workflows grow.
-    </p>
+    <section class="app-about card" aria-labelledby="app-about-title">
+      <h2 class="app-about__title" id="app-about-title">What is Technician Assistant?</h2>
+      <p class="app-about__lead">
+        A single repository for specialized Trimble field tools — organized by product category, each with enhanced
+        documentation, checklists, and guided workflows. Categories organize tools on one page — open the tool you need directly.
+        No app store install required.
+      </p>
+      <ol class="app-about__steps">
+        <li><strong>Open a tool</strong> — find it under its product category (Earthworks, Siteworks, TMC, and more) and click the tool row.</li>
+        <li><strong>Follow the guide</strong> — step-by-step instructions, reference photos, and exportable reports where supported.</li>
+      </ol>
+      <div class="app-about__actions">
+        <button type="button" class="btn-primary" data-open-help>Watch interactive guide</button>
+      </div>
+    </section>
+
+    <section class="categories-section" aria-labelledby="categories-heading">
+      <div class="categories-section__head">
+        <h2 class="categories-section__title" id="categories-heading">Categories</h2>
+        <p class="categories-section__lead">
+          Tools are grouped by product line below — click any tool to open it. New tools are added as workflows grow.
+        </p>
+      </div>
 
     <div class="category-grid">
 
       <!-- Earthworks Excavator category -->
       <section class="category-tile category-tile--earthworks" aria-labelledby="cat-earthworks-title">
         <div class="category-tile__banner">
-          <span class="category-badge">Category</span>
           <h2 class="category-tile__title" id="cat-earthworks-title">Earthworks Excavator</h2>
           <p class="category-tile__desc">
             Autos optimization, commissioning support, and field diagnostics for Earthworks excavator machine control.
@@ -72,7 +100,6 @@
       <!-- Siteworks Machine Guidance category -->
       <section class="category-tile category-tile--siteworks" aria-labelledby="cat-siteworks-title">
         <div class="category-tile__banner">
-          <span class="category-badge">Category</span>
           <h2 class="category-tile__title" id="cat-siteworks-title">Siteworks Machine Guidance</h2>
           <p class="category-tile__desc">
             Survey-based setup, measure-up calculations, and reporting for Siteworks CTL and related guidance workflows.
@@ -107,18 +134,17 @@
         </div>
       </section>
 
-      <!-- Pre-Installation Reports category -->
-      <section class="category-tile category-tile--inspection" aria-labelledby="cat-inspection-title">
+      <!-- Installation category (pre-install + post-install) -->
+      <section class="category-tile category-tile--installation" aria-labelledby="cat-installation-title">
         <div class="category-tile__banner">
-          <span class="category-badge">Category</span>
-          <h2 class="category-tile__title" id="cat-inspection-title">Pre-Installation Reports</h2>
+          <h2 class="category-tile__title" id="cat-installation-title">Installation</h2>
           <p class="category-tile__desc">
-            Document machine condition and wear before installing Trimble machine control on any supported product line.
+            End-to-end install documentation — capture machine wear and condition before Trimble machine control goes on, then photo and voice deliverables after the install for proof of quality and dealer reference.
           </p>
         </div>
         <div class="category-tile__body">
           <p class="tool-howto">
-            <strong>How to use:</strong> Select machine type, then choose <strong>expert mode</strong> (your own wear line items) or <strong>guided inspection</strong> (step-by-step wear areas with reference photos). On each line or step, use green <strong>Record</strong> / red <strong>Stop</strong> for voice notes or the <strong>camera</strong> icon to take field photos. Generate a Trimble-branded PDF when finished. Dealer logo and voice glossary save on this device only.
+            <strong>How to use:</strong> Start with <strong>Pre-Inspection</strong> before the install (expert or guided wear mode, voice, camera, PDF). After install, open <strong>Install Deliverable</strong> — name each machine report, add unlimited photos and notes, switch between in-progress installs anytime, and export when finished. Dealer logo saves on this device for both tools.
           </p>
           <p class="tools-label">Tools in this category</p>
           <ul class="tool-list">
@@ -127,7 +153,17 @@
                 <span class="tool-link__icon" aria-hidden="true">PI</span>
                 <span class="tool-link__text">
                   <span class="tool-link__name">Pre-Inspection / Machine Wear Report</span>
-                  <span class="tool-link__summary">Expert or guided wear documentation with per-line photos and Trimble-branded PDF export</span>
+                  <span class="tool-link__summary">Before install — expert or guided wear documentation with photos and Trimble-branded PDF</span>
+                </span>
+                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+              </a>
+            </li>
+            <li>
+              <a class="tool-link" href="./install-deliverable/index.html">
+                <span class="tool-link__icon" aria-hidden="true">ID</span>
+                <span class="tool-link__text">
+                  <span class="tool-link__name">Install Deliverable</span>
+                  <span class="tool-link__summary">After install — named reports, unlimited photos, voice notes, resume anytime, PDF export</span>
                 </span>
                 <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
               </a>
@@ -136,9 +172,193 @@
         </div>
       </section>
 
+      <!-- TMC category -->
+      <section class="category-tile category-tile--tmc" data-tmc-category aria-labelledby="cat-tmc-title">
+        <div class="category-tile__banner">
+          <h2 class="category-tile__title" id="cat-tmc-title">TMC</h2>
+          <p class="category-tile__desc">
+            In-house TMC tools — assembly guides, manufacturing workflows, and other build documentation.
+          </p>
+        </div>
+        <div class="category-tile__body">
+          <p class="tools-label">Tools in this category</p>
+          <ul class="tool-list">
+            <li>
+              <a class="tool-link" data-tmc-gated href="./bench-crane/index.html#overview">
+                <span class="tool-link__icon" aria-hidden="true">BC</span>
+                <span class="tool-link__text">
+                  <span class="tool-link__name">TMC Bench Crane Assembly Guide</span>
+                  <span class="tool-link__summary">Segment-based assembly, Ruthex hardware catalog, and Google Drive step photos</span>
+                </span>
+                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+              </a>
+            </li>
+            <!-- Add future TMC tools here, e.g.:
+            <li>
+              <a class="tool-link" href="./tmc/some-tool/index.html">...</a>
+            </li>
+            -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- Trimble Groundworks category -->
+      <section class="category-tile category-tile--groundworks" aria-labelledby="cat-groundworks-title">
+        <div class="category-tile__banner">
+          <h2 class="category-tile__title" id="cat-groundworks-title">Trimble Groundworks</h2>
+          <p class="category-tile__desc">
+            Field tools and workflows for Trimble Groundworks machine control — more tools will be added here over time.
+          </p>
+        </div>
+        <div class="category-tile__body">
+          <p class="tools-label">Tools in this category</p>
+          <ul class="tool-list">
+            <!-- Add Groundworks tools here when ready, e.g.:
+            <li>
+              <a class="tool-link" href="./groundworks/some-tool/index.html">...</a>
+            </li>
+            -->
+          </ul>
+        </div>
+      </section>
+
     </div>
+    </section>
   </main>
 
   <footer class="tc-footer">Trimble Technician Assistant — test deployment. Production Apps Script apps remain unchanged.</footer>
+
+  <div class="help-modal" id="helpModal" hidden aria-hidden="true">
+    <button type="button" class="help-modal__backdrop" id="helpModalBackdrop" aria-label="Close guide"></button>
+    <div
+      class="help-modal__panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="helpModalTitle"
+    >
+      <div class="help-modal__head">
+        <h2 id="helpModalTitle">How to use Technician Assistant</h2>
+        <button type="button" class="btn-icon" id="helpModalClose" aria-label="Close">✕</button>
+      </div>
+      <p class="help-modal__intro">
+        One home page for all specialized tools. Categories organize the list — you do not pick a category separately;
+        just click the tool row under the product line you need. Each tool delivers enhanced documentation beyond a basic PDF or manual.
+      </p>
+
+      <div class="help-demo" aria-live="polite">
+        <div class="help-demo__caption" id="helpDemoCaption">
+          Starting walkthrough…
+        </div>
+        <div class="help-demo__stage" id="helpDemoStage">
+          <div class="help-demo__view help-demo__view--home is-active" id="helpDemoHome">
+            <div class="help-demo__mini-header">Technician Assistant — categories</div>
+            <p class="help-demo__section-label">Categories</p>
+            <div class="help-demo__grid">
+              <div class="help-demo__cat" id="helpDemoCat">
+                <span class="help-demo__cat-title">Earthworks Excavator</span>
+                Tuning, commissioning, and field diagnostics.
+              </div>
+              <div class="help-demo__cat help-demo__cat--dim">
+                <span class="help-demo__cat-title">Siteworks Machine Guidance</span>
+                Survey setup and measure-up workflows.
+              </div>
+            </div>
+            <div class="help-demo__tool" id="helpDemoToolRow">
+              <span class="help-demo__tool-icon">ET</span>
+              <span>
+                <span class="help-demo__tool-name">Excavator Tuning Assistant</span><br />
+                Prestart checklist, symptom assistant, tuning map
+              </span>
+            </div>
+          </div>
+
+          <div class="help-demo__view help-demo__view--tool" id="helpDemoTool">
+            <div class="help-demo__mini-header">Excavator Tuning Assistant</div>
+            <div class="help-demo__scroll-wrap">
+              <div class="help-demo__scroll" id="helpDemoScroll">
+                <div class="help-demo__block">
+                  <strong>Prestart checklist</strong>
+                  Confirm commissioning items before tuning access unlocks.
+                </div>
+                <div class="help-demo__block">
+                  <strong>Symptom assistant</strong>
+                  Describe pass behavior — ranked slider recommendations.
+                </div>
+                <div class="help-demo__block">
+                  <strong>Tuning map</strong>
+                  Zone and movement highlight where each slider applies.
+                </div>
+                <div class="help-demo__block">
+                  <strong>Manual step mode</strong>
+                  Rake in/out, flat in/out, apex entry — aligned to commissioning manual.
+                </div>
+                <div class="help-demo__block">
+                  <strong>Reference diagram</strong>
+                  Section A/B/C callouts for boom and attachment tuning.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-demo__cursor" id="helpDemoCursor" aria-hidden="true">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#fff" stroke="#252a2e" stroke-width="1.2" d="M8 4l2.2 18.5 3.5-4.2 4.8 9.2 2.8-1.5-4.8-9.2h6.2z"/>
+            </svg>
+          </div>
+          <div class="help-demo__halo" id="helpDemoHalo" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="help-modal__foot">
+        <span class="note">Demo loops automatically · Esc to close</span>
+        <button type="button" class="btn-secondary" id="helpDemoReplay">Replay</button>
+        <button type="button" class="btn-primary" id="helpModalCloseBottom">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tmc-access-modal" id="tmcAccessModal" hidden aria-hidden="true">
+    <button type="button" class="tmc-access-modal__backdrop" id="tmcAccessModalBackdrop" aria-label="Close"></button>
+    <div class="tmc-access-modal__panel card" role="dialog" aria-modal="true" aria-labelledby="tmcAccessModalTitle">
+      <div class="tmc-access-modal__head">
+        <h2 id="tmcAccessModalTitle" class="tmc-access-modal__title">Continue</h2>
+        <button type="button" class="btn-icon" id="tmcAccessModalClose" aria-label="Close">✕</button>
+      </div>
+      <p class="tmc-access-modal__lead">
+        Enter your email to open this tool.
+      </p>
+      <form id="tmcHubAccessForm" class="tmc-access-modal__form" novalidate>
+        <label class="tmc-access-modal__label" for="tmcHubAccessEmail">Email</label>
+        <input
+          class="tmc-access-modal__input"
+          id="tmcHubAccessEmail"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder="Email address"
+          required
+        />
+        <label class="tmc-access-modal__remember">
+          <input type="checkbox" id="tmcHubAccessRemember" checked />
+          Remember on this device for 30 days
+        </label>
+        <p class="tmc-access-modal__error" id="tmcHubAccessError" hidden role="alert"></p>
+        <button class="btn-primary tmc-access-modal__submit" type="submit">Continue</button>
+      </form>
+      <p class="tmc-access-modal__note note">
+        Authorized personnel only.
+      </p>
+    </div>
+  </div>
+
+  <script src="./assets/landing-help.js"></script>
+  <script src="./assets/tmc-access.js"></script>
+  <script>
+    document.getElementById('helpModalCloseBottom')?.addEventListener('click', function () {
+      document.getElementById('helpModalClose')?.click();
+    });
+    window.TmcAccess?.initHubGate();
+  </script>
 </body>
 </html>

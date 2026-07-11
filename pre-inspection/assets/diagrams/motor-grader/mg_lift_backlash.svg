@@ -9,7 +9,7 @@
     </style>
   </defs>
   <rect width="560" height="280" fill="#fff"/>
-  <text class="label" x="24" y="32">Lift cylinder backlash (§3.2.6)</text>
+  <text class="label" x="24" y="32">Lift cylinder backlash (ï¿½3.2.6)</text>
   <text class="small" x="24" y="52">Blade off ground  measure blade-to-circle play</text>
   <ellipse class="ink" cx="280" cy="95" rx="70" ry="70"/>
   <path class="ink" d="M210 165 L210 220 L350 220 L350 165"/>

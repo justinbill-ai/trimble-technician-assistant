@@ -194,6 +194,32 @@ footer {
   line-height: 1.45;
 }
 
+/* ── Categories section (landing) ── */
+.categories-section {
+  margin-bottom: 8px;
+}
+
+.categories-section__head {
+  margin-bottom: 16px;
+}
+
+.categories-section__title {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tc-blue);
+}
+
+.categories-section__lead {
+  margin: 0;
+  color: var(--tc-grey-600);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  max-width: 52rem;
+}
+
 /* ── Category tiles (landing) ── */
 .category-grid {
   display: grid;
@@ -219,7 +245,7 @@ footer {
 }
 
 .category-tile__banner {
-  padding: 16px 16px 14px;
+  padding: 14px 16px 12px;
   background: var(--tc-surface);
   border-bottom: 1px solid var(--tc-grey-300);
 }
@@ -778,6 +804,81 @@ a.btn:hover { background: var(--tc-blue-dark); }
   font-weight: 700;
 }
 .btn-icon--danger:hover { background: var(--tc-error-bg); color: var(--tc-error); border-color: #f5c2c8; }
+
+.section-media-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.btn-camera {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #a8c4e8;
+  border-radius: 50%;
+  background: #eef4fc;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-camera:hover {
+  background: #e0ecfa;
+  border-color: var(--tc-blue);
+}
+.btn-camera--has-photo {
+  border-color: #9dd4b0;
+  background: #f0faf4;
+}
+.btn-camera--has-photo:hover {
+  border-color: #1fad53;
+  background: #e3f5ea;
+}
+.btn-camera__icon {
+  width: 20px;
+  height: 15px;
+  border: 2px solid var(--tc-blue);
+  border-radius: 3px;
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+}
+.btn-camera__icon::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 3px;
+  background: var(--tc-blue);
+  border-radius: 2px 2px 0 0;
+}
+.btn-camera__icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--tc-blue);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.btn-camera--has-photo .btn-camera__icon,
+.btn-camera--has-photo .btn-camera__icon::before {
+  border-color: #157a3a;
+  background: #157a3a;
+}
+.btn-camera--has-photo .btn-camera__icon::after {
+  border-color: #157a3a;
+}
 
 .diagram-caption {
   padding: 10px 12px;

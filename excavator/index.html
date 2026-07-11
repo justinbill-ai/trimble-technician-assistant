@@ -10,7 +10,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Excavator Tuning" />
 
+  <link rel="icon" type="image/png" sizes="192x192" href="../app-icon-192.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="shortcut icon" href="../favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
   <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
@@ -22,6 +24,7 @@
 main{max-width:980px}
 textarea{min-height:80px;resize:vertical}
 .capture-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.capture-file-actions{margin-top:6px}
 .capture-preview img{width:120px;height:80px;object-fit:cover;border:1px solid var(--tc-grey-300);border-radius:var(--tc-radius)}
 .capture-table-wrap{margin-top:8px}
 .capture-table{width:100%;border-collapse:collapse;font-size:.88rem}
@@ -65,6 +68,11 @@ textarea{min-height:80px;resize:vertical}
 details summary{list-style:none}
 details summary::-webkit-details-marker{display:none}
 .pri{margin:4px 0;line-height:1.25rem}
+.manual-access--top{margin:0 0 16px;background:var(--tc-blue-soft);border-color:var(--tc-blue)}
+.report-panel{border-top:3px solid var(--tc-blue);margin-top:20px}
+.report-panel .section-divider{border-top:none;padding-top:0;margin-top:0}
+.report-panel .meta-box{margin-top:0}
+.report-panel .capture-box{margin-top:12px}
   </style>
 </head>
 <body>
@@ -131,49 +139,11 @@ details summary::-webkit-details-marker{display:none}
     <h2>Symptom Assistant</h2>
     <p class="note">Enter symptoms observed during pass. Recommendations are ranked by confidence and manual alignment.</p>
 
-    <div class="meta-box">
-      <div class="grid grid-2">
-        <div><label for="machine-id">Machine ID</label><input id="machine-id" type="text" placeholder="Example: ZX350LC-07 #12" /></div>
-        <div><label for="attachment-id">Attachment</label><input id="attachment-id" type="text" placeholder="Example: 1500 mm clean-up bucket" /></div>
-      </div>
-      <div class="grid grid-2" style="margin-top:8px;">
-        <div><label for="tech-name">Technician Name (optional)</label><input id="tech-name" type="text" /></div>
-        <div><label for="dealer-name">Dealer (optional)</label><input id="dealer-name" type="text" /></div>
-      </div>
-      <div class="grid grid-2" style="margin-top:8px;">
-        <div><label for="machine-model">Machine Model (optional)</label><input id="machine-model" type="text" /></div>
-        <div><label for="machine-config">Machine Configuration (optional)</label><input id="machine-config" type="text" /></div>
-      </div>
-      <label for="tech-notes" style="margin-top:8px;">Technician Notes</label>
-      <textarea id="tech-notes" placeholder="Optional notes"></textarea>
-
-      <div class="manual-access">
-        <strong>Excavator Commissioning Manual</strong>
-        <div class="small">Use this link for full manual procedure and detailed step logic.</div>
-        <div class="btn-row" style="margin-top:6px;">
-          <a id="manual-link" class="btn-secondary manual-link-btn" href="https://drive.google.com/file/d/18mQ3QyeP_n4Phh5c8NgMe8ikOUkin3OD/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Open Commissioning Manual</a>
-        </div>
-      </div>
-
-      <div class="capture-box">
-        <h3 style="margin:6px 0;">Attachment Capture (Optional)</h3>
-        <p class="small">Upload slider screenshots, extract values, and add attachments to one PDF report.</p>
-        <div class="grid grid-2">
-          <div><label for="capture-attachment-name">Attachment Name</label><input id="capture-attachment-name" type="text" /></div>
-          <div><label for="capture-images">Slider Screenshots</label><input id="capture-images" type="file" accept="image/*" multiple /></div>
-        </div>
-        <div class="btn-row" style="margin-top:8px;">
-          <button id="extract-attachment-btn" class="btn-secondary" type="button">Extract Values From Images</button>
-          <button id="add-attachment-btn" class="btn-secondary" type="button">Add Attachment To Report</button>
-        </div>
-        <div id="ocr-status" class="small"></div>
-        <div id="capture-preview" class="capture-preview"></div>
-        <div id="capture-sliders-table" class="capture-table-wrap"></div>
-        <div id="saved-attachments" class="saved-attachments"></div>
-      </div>
-
+    <div class="manual-access manual-access--top">
+      <strong>Excavator Commissioning Manual</strong>
+      <div class="small">Keep this handy while tuning — full procedure, step logic, and slider detail.</div>
       <div class="btn-row" style="margin-top:8px;">
-        <button id="export-pdf-btn" class="btn-secondary" type="button">Export PDF Report</button>
+        <a id="manual-link" class="btn-secondary manual-link-btn" href="https://drive.google.com/file/d/18mQ3QyeP_n4Phh5c8NgMe8ikOUkin3OD/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Open Commissioning Manual</a>
       </div>
     </div>
 
@@ -281,7 +251,7 @@ details summary::-webkit-details-marker{display:none}
         <li><strong>Secondary Response Sliders (Manual Step 8-12):</strong> refine takeoff, apex transition, and after-apex behavior.</li>
         <li><strong>Validate & Save (Manual Step 13):</strong> verify repeatable passes and save final settings.</li>
       </ol>
-      <div class="small">For full decision logic and machine-specific detail, reference the Commissioning Manual link above.</div>
+      <div class="small">For full decision logic and machine-specific detail, use the Commissioning Manual at the top of this page.</div>
     </div>
 
     <label for="symptom-text" style="margin-top:10px;">Symptom description</label>
@@ -314,6 +284,64 @@ details summary::-webkit-details-marker{display:none}
       </div>
     </details>
   </section>
+
+  <section id="report-panel" class="card report-panel hidden" aria-labelledby="report-panel-title">
+    <div class="section-divider">
+      <h2 id="report-panel-title">PDF Report (Optional)</h2>
+      <p class="note" style="margin-bottom:0;">
+        Skip this section if you only need live tuning guidance. Fill it out when you want a Trimble-branded handoff report with machine details, recommendations, and attachment screenshots.
+      </p>
+    </div>
+
+    <div class="meta-box">
+      <p class="small" style="margin-top:0;">Report header — optional fields for the exported PDF.</p>
+      <div class="grid grid-2">
+        <div><label for="machine-id">Machine ID</label><input id="machine-id" type="text" placeholder="Example: ZX350LC-07 #12" /></div>
+        <div><label for="attachment-id">Attachment</label><input id="attachment-id" type="text" placeholder="Example: 1500 mm clean-up bucket" /></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:8px;">
+        <div><label for="tech-name">Technician Name (optional)</label><input id="tech-name" type="text" /></div>
+        <div><label for="dealer-name">Dealer (optional)</label><input id="dealer-name" type="text" /></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:8px;">
+        <div><label for="machine-model">Machine Model (optional)</label><input id="machine-model" type="text" /></div>
+        <div><label for="machine-config">Machine Configuration (optional)</label><input id="machine-config" type="text" /></div>
+      </div>
+      <label for="tech-notes" style="margin-top:8px;">Technician Notes</label>
+      <textarea id="tech-notes" placeholder="Optional notes for the PDF report"></textarea>
+    </div>
+
+    <div class="capture-box">
+      <h3 style="margin:6px 0;">Attachment Capture (Optional)</h3>
+      <p class="small">Add slider screenshots — extract values and include attachments in the PDF report.</p>
+      <div class="grid grid-2">
+        <div><label for="capture-attachment-name">Attachment Name</label><input id="capture-attachment-name" type="text" /></div>
+        <div>
+          <label>Slider Screenshots</label>
+          <input id="capture-images" type="file" accept="image/*" multiple hidden />
+          <input id="capture-camera-input" type="file" accept="image/*" capture="environment" hidden />
+          <div class="section-media-bar capture-file-actions">
+            <button id="capture-choose-btn" class="btn-sm" type="button">Choose photos</button>
+            <button id="capture-camera-btn" class="btn-camera" type="button" aria-label="Take photo" title="Take photo">
+              <span class="btn-camera__icon" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div id="capture-file-status" class="small">No photos selected yet</div>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button id="extract-attachment-btn" class="btn-secondary" type="button">Extract Values From Images</button>
+        <button id="add-attachment-btn" class="btn-secondary" type="button">Add Attachment To Report</button>
+      </div>
+      <div id="ocr-status" class="small"></div>
+      <div id="capture-preview" class="capture-preview"></div>
+      <div id="capture-sliders-table" class="capture-table-wrap"></div>
+      <div id="saved-attachments" class="saved-attachments"></div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button id="export-pdf-btn" class="btn-primary" type="button">Export PDF Report</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -330,6 +358,7 @@ const assistantTabButton = document.getElementById("assistant-tab-btn");
 let latestMatches = [];
 let attachmentRecords = [];
 let currentCapture = { sliders: {}, images: [], attachmentNameGuess: "" };
+let pendingCaptureFiles = [];
 
 const sliderNames = [
   "Boom Raise Response","Boom Takeoff Speed","Boom Raise Speed","Boom Lower Speed","Boom Lower Response","Boom Joystick Response Speed",
@@ -421,6 +450,8 @@ function updateChecklistUi(){
 function activateTab(tabName){
   document.querySelectorAll(".tab-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===tabName));
   ["prestart","assistant"].forEach(id=>q(id).classList.toggle("hidden",id!==tabName));
+  const reportPanel=q("report-panel");
+  if(reportPanel) reportPanel.classList.toggle("hidden",tabName!=="assistant");
 }
 
 function scoreScenario(s,movement,zone,symptomText){
@@ -554,6 +585,36 @@ function renderCapturePreview(images){
   const w=q("capture-preview"); if(!w) return;
   w.innerHTML=(images||[]).map(src=>'<img src="'+src+'" alt="Attachment screenshot preview" />').join("");
 }
+function updateCaptureFileStatus(){
+  const el=q("capture-file-status"); if(!el) return;
+  const n=pendingCaptureFiles.length;
+  el.textContent=n?(n+" photo"+(n===1?"":"s")+" ready for OCR"):"No photos selected yet";
+  const camBtn=q("capture-camera-btn");
+  if(camBtn){
+    camBtn.classList.toggle("btn-camera--has-photo",n>0);
+    camBtn.setAttribute("aria-label",n?"Add another photo":"Take photo");
+    camBtn.setAttribute("title",n?"Add another photo":"Take photo");
+  }
+}
+async function refreshCapturePreviewFromPending(){
+  const urls=[];
+  for(const f of pendingCaptureFiles){ urls.push(await readFileAsDataUrl(f)); }
+  renderCapturePreview(urls);
+  updateCaptureFileStatus();
+}
+function addPendingCaptureFiles(fileList){
+  const incoming=Array.from(fileList||[]).filter(f=>f&&f.type&&f.type.indexOf("image/")===0);
+  if(!incoming.length) return;
+  pendingCaptureFiles=pendingCaptureFiles.concat(incoming);
+  refreshCapturePreviewFromPending();
+}
+function clearPendingCaptureFiles(){
+  pendingCaptureFiles=[];
+  const input=q("capture-images");
+  if(input) input.value="";
+  renderCapturePreview([]);
+  updateCaptureFileStatus();
+}
 function renderCaptureTable(values){
   const t=q("capture-sliders-table"); if(!t) return;
   const rows=captureSliderSpecs.map(spec=>"<tr><td>"+spec.label+'</td><td><input data-slider-key="'+spec.key+'" value="'+(values[spec.key]||"")+'" /></td></tr>').join("");
@@ -577,9 +638,9 @@ function renderSavedAttachments(){
   ).join("");
 }
 async function extractAttachmentFromImages(){
-  const input=q("capture-images"), status=q("ocr-status");
-  const files=input&&input.files?Array.from(input.files):[];
-  if(!files.length){ alert("Select one or more screenshots first."); return; }
+  const status=q("ocr-status");
+  const files=pendingCaptureFiles.length?pendingCaptureFiles.slice():(q("capture-images")&&q("capture-images").files?Array.from(q("capture-images").files):[]);
+  if(!files.length){ alert("Choose or take at least one screenshot first."); return; }
 
   status.textContent="Reading screenshots...";
   const imageUrls=[];
@@ -618,7 +679,7 @@ function addCapturedAttachment(){
   renderSavedAttachments();
   saveSessionToStorage();
 
-  nameInput.value=""; q("capture-images").value=""; q("ocr-status").textContent="Attachment added to report.";
+  nameInput.value=""; clearPendingCaptureFiles(); q("ocr-status").textContent="Attachment added to report.";
   q("capture-preview").innerHTML=""; q("capture-sliders-table").innerHTML="";
   currentCapture={sliders:{},images:[],attachmentNameGuess:""};
 }
@@ -702,6 +763,16 @@ q("zone").addEventListener("change",()=>updateVisualization(q("movement").value,
 q("export-pdf-btn").addEventListener("click",exportSessionPdf);
 q("extract-attachment-btn").addEventListener("click",extractAttachmentFromImages);
 q("add-attachment-btn").addEventListener("click",addCapturedAttachment);
+q("capture-choose-btn").addEventListener("click",()=>q("capture-images").click());
+q("capture-camera-btn").addEventListener("click",()=>q("capture-camera-input").click());
+q("capture-images").addEventListener("change",function(){
+  if(this.files&&this.files.length) addPendingCaptureFiles(this.files);
+  this.value="";
+});
+q("capture-camera-input").addEventListener("change",function(){
+  if(this.files&&this.files.length) addPendingCaptureFiles(this.files);
+  this.value="";
+});
 
 q("saved-attachments").addEventListener("click",e=>{
   const btn=e.target.closest(".remove-attachment-btn"); if(!btn) return;
