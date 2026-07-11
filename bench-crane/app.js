@@ -249,19 +249,8 @@ function renderViewerPrompt() {
 }
 
 function closeSegNav() {
-  const shell = document.getElementById('segNavShell');
-  const toggle = document.getElementById('segNavToggle');
-  if (!shell) return;
-  shell.classList.remove('is-open');
-  if (toggle) toggle.setAttribute('aria-expanded', 'false');
-}
-
-function toggleSegNav() {
-  const shell = document.getElementById('segNavShell');
-  const toggle = document.getElementById('segNavToggle');
-  if (!shell || !toggle) return;
-  const open = shell.classList.toggle('is-open');
-  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  const details = document.getElementById('segNavDetails');
+  if (details) details.open = false;
 }
 
 function updateSegNavToggle() {
@@ -1003,11 +992,16 @@ function render() {
 }
 
 function bindCraneUi() {
+  const details = document.getElementById('segNavDetails');
+  if (details) details.open = false;
+
+  document.addEventListener('click', (e) => {
+    if (!details?.open) return;
+    const shell = document.getElementById('segNavShell');
+    if (shell && !shell.contains(e.target)) closeSegNav();
+  });
+
   var app = document.getElementById('app');
-  var segNavToggle = document.getElementById('segNavToggle');
-  if (segNavToggle) {
-    segNavToggle.addEventListener('click', toggleSegNav);
-  }
   if (app) {
     app.addEventListener('click', function (e) {
       var sectionBtn = e.target.closest('[data-crane-section]');

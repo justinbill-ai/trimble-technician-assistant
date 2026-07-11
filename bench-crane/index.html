@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#005f9e" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
   <link rel="stylesheet" href="../assets/tmc-access.css" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body class="access-locked">
   <div id="accessGate" class="access-gate" role="dialog" aria-modal="true" aria-labelledby="accessGateTitle">
@@ -110,20 +110,18 @@
 
     <div class="crane-layout">
       <div class="seg-nav-shell" id="segNavShell">
-        <button
-          class="seg-nav-toggle"
-          id="segNavToggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="sidebar"
-        >
-          <span class="seg-nav-toggle__text">
-            <span class="seg-nav-toggle__eyebrow">Assembly sections</span>
-            <span class="seg-nav-toggle__label" id="segNavToggleLabel">Overview</span>
-          </span>
-          <span class="seg-nav-toggle__chevron" aria-hidden="true"></span>
-        </button>
-        <nav class="seg-nav" id="sidebar" aria-label="Assembly segments"></nav>
+        <details class="seg-nav-details" id="segNavDetails">
+          <summary class="seg-nav-toggle" id="segNavToggle">
+            <span class="seg-nav-toggle__text">
+              <span class="seg-nav-toggle__eyebrow">Assembly sections</span>
+              <span class="seg-nav-toggle__label" id="segNavToggleLabel">Overview</span>
+            </span>
+            <span class="seg-nav-toggle__chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="seg-nav-panel">
+            <nav class="seg-nav" id="sidebar" aria-label="Assembly segments"></nav>
+          </div>
+        </details>
       </div>
       <main class="crane-main" id="main">
         <div class="welcome card" id="welcome">
@@ -160,6 +158,6 @@
   <script src="drive-images.js"></script>
   <script src="hardware-catalog.js"></script>
   <script src="guide-data.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
