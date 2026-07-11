@@ -267,12 +267,8 @@ function toggleSegNav() {
 function updateSegNavToggle() {
   const label = document.getElementById('segNavToggleLabel');
   if (!label) return;
-  if (!state.currentSection) {
-    label.textContent = 'Open menu';
-    return;
-  }
-  const section = getSection(state.currentSection);
-  label.textContent = section ? section.title : 'Open menu';
+  const section = state.currentSection ? getSection(state.currentSection) : null;
+  label.textContent = section ? section.title : 'Choose a section';
 }
 
 function renderSidebar() {
@@ -300,7 +296,11 @@ function renderSidebar() {
   }).join('');
 
   sidebar.querySelectorAll('.seg-nav-item').forEach(btn => {
-    btn.addEventListener('click', () => showSection(btn.dataset.section));
+    btn.addEventListener('click', () => {
+      showSection(btn.dataset.section);
+      closeSegNav();
+      document.getElementById('main')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   });
   updateSegNavToggle();
 }
