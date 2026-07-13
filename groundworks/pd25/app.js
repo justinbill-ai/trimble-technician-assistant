@@ -6,6 +6,48 @@ var state = {
   csvText: null,
 };
 
+function copyResultValue(text, buttonEl) {
+  function flashDone() {
+    var prev = buttonEl.textContent;
+    buttonEl.textContent = 'Copied';
+    buttonEl.disabled = true;
+    setTimeout(function () {
+      buttonEl.textContent = prev;
+      buttonEl.disabled = false;
+    }, 1400);
+  }
+  function flashFail() {
+    alert('Could not copy automatically. Select the value and copy manually.');
+  }
+  function fallbackExec() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      if (document.execCommand('copy')) flashDone();
+      else flashFail();
+    } catch (err) {
+      flashFail();
+    }
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flashDone).catch(fallbackExec);
+  } else {
+    fallbackExec();
+  }
+}
+
+function refreshViz(analysis) {
+  if (typeof PD25Viz !== 'undefined' && analysis) {
+    PD25Viz.updateFromAnalysis(analysis);
+  }
+}
+
 function esc(s) {
   if (s == null) return '';
   return String(s)
@@ -395,48 +437,6 @@ function bindHfUi() {
   });
 }
 
-function fmtCoord(pt, unitLabel) {
-  if (!pt) return '—';
-  return (
-    'N ' +
-    Number(pt.n).toFixed(3) +
-    ', E ' +
-    Number(pt.e).toFixed(3) +
-    ', Z ' +
-    Number(pt.z).toFixed(3) +
-    ' ' +
-    unitLabel
-  );
-}
-
-function renderValidationRow(label, calc, check, unitLabel) {
-  if (!check) {
-    return (
-      '<tr><td>' +
-      esc(label) +
-      '</td><td class="pd25-mono">' +
-      esc(fmtCoord(calc, unitLabel)) +
-      '</td><td class="pd25-muted">—</td><td>—</td></tr>'
-    );
-  }
-  var status = check.withinTol
-    ? '<span class="pd25-ok">Within tolerance</span>'
-    : '<span class="pd25-warn">Check COGO</span>';
-  return (
-    '<tr><td>' +
-    esc(label) +
-    '</td><td class="pd25-mono">' +
-    esc(fmtCoord(calc, unitLabel)) +
-    '</td><td class="pd25-mono">Δ horiz ' +
-    esc(check.horizDelta.toFixed(3)) +
-    ', ΔZ ' +
-    esc(check.vertDelta.toFixed(3)) +
-    '</td><td>' +
-    status +
-    '</td></tr>'
-  );
-}
-
 function renderCalcResults(analysis) {
   var box = document.getElementById('calcResults');
   if (analysis.status !== 'ok') {
@@ -446,10 +446,7 @@ function renderCalcResults(analysis) {
   }
 
   var u = analysis.unitLabel;
-  var ic = analysis.intermediate;
   var html = '';
-
-  html += '<p class="pd25-results__lead">' + esc(analysis.message) + '</p>';
 
   if (analysis.warnings && analysis.warnings.length) {
     html +=
@@ -458,54 +455,18 @@ function renderCalcResults(analysis) {
       '</div>';
   }
 
-  html += '<h3 class="pd25-results__h">COGO reference points (computed)</h3>';
-  html += '<p class="note">Offset line from <strong>ML → MR</strong> at +' + ic.offsetConstants.horizontal + ' ' + u + ' horizontal (right), +' + ic.offsetConstants.vertical + ' ' + u + ' vertical. <strong>CENTER REF</strong> is ' + ic.offsetConstants.centerRefDist + ' ' + u + ' from Line PT1 toward Line PT2.</p>';
-  html +=
-    '<table class="pd25-table"><thead><tr><th>Point</th><th>Computed</th><th>vs CSV reference</th><th>Match</th></tr></thead><tbody>';
-  html += renderValidationRow('Line PT1 (ML side)', ic.linePt1, analysis.validation.linePt1, u);
-  html += renderValidationRow('Line PT2 (MR side)', ic.linePt2, analysis.validation.linePt2, u);
-  html += renderValidationRow('CENTER REF', ic.centerRef, analysis.validation.centerRef, u);
-  if (ic.hfJawCenter && ic.hfMeasured) {
-    html += renderValidationRow('HF measured (face)', ic.hfMeasured, null, u);
-    html +=
-      '<tr><td>HF jaw center (corrected)</td><td class="pd25-mono">' +
-      esc(fmtCoord(ic.hfJawCenter, u)) +
-      '</td><td class="pd25-muted">' +
-      (ic.hfFaceOffset
-        ? 'Offset ' + esc(String(ic.hfFaceOffset)) + ' ' + esc(u) + ' toward ML/MR'
-        : 'No face offset') +
-      '</td><td>—</td></tr>';
-  }
-  html += '</tbody></table>';
-
-  if (!analysis.validation.hasReferencePoints) {
-    html +=
-      '<p class="note">Tip: include your Siteworks <strong>LinePt1</strong>, <strong>LinePt2</strong>, and <strong>center ref</strong> points in the CSV to verify the calculator against your manual COGO.</p>';
-  }
-
-  var GROUNDWORKS_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T5'];
+  var GROUNDWORKS_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1'];
 
   html += '<h3 class="pd25-results__h">Groundworks measure-up values</h3>';
   html +=
     '<table class="pd25-table"><thead><tr><th>Value</th><th>Result (' +
     esc(u) +
-    ')</th><th>Method</th></tr></thead><tbody>';
+    ')</th><th class="pd25-th-copy">Copy</th></tr></thead><tbody>';
   GROUNDWORKS_ORDER.forEach(function (key) {
     var row = analysis.groundworks[key];
     if (!row) return;
-    var valueCell = esc(Number(row.value).toFixed(3));
-    if (key === 'G7' && row.signedInverse != null) {
-      valueCell +=
-        '<br><span class="pd25-muted">Siteworks inverse sign: ' +
-        esc(Number(row.signedInverse).toFixed(3)) +
-        '</span>';
-    }
-    if (key === 'T5' && row.signedInverse != null) {
-      valueCell +=
-        '<br><span class="pd25-muted">Siteworks inverse sign: ' +
-        esc(Number(row.signedInverse).toFixed(3)) +
-        '</span>';
-    }
+    var valueStr = Number(row.value).toFixed(3);
+    var valueCell = esc(valueStr);
     html +=
       '<tr><td><strong>' +
       esc(key) +
@@ -513,9 +474,11 @@ function renderCalcResults(analysis) {
       esc(row.label) +
       '</span></td><td class="pd25-mono pd25-results__value">' +
       valueCell +
-      '</td><td class="pd25-muted">' +
-      esc(row.source) +
-      '</td></tr>';
+      '</td><td class="pd25-copy-cell"><button type="button" class="copy-res-btn" data-copy="' +
+      encodeURIComponent(valueStr) +
+      '" aria-label="Copy ' +
+      esc(key) +
+      '">Copy</button></td></tr>';
   });
   html += '</tbody></table>';
 
@@ -525,11 +488,8 @@ function renderCalcResults(analysis) {
       analysis.rodCorrection.rodSubtract +
       ' ' +
       esc(analysis.rodCorrection.unitLabel) +
-      ' subtracted from MB and H elevations before G7 and antenna offsets.</p>';
+      ' subtracted from MB and H elevations.</p>';
   }
-
-  html +=
-    '<p class="note" style="margin-top:12px;">Assumes <strong>MB</strong> is mast-side, <strong>H</strong> is rear, brackets left of mast. <strong>G7</strong> = |vertical| MB APC → ML (expect ~3.596&nbsp;ft when rod height is correct in survey). <strong>T5</strong> when <strong>HF</strong> is present.</p>';
 
   box.hidden = false;
   box.innerHTML = html;
@@ -549,6 +509,7 @@ function bindCsv() {
         var analysis = runAnalysis();
         renderPointBadges(analysis.points, analysis.missing);
         syncHfUi(!!(analysis.points && analysis.points.HF));
+        refreshViz(analysis);
         document.getElementById('calcResults').hidden = true;
       } catch (err) {
         alert(err.message || String(err));
@@ -578,7 +539,9 @@ function bindCsv() {
 
   document.getElementById('analyzeBtn').addEventListener('click', function () {
     if (!state.csvText) return;
-    renderCalcResults(runAnalysis());
+    var analysis = runAnalysis();
+    renderCalcResults(analysis);
+    refreshViz(analysis);
   });
 
   document.getElementById('units').addEventListener('change', function () {
@@ -598,6 +561,18 @@ function bindCsv() {
   });
 }
 
+function bindCopyResults() {
+  var box = document.getElementById('calcResults');
+  if (!box) return;
+  box.addEventListener('click', function (e) {
+    var btn = e.target.closest('.copy-res-btn');
+    if (!btn) return;
+    var enc = btn.getAttribute('data-copy');
+    if (!enc) return;
+    copyResultValue(decodeURIComponent(enc), btn);
+  });
+}
+
 function init() {
   document.getElementById('accuracyBanner').textContent = PD25_GUIDE.accuracyBanner;
   loadProgress();
@@ -607,6 +582,7 @@ function init() {
   bindCsv();
   bindRodUi();
   bindHfUi();
+  bindCopyResults();
   updateHfOffsetHint();
 }
 

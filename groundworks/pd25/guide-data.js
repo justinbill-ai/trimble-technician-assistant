@@ -25,19 +25,22 @@ var PD25_GUIDE = {
     'Calibrated smart level (inclinometer)',
   ],
 
-  /** COGO constants from guide — metric primary */
+  /** COGO constants from guide — metric primary (reverse-verified against ECM CSV). */
   cogo: {
     offsetLine: {
+      /** Siteworks step 1: perpendicular horizontal offset of ML→MR line (right +). */
       horizontalM: 0.083,
       horizontalFt: 0.272,
+      /** Siteworks step 2: vertical offset applied to the horizontally offset line (up +). */
       verticalM: 0.322,
       verticalFt: 1.056,
-      note: 'ML → MR order sets line direction. Positive horizontal offsets right; positive vertical up.',
+      note:
+        'Mirror Siteworks: offset ML→MR line horizontally (83 mm / 0.272 ft right), then vertically (322 mm / 1.056 ft up) to form Line PT1–Line PT2.',
     },
     centerRef: {
       distanceM: 0.263,
       distanceFt: 0.862,
-      note: 'From ML-side offset point (LinePt1), bearing to MR-side line point (LinePt2).',
+      note: 'From Line PT1 along the offset line toward Line PT2 (Y-pivot on offset line).',
     },
     rodHeightMbH: { metricM: 0.204, usft: 0.669 },
     ewToolHeightM: 0.204,
@@ -50,11 +53,11 @@ var PD25_GUIDE = {
     { id: 'MR', label: 'Mast Right — Y pivot pin (MR)', required: true },
     { id: 'MB', label: 'Moving Base antenna APC (MB)', required: true },
     { id: 'H', label: 'Heading antenna APC (H)', required: true },
-    { id: 'HF', label: 'Hammer face / jaw center (HF — optional T5)', required: false },
+    { id: 'HF', label: 'Hammer face / jaw center (HF — optional T1)', required: false },
   ],
 
   groundworksDefaults: {
-    useDefaults: ['T4', 'T5', 'T6', 'T7', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'B5'],
+    useDefaults: ['T4', 'T6', 'T7', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'B5'],
     measureRequired: ['G1', 'G2', 'G5', 'G6', 'G7', 'T1', 'T2', 'T3'],
   },
 

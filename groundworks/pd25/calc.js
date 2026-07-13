@@ -68,46 +68,84 @@ var PD25Calc = (function () {
     return POINT_ALIASES[key] || [key];
   }
 
-  function findPoint(rows, canonicalId) {
-    var targets = aliasList(canonicalId).map(normalizeName);
+  function detectCsvLayout(rows) {
+    if (!rows.length) throw new Error('CSV file is empty.');
 
-    var sample = parseFloat(rows[0][1]);
-    var hasHeader = isNaN(sample);
+    function headerScore(row) {
+      var score = 0;
+      row.forEach(function (cell) {
+        var h = String(cell).toLowerCase().trim();
+        if (!h) return;
+        if (h.includes('name') || h.includes('point') || h === 'pt') score++;
+        if (h.includes('north') || h === 'n' || h === 'y') score++;
+        if (h.includes('east') || h === 'e' || h === 'x') score++;
+        if (h.includes('elev') || h === 'z' || h.includes('alt') || h.includes('height') || h === 'hgt')
+          score++;
+      });
+      return score;
+    }
+
+    var hasHeader = headerScore(rows[0]) >= 2;
     var idxName = 0;
     var idxN = 1;
     var idxE = 2;
     var idxZ = 3;
+
     if (hasHeader) {
       var headers = rows[0].map(function (h) {
-        return h.toString().toLowerCase().trim();
+        return String(h).toLowerCase().trim();
       });
       idxName = headers.findIndex(function (h) {
         return h.includes('name') || h === 'pt' || h.includes('point');
       });
       idxN = headers.findIndex(function (h) {
-        return h.includes('north') || h === 'n';
+        return h.includes('north') || h === 'n' || h === 'y';
       });
       idxE = headers.findIndex(function (h) {
-        return h.includes('east') || h === 'e';
+        return h.includes('east') || h === 'e' || h === 'x';
       });
       idxZ = headers.findIndex(function (h) {
-        return h.includes('elev') || h === 'z';
+        return (
+          h.includes('elev') ||
+          h === 'z' ||
+          h.includes('alt') ||
+          h.includes('height') ||
+          h === 'hgt'
+        );
       });
+      if (idxName === -1 || idxN === -1 || idxE === -1 || idxZ === -1) {
+        throw new Error(
+          'CSV header row found but could not locate Point Name, Northing, Easting, and Elevation columns.'
+        );
+      }
+      return { hasHeader: true, dataStart: 1, idxName: idxName, idxN: idxN, idxE: idxE, idxZ: idxZ };
     }
 
-    for (var i = hasHeader ? 1 : 0; i < rows.length; i++) {
-      var r = rows[i];
-      if (!r[idxName]) continue;
-      var rowName = normalizeName(r[idxName]);
-      if (targets.indexOf(rowName) !== -1) {
-        return {
-          n: parseFloat(r[idxN]),
-          e: parseFloat(r[idxE]),
-          z: parseFloat(r[idxZ]),
-          name: rowName,
-          csvName: r[idxName].toString().trim(),
-        };
-      }
+    return { hasHeader: false, dataStart: 0, idxName: idxName, idxN: idxN, idxE: idxE, idxZ: idxZ };
+  }
+
+  function rowToPoint(row, layout) {
+    if (!row || !row[layout.idxName]) return null;
+    var n = parseFloat(row[layout.idxN]);
+    var e = parseFloat(row[layout.idxE]);
+    var z = parseFloat(row[layout.idxZ]);
+    if (isNaN(n) || isNaN(e) || isNaN(z)) return null;
+    return {
+      n: n,
+      e: e,
+      z: z,
+      name: normalizeName(row[layout.idxName]),
+      csvName: String(row[layout.idxName]).trim(),
+    };
+  }
+
+  function findPoint(rows, canonicalId, layout) {
+    if (!layout) layout = detectCsvLayout(rows);
+    var targets = aliasList(canonicalId).map(normalizeName);
+
+    for (var i = layout.dataStart; i < rows.length; i++) {
+      var pt = rowToPoint(rows[i], layout);
+      if (pt && targets.indexOf(pt.name) !== -1) return pt;
     }
     return null;
   }
@@ -143,7 +181,9 @@ var PD25Calc = (function () {
   }
 
   /**
-   * Siteworks offset line: ML then MR, positive horizontal = right of ML→MR, positive vertical = up.
+   * Siteworks offset line — mirrors COGO in two steps on ML and MR:
+   *   1) Horizontal offset perpendicular to ML→MR (right positive)
+   *   2) Vertical offset on that horizontally shifted line (up positive)
    */
   function buildOffsetLine(ml, mr, units) {
     var c = constantsForUnits(units);
@@ -151,9 +191,21 @@ var PD25Calc = (function () {
     var dE = mr.e - ml.e;
     var mlToMr = bearingRad(dN, dE);
     var rightBearing = mlToMr + Math.PI / 2;
+
+    var mlHoriz = offsetByBearing(ml, rightBearing, c.horizontal, 0);
+    var mrHoriz = offsetByBearing(mr, rightBearing, c.horizontal, 0);
+
     return {
-      linePt1: offsetByBearing(ml, rightBearing, c.horizontal, c.vertical),
-      linePt2: offsetByBearing(mr, rightBearing, c.horizontal, c.vertical),
+      linePt1: {
+        n: mlHoriz.n,
+        e: mlHoriz.e,
+        z: mlHoriz.z + c.vertical,
+      },
+      linePt2: {
+        n: mrHoriz.n,
+        e: mrHoriz.e,
+        z: mrHoriz.z + c.vertical,
+      },
       bearingMlMrDeg: (mlToMr * 180) / Math.PI,
       constants: c,
     };
@@ -204,6 +256,43 @@ var PD25Calc = (function () {
 
   function inverseVertical(fromPt, toPt) {
     return toPt.z - fromPt.z;
+  }
+
+  /** Siteworks-style inverse: slope (3D), horizontal, and vertical components. */
+  function inverseDistance(fromPt, toPt) {
+    var dN = toPt.n - fromPt.n;
+    var dE = toPt.e - fromPt.e;
+    var dZ = toPt.z - fromPt.z;
+    return {
+      slope: Math.hypot(dN, dE, dZ),
+      horizontal: Math.hypot(dN, dE),
+      vertical: dZ,
+    };
+  }
+
+  /**
+   * Siteworks Down & Out from CENTER REF with baseline toward Line PT2.
+   * down = signed along baseline; out = signed left of baseline (matches Siteworks Out on ECM).
+   */
+  function downAndOutFromBaseline(centerRef, linePt2, target) {
+    var dN = linePt2.n - centerRef.n;
+    var dE = linePt2.e - centerRef.e;
+    var len = Math.hypot(dN, dE);
+    if (len < 1e-12) return { down: 0, out: 0 };
+    var uN = dN / len;
+    var uE = dE / len;
+    var lN = -uE;
+    var lE = uN;
+    var vN = target.n - centerRef.n;
+    var vE = target.e - centerRef.e;
+    return {
+      down: vN * uN + vE * uE,
+      out: vN * lN + vE * lE,
+    };
+  }
+
+  function distance3d(a, b) {
+    return Math.hypot(b.n - a.n, b.e - a.e, b.z - a.z);
   }
 
   function fmt(n, places) {
@@ -285,26 +374,31 @@ var PD25Calc = (function () {
     var rows = parseSurveyCsv(csvString);
     if (!rows.length) throw new Error('CSV file is empty.');
 
+    var layout = detectCsvLayout(rows);
+
     var coreRequired = ['ML', 'MR', 'MB', 'H'];
     var points = {};
     var missing = [];
     var warnings = [];
 
     coreRequired.forEach(function (id) {
-      var pt = findPoint(rows, id);
+      var pt = findPoint(rows, id, layout);
       if (pt) points[id] = pt;
       else missing.push(id);
     });
 
-    var mf = findPoint(rows, 'MF');
+    var mf = findPoint(rows, 'MF', layout);
     if (mf) points.MF = mf;
 
-    var hf = findPoint(rows, 'HF');
+    var hf = findPoint(rows, 'HF', layout);
     if (hf) points.HF = hf;
+    else if (!points.MF) {
+      warnings.push('HF or MF not in CSV — T1 (CENTER REF to hammer jaw center) will be skipped.');
+    }
 
-    var refLinePt1 = findPoint(rows, 'LINEPT1');
-    var refLinePt2 = findPoint(rows, 'LINEPT2');
-    var refCenter = findPoint(rows, 'CENTER REF');
+    var refLinePt1 = findPoint(rows, 'LINEPT1', layout);
+    var refLinePt2 = findPoint(rows, 'LINEPT2', layout);
+    var refCenter = findPoint(rows, 'CENTER REF', layout);
 
     if (missing.length) {
       return {
@@ -376,18 +470,30 @@ var PD25Calc = (function () {
 
     var hfCorrection = null;
     var hfCenter = null;
+    var hammerCenter = null;
 
     if (points.HF) {
       hfCorrection = correctHfToHammerCenter(points.HF, pivot, surveyOptions.hfFaceOffset);
       hfCenter = hfCorrection.center;
-      var t5Signed = inverseVertical(pivot, hfCenter);
-      results.T5 = {
-        label: 'Vertical — Y pivot center to hammer opening center (HF)',
-        value: Math.abs(t5Signed),
-        signedInverse: t5Signed,
+      hammerCenter = hfCenter;
+    } else if (points.MF) {
+      hammerCenter = points.MF;
+    }
+
+    if (hammerCenter) {
+      var t1Horiz = horizDist(centerRef, hammerCenter);
+      var t1Dno = downAndOutFromBaseline(centerRef, linePt2, hammerCenter);
+      results.T1 = {
+        label: 'Horizontal distance — CENTER REF (Y pivot line) to hammer jaw center',
+        value: t1Horiz,
+        signedOut: t1Dno.out,
+        signedDown: t1Dno.down,
+        vertical: hammerCenter.z - centerRef.z,
         source:
-          'Inverse vertical — Y pivot midpoint (ML/MR) → corrected HF jaw center' +
-          (hfCorrection.offsetApplied
+          (points.HF
+            ? 'Plan distance — CENTER REF → corrected HF jaw center'
+            : 'Plan distance — CENTER REF → MF (hammer jaw center at reference position)') +
+          (hfCorrection && hfCorrection.offsetApplied
             ? ' (face offset ' +
               hfCorrection.offsetApplied +
               ' ' +
@@ -407,7 +513,7 @@ var PD25Calc = (function () {
       message: validation.hasReferencePoints
         ? 'Survey parsed. Computed COGO points compared to optional reference points in CSV.'
         : 'Survey parsed. G1, G2, G5, G6, and G7 calculated from ML, MR, MB, and H.' +
-          (points.HF ? ' T5 included from HF.' : ''),
+          (hammerCenter ? ' T1 included from ' + (points.HF ? 'HF' : 'MF') + '.' : ''),
       intermediate: {
         linePt1: linePt1,
         linePt2: linePt2,
@@ -437,6 +543,8 @@ var PD25Calc = (function () {
   return {
     analyzeCsv: analyzeCsv,
     parseSurveyCsv: parseSurveyCsv,
+    detectCsvLayout: detectCsvLayout,
+    findPoint: findPoint,
     buildOffsetLine: buildOffsetLine,
     buildCenterRef: buildCenterRef,
     defaultRodHeight: defaultRodHeight,
@@ -447,5 +555,8 @@ var PD25Calc = (function () {
     antennaOffsetsFromOffsetLine: antennaOffsetsFromOffsetLine,
     yPivotCenter: yPivotCenter,
     inverseVertical: inverseVertical,
+    inverseDistance: inverseDistance,
+    downAndOutFromBaseline: downAndOutFromBaseline,
+    distance3d: distance3d,
   };
 })();
