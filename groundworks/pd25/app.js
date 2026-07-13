@@ -361,19 +361,29 @@ function updateHcOffsetHint() {
 
 function updateRodHeightDefault() {
   var units = document.getElementById('units').value;
-  var def = PD25Calc.defaultRodHeight(units);
+  var def = PD25Calc.defaultRodPostHeight(units);
   var input = document.getElementById('rodHeight');
   if (input && (!input.value || input.dataset.auto === '1')) {
     input.value = def;
     input.dataset.auto = '1';
   }
   var hint = document.getElementById('rodHeightHint');
+  var apc = PD25Calc.apcOffsetZephyr3(units);
+  var unit = units === 'METRIC' ? 'm' : 'ft';
   if (hint) {
-    hint.textContent =
-      'PD25 default: ' +
-      (units === 'METRIC' ? '0.204 m' : '0.669 ft') +
-      ' (EW measure-up tool P/N 105568)';
+    hint.innerHTML =
+      'Enter <strong>post height only</strong> — not APC. The calculator adds <strong>' +
+      (units === 'METRIC' ? '4&nbsp;mm' : formatRodHint(apc, unit) + ' APC offset') +
+      '</strong> (Zephyr 3 Rugged target center → APC) behind the scenes. P/N 105568 default: <strong>' +
+      def +
+      '&nbsp;' +
+      unit +
+      '</strong>.';
   }
+}
+
+function formatRodHint(apcFt, unit) {
+  return apcFt + '&nbsp;' + unit;
 }
 
 function syncRodUi() {
@@ -384,6 +394,8 @@ function syncRodUi() {
 
   if (rodSection) rodSection.hidden = !shotWithRod;
   if (rodField) rodField.hidden = !shotWithRod || !rodInSwNo;
+  var measureupBlock = document.getElementById('measureupToolBlock');
+  if (measureupBlock) measureupBlock.hidden = !shotWithRod;
   updateRodHeightDefault();
 }
 
@@ -483,11 +495,20 @@ function renderCalcResults(analysis) {
   html += '</tbody></table>';
 
   if (analysis.rodCorrection && analysis.rodCorrection.rodSubtract > 0) {
+    var rc = analysis.rodCorrection;
     html +=
       '<p class="note"><strong>APC correction applied:</strong> ' +
-      analysis.rodCorrection.rodSubtract +
+      rc.rodPostHeight +
       ' ' +
-      esc(analysis.rodCorrection.unitLabel) +
+      esc(rc.unitLabel) +
+      ' post height + ' +
+      rc.apcOffsetAdded +
+      ' ' +
+      esc(rc.unitLabel) +
+      ' APC offset = ' +
+      rc.rodSubtract +
+      ' ' +
+      esc(rc.unitLabel) +
       ' subtracted from MB and H elevations.</p>';
   }
 

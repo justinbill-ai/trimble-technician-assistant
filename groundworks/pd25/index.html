@@ -7,13 +7,13 @@
   <meta name="theme-color" content="#005f9e" />
   <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=7" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
   <header class="tc-app-header">
-    <a class="tc-back-link" href="../../index.html">&larr; Technician Assistant</a>
+    <a class="tc-back-link" href="../../index.html#category/groundworks">&larr; Trimble Groundworks</a>
     <div class="tc-header__inner">
       <div class="tc-header__brand">
         <img class="tc-header__logo" src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400" alt="Trimble" />
@@ -28,6 +28,11 @@
   <main class="tc-main">
     <div class="card">
       <div class="pd25-accuracy" id="accuracyBanner"></div>
+
+      <div class="pd25-survey-requirement" role="note">
+        <strong>All points must be measured as control with zero rod height in Siteworks.</strong>
+        Do not enter rod height on MB or H in the field — this calculator adds post height (and APC offset) before computing results.
+      </div>
 
       <div class="pd25-tabs" role="tablist">
         <button type="button" class="pd25-tab active" id="tabGuide" data-panel="panelGuide" role="tab">Guided workflow</button>
@@ -61,11 +66,14 @@
           </p>
 
           <div class="tc-field">
-            <label class="tc-label" for="units">Units</label>
+            <label class="tc-label" for="units">Survey coordinate units</label>
             <select id="units" class="tc-input">
-              <option value="METRIC">Metric (recommended)</option>
-              <option value="US FT">US FT</option>
+              <option value="METRIC">Meters</option>
+              <option value="US FT">US survey feet</option>
             </select>
+            <p class="note" style="margin-top:6px;">
+              Match your Siteworks project units before computing results.
+            </p>
           </div>
 
           <div class="drop-zone" id="dropZone">
@@ -83,10 +91,31 @@
               <strong>Did you shoot MB and H with the measure-up rod/post?</strong> Groundworks needs
               <strong> antenna phase center (APC)</strong>, not the prism height on top of the post.
             </p>
-            <fieldset class="pd25-rod-fieldset">
+            <fieldset class="pd25-rod-fieldset pd25-rod-fieldset--measureup">
               <legend class="pd25-rod-legend">Measure-up rod used on MB &amp; H?</legend>
-              <label class="pd25-rod-option"><input type="radio" name="shotWithRod" id="shotWithRodYes" value="yes" checked /> Yes — EW rod / vertical post</label>
-              <label class="pd25-rod-option"><input type="radio" name="shotWithRod" id="shotWithRodNo" value="no" /> No — acrylic target at APC only</label>
+              <div class="pd25-rod-yes-block" id="measureupToolBlock">
+                <label class="pd25-rod-option">
+                  <input type="radio" name="shotWithRod" id="shotWithRodYes" value="yes" checked />
+                  Yes — EW rod / vertical post
+                </label>
+                <figure class="pd25-measureup-tool" id="measureupToolFigure">
+                  <img
+                    class="pd25-measureup-tool__img"
+                    src="https://drive.google.com/thumbnail?id=1QHl-55tFsMQKLt6HA96Z5wo-PSP6paZM&amp;sz=w480"
+                    alt="Trimble Earthworks measure-up rod and vertical post for PD25 MB and H antenna shots"
+                    width="200"
+                    height="320"
+                    loading="lazy"
+                  />
+                  <figcaption class="pd25-measureup-tool__caption">
+                    Earthworks measure-up tool P/N 105568 — used with this option
+                  </figcaption>
+                </figure>
+              </div>
+              <label class="pd25-rod-option">
+                <input type="radio" name="shotWithRod" id="shotWithRodNo" value="no" />
+                No — acrylic target at APC only
+              </label>
             </fieldset>
             <div id="rodHeightSection">
               <fieldset class="pd25-rod-fieldset">
@@ -95,9 +124,13 @@
                 <label class="pd25-rod-option"><input type="radio" name="rodInSw" id="rodInSwNo" value="no" /> No — CSV is prism height; correct to APC below</label>
               </fieldset>
               <div class="tc-field" id="rodHeightField" hidden>
-                <label class="tc-label" for="rodHeight">Rod height to subtract from MB &amp; H elevation</label>
+                <label class="tc-label" for="rodHeight">Measure-up post height (rod only)</label>
                 <input type="number" id="rodHeight" class="tc-input" step="0.001" min="0" />
-                <p class="note pd25-rod-note" id="rodHeightHint">PD25 default: 0.204&nbsp;m / 0.669&nbsp;ft (EW measure-up tool P/N 105568)</p>
+                <p class="note pd25-rod-note" id="rodHeightHint">
+                  Enter <strong>post height only</strong> — not APC. The calculator adds
+                  <strong>4&nbsp;mm</strong> (Zephyr 3 Rugged target center → APC) behind the scenes.
+                  P/N 105568 default: 0.200&nbsp;m / 0.656&nbsp;ft.
+                </p>
               </div>
             </div>
           </div>
@@ -120,7 +153,7 @@
           </div>
 
           <div class="mu-actions" style="margin-top:16px;">
-            <button type="button" class="btn btn-primary" id="analyzeBtn" disabled>Analyze survey points</button>
+            <button type="button" class="btn btn-primary" id="analyzeBtn" disabled>Calculate Results</button>
           </div>
 
           <div id="calcResults" class="pd25-results" hidden></div>
@@ -131,9 +164,9 @@
 
   <footer class="tc-footer">PD25 · Trimble Groundworks · Technician Assistant</footer>
 
-  <script src="guide-data.js?v=7"></script>
+  <script src="guide-data.js?v=9"></script>
   <script src="viz.js?v=4"></script>
-  <script src="calc.js?v=15"></script>
-  <script src="app.js?v=16"></script>
+  <script src="calc.js?v=20"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>

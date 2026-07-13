@@ -41,181 +41,19 @@
   </header>
 
   <main class="tc-main">
-    <section class="app-about card" aria-labelledby="app-about-title">
-      <h2 class="app-about__title" id="app-about-title">What is Technician Assistant?</h2>
-      <p class="app-about__lead">
-        A single repository for specialized Trimble field tools — organized by product category, each with enhanced
-        documentation, checklists, and guided workflows. Categories organize tools on one page — open the tool you need directly.
-        No app store install required.
-      </p>
-      <ol class="app-about__steps">
-        <li><strong>Open a tool</strong> — find it under its product category (Earthworks, Siteworks, Groundworks, TMC, and more) and click the tool row.</li>
-        <li><strong>Follow the guide</strong> — step-by-step instructions, reference photos, and exportable reports where supported.</li>
-      </ol>
-      <div class="app-about__actions">
-        <button type="button" class="btn-primary" data-open-help>Watch interactive guide</button>
-      </div>
+    <section id="hubHome" class="hub-view">
+      <div id="categoryPicker" class="category-picker-grid" role="list"></div>
     </section>
 
-    <section class="categories-section" aria-labelledby="categories-heading">
-      <div class="categories-section__head">
-        <h2 class="categories-section__title" id="categories-heading">Categories</h2>
-        <p class="categories-section__lead">
-          Tools are grouped by product line below — click any tool to open it. New tools are added as workflows grow.
-        </p>
+    <section id="hubCategory" class="hub-view" hidden>
+      <a href="#" class="hub-back" id="hubBack">&larr; All categories</a>
+      <div class="hub-category-banner card">
+        <h2 class="hub-category-title" id="hubCategoryTitle"></h2>
+        <p class="hub-category-desc" id="hubCategoryDesc"></p>
+        <p class="hub-category-howto" id="hubCategoryHowto" hidden></p>
       </div>
-
-    <div class="category-grid">
-
-      <!-- Earthworks Excavator category -->
-      <section class="category-tile category-tile--earthworks" aria-labelledby="cat-earthworks-title">
-        <div class="category-tile__banner">
-          <h2 class="category-tile__title" id="cat-earthworks-title">Earthworks Excavator</h2>
-          <p class="category-tile__desc">
-            Autos optimization, commissioning support, and field diagnostics for Earthworks excavator machine control.
-          </p>
-        </div>
-        <div class="category-tile__body">
-          <p class="tools-label">Tools in this category</p>
-          <ul class="tool-list">
-            <li>
-              <a class="tool-link" href="./excavator/index.html">
-                <span class="tool-link__icon" aria-hidden="true">ET</span>
-                <span class="tool-link__text">
-                  <span class="tool-link__name">Excavator Tuning Assistant</span>
-                  <span class="tool-link__summary">Prestart checklist, symptom assistant, tuning map, and attachment capture</span>
-                </span>
-                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
-              </a>
-            </li>
-            <!-- Add future Earthworks tools here, e.g.:
-            <li>
-              <a class="tool-link" href="./excavator/some-new-tool/index.html">...</a>
-            </li>
-            -->
-          </ul>
-        </div>
-      </section>
-
-      <!-- Siteworks Machine Guidance category -->
-      <section class="category-tile category-tile--siteworks" aria-labelledby="cat-siteworks-title">
-        <div class="category-tile__banner">
-          <h2 class="category-tile__title" id="cat-siteworks-title">Siteworks Machine Guidance</h2>
-          <p class="category-tile__desc">
-            Survey-based setup, measure-up calculations, and reporting for Siteworks CTL and related guidance workflows.
-          </p>
-        </div>
-        <div class="category-tile__body">
-          <p class="tools-label">Tools in this category</p>
-          <ul class="tool-list">
-            <li>
-              <a class="tool-link" href="./measure-up/index.html">
-                <span class="tool-link__icon" aria-hidden="true">MU</span>
-                <span class="tool-link__text">
-                  <span class="tool-link__name">CTL Measure-Up Calculator</span>
-                  <span class="tool-link__summary">Survey CSV upload, receiver-to-centerline, attachment width, 3D preview, and PDF report</span>
-                </span>
-                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- Installation category (pre-install + post-install) -->
-      <section class="category-tile category-tile--installation" aria-labelledby="cat-installation-title">
-        <div class="category-tile__banner">
-          <h2 class="category-tile__title" id="cat-installation-title">Installation</h2>
-          <p class="category-tile__desc">
-            End-to-end install documentation — capture machine wear and condition before Trimble machine control goes on, then photo and voice deliverables after the install for proof of quality and dealer reference.
-          </p>
-        </div>
-        <div class="category-tile__body">
-          <p class="tool-howto">
-            <strong>How to use:</strong> Start with <strong>Pre-Inspection</strong> before the install (expert or guided wear mode, voice, camera, PDF). After install, open <strong>Install Deliverable</strong> — name each machine report, add unlimited photos and notes, switch between in-progress installs anytime, and export when finished. Dealer logo saves on this device for both tools.
-          </p>
-          <p class="tools-label">Tools in this category</p>
-          <ul class="tool-list">
-            <li>
-              <a class="tool-link" href="./pre-inspection/index.html">
-                <span class="tool-link__icon" aria-hidden="true">PI</span>
-                <span class="tool-link__text">
-                  <span class="tool-link__name">Pre-Inspection / Machine Wear Report</span>
-                  <span class="tool-link__summary">Before install — expert or guided wear documentation with photos and Trimble-branded PDF</span>
-                </span>
-                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
-              </a>
-            </li>
-            <li>
-              <a class="tool-link" href="./install-deliverable/index.html">
-                <span class="tool-link__icon" aria-hidden="true">ID</span>
-                <span class="tool-link__text">
-                  <span class="tool-link__name">Install Deliverable</span>
-                  <span class="tool-link__summary">After install — named reports, unlimited photos, voice notes, resume anytime, PDF export</span>
-                </span>
-                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- TMC category -->
-      <section class="category-tile category-tile--tmc" data-tmc-category aria-labelledby="cat-tmc-title">
-        <div class="category-tile__banner">
-          <h2 class="category-tile__title" id="cat-tmc-title">TMC</h2>
-          <p class="category-tile__desc">
-            In-house TMC tools — assembly guides, manufacturing workflows, and other build documentation.
-          </p>
-        </div>
-        <div class="category-tile__body">
-          <p class="tools-label">Tools in this category</p>
-          <ul class="tool-list">
-            <li>
-              <a class="tool-link" data-tmc-gated href="./bench-crane/index.html#overview">
-                <span class="tool-link__icon" aria-hidden="true">BC</span>
-                <span class="tool-link__text">
-                  <span class="tool-link__name">TMC Bench Crane Assembly Guide</span>
-                  <span class="tool-link__summary">Segment-based assembly, Ruthex hardware catalog, and Google Drive step photos</span>
-                </span>
-                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
-              </a>
-            </li>
-            <!-- Add future TMC tools here, e.g.:
-            <li>
-              <a class="tool-link" href="./tmc/some-tool/index.html">...</a>
-            </li>
-            -->
-          </ul>
-        </div>
-      </section>
-
-      <!-- Trimble Groundworks category -->
-      <section class="category-tile category-tile--groundworks" aria-labelledby="cat-groundworks-title">
-        <div class="category-tile__banner">
-          <h2 class="category-tile__title" id="cat-groundworks-title">Trimble Groundworks</h2>
-          <p class="category-tile__desc">
-            Measure-up, calibration, and field workflows for Trimble Groundworks pile drivers and related machine control.
-          </p>
-        </div>
-        <div class="category-tile__body">
-          <p class="tools-label">Tools in this category</p>
-          <ul class="tool-list">
-            <li>
-              <a class="tool-link" href="./groundworks/pd25/index.html">
-                <span class="tool-link__icon" aria-hidden="true">PD</span>
-                <span class="tool-link__text">
-                  <span class="tool-link__name">Vermeer PD25R Measure-Up</span>
-                  <span class="tool-link__summary">Guided calibration funnel, body pitch/roll signs, and COGO measure-up calculator</span>
-                </span>
-                <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-    </div>
+      <p class="tools-label">Tools</p>
+      <ul class="tool-list" id="hubToolList"></ul>
     </section>
   </main>
 
@@ -234,8 +72,8 @@
         <button type="button" class="btn-icon" id="helpModalClose" aria-label="Close">✕</button>
       </div>
       <p class="help-modal__intro">
-        One home page for all specialized tools. Categories organize the list — you do not pick a category separately;
-        just click the tool row under the product line you need. Each tool delivers enhanced documentation beyond a basic PDF or manual.
+        One home screen lists product categories. Tap a category to see its tools, then tap a tool to open it.
+        Each tool includes enhanced documentation, checklists, and guided workflows beyond a basic PDF.
       </p>
 
       <div class="help-demo" aria-live="polite">
@@ -244,18 +82,24 @@
         </div>
         <div class="help-demo__stage" id="helpDemoStage">
           <div class="help-demo__view help-demo__view--home is-active" id="helpDemoHome">
-            <div class="help-demo__mini-header">Technician Assistant — categories</div>
+            <div class="help-demo__mini-header">Technician Assistant</div>
             <p class="help-demo__section-label">Categories</p>
-            <div class="help-demo__grid">
-              <div class="help-demo__cat" id="helpDemoCat">
+            <div class="help-demo__grid help-demo__grid--picker">
+              <div class="help-demo__cat help-demo__cat--pick" id="helpDemoCat">
                 <span class="help-demo__cat-title">Earthworks Excavator</span>
-                Tuning, commissioning, and field diagnostics.
               </div>
-              <div class="help-demo__cat help-demo__cat--dim">
-                <span class="help-demo__cat-title">Siteworks Machine Guidance</span>
-                Survey setup and measure-up workflows.
+              <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
+                <span class="help-demo__cat-title">Siteworks</span>
+              </div>
+              <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
+                <span class="help-demo__cat-title">Trimble Groundworks</span>
               </div>
             </div>
+          </div>
+
+          <div class="help-demo__view help-demo__view--category" id="helpDemoCategory">
+            <div class="help-demo__mini-header">Earthworks Excavator</div>
+            <p class="help-demo__section-label">Tools</p>
             <div class="help-demo__tool" id="helpDemoToolRow">
               <span class="help-demo__tool-icon">ET</span>
               <span>
@@ -280,14 +124,6 @@
                 <div class="help-demo__block">
                   <strong>Tuning map</strong>
                   Zone and movement highlight where each slider applies.
-                </div>
-                <div class="help-demo__block">
-                  <strong>Manual step mode</strong>
-                  Rake in/out, flat in/out, apex entry — aligned to commissioning manual.
-                </div>
-                <div class="help-demo__block">
-                  <strong>Reference diagram</strong>
-                  Section A/B/C callouts for boom and attachment tuning.
                 </div>
               </div>
             </div>
@@ -345,6 +181,7 @@
     </div>
   </div>
 
+  <script src="./assets/hub-nav.js"></script>
   <script src="./assets/landing-help.js"></script>
   <script src="./assets/tmc-access.js"></script>
   <script>

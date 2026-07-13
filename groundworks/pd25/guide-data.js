@@ -42,10 +42,13 @@ var PD25_GUIDE = {
       distanceFt: 0.862,
       note: 'From Line PT1 along the offset line toward Line PT2 (Y-pivot on offset line).',
     },
-    rodHeightMbH: { metricM: 0.204, usft: 0.669 },
-    ewToolHeightM: 0.204,
+    /** Measure-up post height only (P/N 105568 = 200 mm). User enters this; calculator adds APC offset. */
+    rodPostHeight: { metricM: 0.2, usft: 0.656 },
+    /** Acrylic target center on post → Zephyr 3 Rugged APC (added behind the scenes). */
+    apcOffsetZephyr3Rugged: { metricM: 0.004, usft: 0.013 },
+    ewToolHeightM: 0.2,
     rodHeightNote:
-      'MB and H are shot with the Earthworks measure-up rod/post. Siteworks must use APC (antenna phase center). If rod height was not entered in Siteworks, subtract the rod height from the measured MB/H elevation before computing G7 (and antenna offsets).',
+      'Enter measure-up post height only (e.g. 200 mm for P/N 105568). The calculator adds 4 mm to reach Zephyr 3 Rugged APC when correcting MB/H elevations from prism height.',
   },
 
   surveyPoints: [
@@ -139,12 +142,12 @@ var PD25_GUIDE = {
         {
           id: 'p2-mb',
           title: 'Target MB — moving base Zephyr 3 (mast side)',
-          body: 'Use EW measure-up tool P/N 105568; post vertical. Rod height 0.204 m / 0.669 ft.',
+          body: 'Use EW measure-up tool P/N 105568; post vertical. Rod height 0.200 m / 0.656 ft (post only).',
         },
         {
           id: 'p2-h',
           title: 'Target H — heading Zephyr 3 (rearward)',
-          body: 'Use EW measure-up tool P/N 105568; post vertical. Rod height 0.204 m / 0.669 ft.',
+          body: 'Use EW measure-up tool P/N 105568; post vertical. Rod height 0.200 m / 0.656 ft (post only).',
         },
         {
           id: 'p2-hc',
@@ -175,7 +178,7 @@ var PD25_GUIDE = {
           id: 'p3-settings',
           title: 'Target settings',
           body:
-            'Rod height 0.00 for ML, MR, MF, HC. Rod height 0.204 m / 0.669 ft for MB and H. Target type: acrylic.',
+            'Rod height 0.00 for all control points (ML, MR, MF, MB, H, HC). Target type: acrylic. Add MB/H post height in the calculator — not in Siteworks.',
         },
         {
           id: 'p3-shoot',

@@ -172,6 +172,22 @@ body.help-modal-open { overflow: hidden; }
   border-radius: var(--tc-radius);
 }
 
+.help-demo__grid--picker {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.help-demo__cat--pick {
+  padding: 12px 14px;
+  border-radius: var(--tc-radius-lg);
+  border: 1px solid var(--tc-grey-400);
+  background: var(--tc-surface);
+}
+
+.help-demo__view--category {
+  padding: 12px;
+}
+
 .help-demo__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -12,6 +12,7 @@
   var cursor = document.getElementById('helpDemoCursor');
   var halo = document.getElementById('helpDemoHalo');
   var viewHome = document.getElementById('helpDemoHome');
+  var viewCategory = document.getElementById('helpDemoCategory');
   var viewTool = document.getElementById('helpDemoTool');
   var demoCat = document.getElementById('helpDemoCat');
   var demoTool = document.getElementById('helpDemoToolRow');
@@ -26,7 +27,6 @@
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('help-modal-open');
     closeBtn.focus();
-    /* Wait for modal layout so cursor targets measure correctly */
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         startDemo();
@@ -111,9 +111,14 @@
     });
   }
 
+  function showView(name) {
+    if (viewHome) viewHome.classList.toggle('is-active', name === 'home');
+    if (viewCategory) viewCategory.classList.toggle('is-active', name === 'category');
+    if (viewTool) viewTool.classList.toggle('is-active', name === 'tool');
+  }
+
   function resetDemoVisuals() {
-    if (viewHome) viewHome.classList.add('is-active');
-    if (viewTool) viewTool.classList.remove('is-active');
+    showView('home');
     if (demoCat) demoCat.classList.remove('is-highlight');
     if (demoTool) demoTool.classList.remove('is-highlight');
     if (demoScroll) demoScroll.scrollTop = 0;
@@ -129,18 +134,27 @@
     demoRunning = true;
     resetDemoVisuals();
 
-    setCaption('Technician Assistant is one hub for specialized Trimble tools.');
+    setCaption('Technician Assistant — one home screen with product categories.');
     await sleep(reducedMotion ? 400 : 1200);
 
     if (!demoRunning) return;
-    setCaption('Open the tool you need — categories group tools on one page; just click the tool row.');
-    await clickTarget(demoTool, null, null);
-    if (demoTool) demoTool.classList.add('is-highlight');
-    await sleep(reducedMotion ? 600 : 1200);
+    setCaption('Tap a category to see its tools.');
+    await clickTarget(demoCat, null, null);
+    if (demoCat) demoCat.classList.add('is-highlight');
+    await sleep(reducedMotion ? 400 : 700);
 
     if (!demoRunning) return;
-    setCaption('You\'re ready — scroll down and open any tool below.');
-    await sleep(reducedMotion ? 800 : 1800);
+    showView('category');
+    setCaption('Each category lists its tools — tap the one you need.');
+    await sleep(reducedMotion ? 300 : 600);
+    await clickTarget(demoTool, null, null);
+    if (demoTool) demoTool.classList.add('is-highlight');
+    await sleep(reducedMotion ? 500 : 900);
+
+    if (!demoRunning) return;
+    showView('tool');
+    setCaption('Inside a tool — follow guides, checklists, and workflows.');
+    await sleep(reducedMotion ? 800 : 1600);
 
     if (!demoRunning || modal.hidden) return;
     demoRunning = false;

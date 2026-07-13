@@ -160,6 +160,22 @@ var PD25Calc = (function () {
     };
   }
 
+  function cogoConstantsForCoords(coordUnits) {
+    return constantsForUnits(coordUnits);
+  }
+
+  /** Round a groundworks distance in the job's coordinate units (m or US survey ft). */
+  function formatGroundworksValue(valueNative) {
+    return Math.round(valueNative * 1000) / 1000;
+  }
+
+  function applyGroundworksDisplay(results) {
+    Object.keys(results).forEach(function (key) {
+      var row = results[key];
+      if (row && row.value != null) row.value = formatGroundworksValue(row.value);
+    });
+  }
+
   function bearingRad(dN, dE) {
     return Math.atan2(dE, dN);
   }
@@ -185,8 +201,8 @@ var PD25Calc = (function () {
    *   1) Horizontal offset perpendicular to ML→MR (right positive)
    *   2) Vertical offset on that horizontally shifted line (up positive)
    */
-  function buildOffsetLine(ml, mr, units) {
-    var c = constantsForUnits(units);
+  function buildOffsetLine(ml, mr, coordUnits) {
+    var c = cogoConstantsForCoords(coordUnits);
     var dN = mr.n - ml.n;
     var dE = mr.e - ml.e;
     var mlToMr = bearingRad(dN, dE);
@@ -211,8 +227,8 @@ var PD25Calc = (function () {
     };
   }
 
-  function buildCenterRef(linePt1, linePt2, units) {
-    var c = constantsForUnits(units);
+  function buildCenterRef(linePt1, linePt2, coordUnits) {
+    var c = cogoConstantsForCoords(coordUnits);
     var dN = linePt2.n - linePt1.n;
     var dE = linePt2.e - linePt1.e;
     var bearing = bearingRad(dN, dE);
@@ -314,8 +330,38 @@ var PD25Calc = (function () {
     };
   }
 
+  /** Metric jobs: Siteworks rounds all COGO coordinates to 3 decimal meters. */
+  function snapMetricCoord(pt) {
+    if (!pt) return pt;
+    return {
+      n: Math.round(pt.n * 1000) / 1000,
+      e: Math.round(pt.e * 1000) / 1000,
+      z: Math.round(pt.z * 1000) / 1000,
+      name: pt.name,
+      csvName: pt.csvName,
+    };
+  }
+
+  function snapCogoPoint(pt, coordUnits) {
+    if (!pt) return pt;
+    return coordUnits === 'METRIC' ? snapMetricCoord(pt) : snapSiteworksCoord(pt);
+  }
+
+  function defaultRodPostHeight(units) {
+    return units === 'METRIC' ? COGO.rodPostHeight.metricM : COGO.rodPostHeight.usft;
+  }
+
+  function apcOffsetZephyr3(units) {
+    return units === 'METRIC' ? COGO.apcOffsetZephyr3Rugged.metricM : COGO.apcOffsetZephyr3Rugged.usft;
+  }
+
+  /** @deprecated Use defaultRodPostHeight — kept for app.js */
   function defaultRodHeight(units) {
-    return units === 'METRIC' ? COGO.rodHeightMbH.metricM : COGO.rodHeightMbH.usft;
+    return defaultRodPostHeight(units);
+  }
+
+  function totalApcSubtractFromPost(rodPostHeight, units) {
+    return rodPostHeight + apcOffsetZephyr3(units);
   }
 
   /** Lower measured Z to APC when rod height was not entered in Siteworks. */
@@ -369,13 +415,13 @@ var PD25Calc = (function () {
 
   function analyzeCsv(csvString, units, surveyOptions) {
     surveyOptions = surveyOptions || {};
+    var displayMetric = units === 'METRIC';
+    var displayConstants = constantsForUnits(units);
     var rodEnteredInSiteworks = !!surveyOptions.rodEnteredInSiteworks;
     var shotWithRod = surveyOptions.shotWithRod !== false;
-    var rodSubtract = 0;
-    if (shotWithRod && !rodEnteredInSiteworks) {
-      var parsed = parseFloat(surveyOptions.rodHeight);
-      rodSubtract = !isNaN(parsed) && parsed > 0 ? parsed : defaultRodHeight(units);
-    }
+    var rodPostHeight = 0;
+    var apcOffsetAdded = 0;
+    var rodSubtractNative = 0;
     var rows = parseSurveyCsv(csvString);
     if (!rows.length) throw new Error('CSV file is empty.');
 
@@ -416,20 +462,32 @@ var PD25Calc = (function () {
       };
     }
 
-    var offset = buildOffsetLine(points.ML, points.MR, units);
+    var coordUnits = units;
+    if (shotWithRod && !rodEnteredInSiteworks) {
+      var parsedRod = parseFloat(surveyOptions.rodHeight);
+      rodPostHeight =
+        !isNaN(parsedRod) && parsedRod > 0 ? parsedRod : defaultRodPostHeight(coordUnits);
+      apcOffsetAdded = apcOffsetZephyr3(coordUnits);
+      rodSubtractNative = totalApcSubtractFromPost(rodPostHeight, coordUnits);
+    }
+
+    var offset = buildOffsetLine(points.ML, points.MR, coordUnits);
     var linePt1 = offset.linePt1;
     var linePt2 = offset.linePt2;
-    var centerRef = buildCenterRef(linePt1, linePt2, units);
+    var centerRef = buildCenterRef(linePt1, linePt2, coordUnits);
 
-    /** Prefer Siteworks COGO points from CSV; otherwise snap computed points to 3-decimal storage. */
-    var dnoCenterRef = refCenter || snapSiteworksCoord(centerRef);
-    var dnoLinePt2 = refLinePt2 || snapSiteworksCoord(linePt2);
+    /**
+     * Prefer Siteworks COGO points from CSV.
+     * Otherwise snap computed COGO to Siteworks coordinate storage (ft or metric).
+     */
+    var dnoCenterRef = refCenter || snapCogoPoint(centerRef, coordUnits);
+    var dnoLinePt2 = refLinePt2 || snapCogoPoint(linePt2, coordUnits);
     if (refLinePt1) linePt1 = refLinePt1;
 
     var pivot = yPivotCenter(points.ML, points.MR);
 
-    var mbApc = applyApcCorrection(points.MB, rodSubtract);
-    var hApc = applyApcCorrection(points.H, rodSubtract);
+    var mbApc = applyApcCorrection(points.MB, rodSubtractNative);
+    var hApc = applyApcCorrection(points.H, rodSubtractNative);
 
     var tol = units === 'METRIC' ? 0.002 : 0.01;
     var validation = {
@@ -444,6 +502,24 @@ var PD25Calc = (function () {
 
     var g7Signed = inverseVertical(mbApc, points.ML);
     var g7Value = g7Vertical(mbApc, points.ML);
+
+    var hcCorrection = null;
+    var hcCenter = null;
+    var hammerCenter = null;
+    var hcFaceOffset =
+      surveyOptions.hcFaceOffset != null ? surveyOptions.hcFaceOffset : surveyOptions.hfFaceOffset;
+    if (hcFaceOffset != null && hcFaceOffset !== '') {
+      var faceParsed = parseFloat(hcFaceOffset);
+      if (isNaN(faceParsed)) hcFaceOffset = 0;
+    }
+
+    if (points.HC) {
+      hcCorrection = correctHcToHammerCenter(points.HC, pivot, hcFaceOffset);
+      hcCenter = hcCorrection.center;
+      hammerCenter = hcCenter;
+    } else if (points.MF) {
+      hammerCenter = points.MF;
+    }
 
     var results = {
       G6: {
@@ -472,25 +548,19 @@ var PD25Calc = (function () {
         signedInverse: g7Signed,
         source:
           'Inverse vertical — MB APC → ML' +
-          (rodSubtract > 0
-            ? ' (rod height ' + rodSubtract + ' ' + offset.constants.unitLabel + ' subtracted from MB/H for APC)'
+          (rodSubtractNative > 0
+            ? ' (post height ' +
+              formatGroundworksValue(rodPostHeight) +
+              ' ' +
+              displayConstants.unitLabel +
+              ' + ' +
+              formatGroundworksValue(apcOffsetAdded) +
+              ' ' +
+              displayConstants.unitLabel +
+              ' APC offset subtracted from MB/H)'
             : ''),
       },
     };
-
-    var hcCorrection = null;
-    var hcCenter = null;
-    var hammerCenter = null;
-    var hcFaceOffset =
-      surveyOptions.hcFaceOffset != null ? surveyOptions.hcFaceOffset : surveyOptions.hfFaceOffset;
-
-    if (points.HC) {
-      hcCorrection = correctHcToHammerCenter(points.HC, pivot, hcFaceOffset);
-      hcCenter = hcCorrection.center;
-      hammerCenter = hcCenter;
-    } else if (points.MF) {
-      hammerCenter = points.MF;
-    }
 
     if (hammerCenter) {
       var t1Horiz = horizDist(dnoCenterRef, hammerCenter);
@@ -507,20 +577,23 @@ var PD25Calc = (function () {
             : 'Plan distance — CENTER REF → MF (hammer center at reference position)') +
           (hcCorrection && hcCorrection.offsetApplied
             ? ' (face offset ' +
-              hcCorrection.offsetApplied +
+              formatGroundworksValue(hcCorrection.offsetApplied) +
               ' ' +
-              offset.constants.unitLabel +
+              displayConstants.unitLabel +
               ' toward ML/MR applied)'
             : ''),
       };
     }
+
+    applyGroundworksDisplay(results);
 
     return {
       points: points,
       missing: [],
       warnings: warnings,
       units: units,
-      unitLabel: offset.constants.unitLabel,
+      coordUnits: coordUnits,
+      unitLabel: displayConstants.unitLabel,
       status: 'ok',
       message: validation.hasReferencePoints
         ? 'Survey parsed. Computed COGO points compared to optional reference points in CSV.'
@@ -548,8 +621,10 @@ var PD25Calc = (function () {
       rodCorrection: {
         shotWithRod: shotWithRod,
         rodEnteredInSiteworks: rodEnteredInSiteworks,
-        rodSubtract: rodSubtract,
-        unitLabel: offset.constants.unitLabel,
+        rodPostHeight: formatGroundworksValue(rodPostHeight),
+        apcOffsetAdded: formatGroundworksValue(apcOffsetAdded),
+        rodSubtract: formatGroundworksValue(rodSubtractNative),
+        unitLabel: displayConstants.unitLabel,
       },
     };
   }
@@ -561,7 +636,9 @@ var PD25Calc = (function () {
     findPoint: findPoint,
     buildOffsetLine: buildOffsetLine,
     buildCenterRef: buildCenterRef,
+    defaultRodPostHeight: defaultRodPostHeight,
     defaultRodHeight: defaultRodHeight,
+    apcOffsetZephyr3: apcOffsetZephyr3,
     applyApcCorrection: applyApcCorrection,
     correctHcToHammerCenter: correctHcToHammerCenter,
     correctHfToHammerCenter: correctHcToHammerCenter,

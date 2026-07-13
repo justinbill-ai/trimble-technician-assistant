@@ -226,7 +226,8 @@
     ensureSessionFromStorage();
     updateHubAccessUi();
 
-    document.querySelectorAll('[data-tmc-gated]').forEach(function (link) {
+    document.querySelectorAll('[data-tmc-gated]:not([data-tmc-bound])').forEach(function (link) {
+      link.setAttribute('data-tmc-bound', '1');
       link.addEventListener('click', function (e) {
         var href = link.getAttribute('href');
         if (!href) return;
