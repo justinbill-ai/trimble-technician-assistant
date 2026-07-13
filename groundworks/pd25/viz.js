@@ -4,7 +4,7 @@
 var PD25Viz = (function () {
   var scene, camera, renderer, controls, vizAnimFrame;
 
-  var SURVEY_ORDER = ['ML', 'MR', 'MB', 'H', 'HF', 'MF'];
+  var SURVEY_ORDER = ['ML', 'MR', 'MB', 'H', 'HC', 'MF'];
 
   function fillRoundRect(ctx, x, y, w, h, r) {
     r = Math.min(r, w / 2, h / 2);

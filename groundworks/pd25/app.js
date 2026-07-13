@@ -330,32 +330,32 @@ function getSurveyOptions() {
     shotWithRod: shotWithRod,
     rodEnteredInSiteworks: !shotWithRod || rodEntered,
     rodHeight: rodHeightEl ? rodHeightEl.value : '',
-    hfFaceOffset: document.getElementById('hfFaceOffset')
-      ? document.getElementById('hfFaceOffset').value
+    hcFaceOffset: document.getElementById('hcFaceOffset')
+      ? document.getElementById('hcFaceOffset').value
       : '0',
   };
 }
 
-function syncHfUi(hasHf) {
-  var section = document.getElementById('hfOffsetSection');
-  if (section) section.hidden = !hasHf;
-  updateHfOffsetHint();
+function syncHcUi(hasHc) {
+  var section = document.getElementById('hcOffsetSection');
+  if (section) section.hidden = !hasHc;
+  updateHcOffsetHint();
 }
 
-function updateHfOffsetHint() {
-  var hint = document.getElementById('hfOffsetHint');
+function updateHcOffsetHint() {
+  var hint = document.getElementById('hcOffsetHint');
   if (!hint) return;
   var units = document.getElementById('units').value;
   if (units === 'METRIC') {
     hint.innerHTML =
-      '<strong>Positive (+)</strong> — HF is on the face, <em>ahead</em> of jaw center (farther from ML/MR). Example: face shot 160&nbsp;mm toward ML/MR → enter <strong>+0.160&nbsp;m</strong>.<br />' +
-      '<strong>Zero (0)</strong> — HF is at the jaw center (pile center).<br />' +
-      '<strong>Negative (−)</strong> — HF is between jaw center and ML/MR.';
+      '<strong>Positive (+)</strong> — shot is on the face, <em>ahead</em> of hammer center (farther from ML/MR). Example: face shot 160&nbsp;mm toward ML/MR → enter <strong>+0.160&nbsp;m</strong>.<br />' +
+      '<strong>Zero (0)</strong> — shot is at hammer center.<br />' +
+      '<strong>Negative (−)</strong> — shot is between hammer center and ML/MR.';
   } else {
     hint.innerHTML =
-      '<strong>Positive (+)</strong> — HF is on the face, <em>ahead</em> of jaw center (farther from ML/MR). Example: face shot ~6.3&nbsp;in toward ML/MR → enter <strong>+0.525&nbsp;ft</strong> (160&nbsp;mm).<br />' +
-      '<strong>Zero (0)</strong> — HF is at the jaw center (pile center).<br />' +
-      '<strong>Negative (−)</strong> — HF is between jaw center and ML/MR.';
+      '<strong>Positive (+)</strong> — shot is on the face, <em>ahead</em> of hammer center (farther from ML/MR). Example: face shot ~6.3&nbsp;in toward ML/MR → enter <strong>+0.525&nbsp;ft</strong> (160&nbsp;mm).<br />' +
+      '<strong>Zero (0)</strong> — shot is at hammer center.<br />' +
+      '<strong>Negative (−)</strong> — shot is between hammer center and ML/MR.';
   }
 }
 
@@ -426,9 +426,9 @@ function bindRodUi() {
 }
 
 function bindHfUi() {
-  var hfOffset = document.getElementById('hfFaceOffset');
-  if (!hfOffset) return;
-  hfOffset.addEventListener('input', function () {
+  var hcOffset = document.getElementById('hcFaceOffset');
+  if (!hcOffset) return;
+  hcOffset.addEventListener('input', function () {
     if (state.csvText && !document.getElementById('calcResults').hidden) {
       try {
         renderCalcResults(runAnalysis());
@@ -508,7 +508,7 @@ function bindCsv() {
       try {
         var analysis = runAnalysis();
         renderPointBadges(analysis.points, analysis.missing);
-        syncHfUi(!!(analysis.points && analysis.points.HF));
+        syncHcUi(!!(analysis.points && analysis.points.HC));
         refreshViz(analysis);
         document.getElementById('calcResults').hidden = true;
       } catch (err) {
@@ -551,7 +551,7 @@ function bindCsv() {
     try {
       var analysis = runAnalysis();
       renderPointBadges(analysis.points, analysis.missing);
-      syncHfUi(!!(analysis.points && analysis.points.HF));
+      syncHcUi(!!(analysis.points && analysis.points.HC));
       if (!document.getElementById('calcResults').hidden && analysis.status === 'ok') {
         renderCalcResults(analysis);
       }

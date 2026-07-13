@@ -50,7 +50,7 @@ var PD25Calc = (function () {
     MF: ['MF', 'MASTFOOT', 'MAST FOOT'],
     MB: ['MB'],
     H: ['H', 'HEADING'],
-    HF: ['HF', 'MHF', 'HAMMERFACE', 'HAMMER FACE'],
+    HC: ['HC', 'HAMMER CENTER', 'HAMMERCENTER', 'HF', 'MHF', 'HAMMERFACE', 'HAMMER FACE'],
     LINEPT1: ['LINEPT1', 'LINE PT1', 'LINE PT 1', 'LINE_PT1'],
     LINEPT2: ['LINEPT2', 'LINE PT2', 'LINE PT 2', 'LINE_PT2'],
     'CENTER REF': ['CENTER REF', 'CENTERREF', 'CENTER_REF'],
@@ -299,6 +299,21 @@ var PD25Calc = (function () {
     };
   }
 
+  /**
+   * Match Siteworks 3-decimal coordinate storage on computed COGO points.
+   * Northing truncates; easting and elevation round (reverse-verified on ECM).
+   */
+  function snapSiteworksCoord(pt) {
+    if (!pt) return pt;
+    return {
+      n: Math.trunc(pt.n * 1000) / 1000,
+      e: Math.round(pt.e * 1000) / 1000,
+      z: Math.round(pt.z * 1000) / 1000,
+      name: pt.name,
+      csvName: pt.csvName,
+    };
+  }
+
   function defaultRodHeight(units) {
     return units === 'METRIC' ? COGO.rodHeightMbH.metricM : COGO.rodHeightMbH.usft;
   }
@@ -320,33 +335,33 @@ var PD25Calc = (function () {
   }
 
   /**
-   * Move measured HF to hammer jaw center along HF → Y-pivot (ML/MR) direction.
+   * Move measured HC shot to hammer center along HC → Y-pivot (ML/MR) direction.
    * Positive offset = shot is ahead of center (farther from ML/MR than jaw center).
-   * Zero = shot is at jaw center. Negative = shot is between jaw center and ML/MR.
+   * Zero = shot is at hammer center. Negative = shot is between center and ML/MR.
    */
-  function correctHfToHammerCenter(hf, pivot, faceOffset) {
+  function correctHcToHammerCenter(hc, pivot, faceOffset) {
     var offset = parseFloat(faceOffset);
-    if (!hf || isNaN(offset) || offset === 0) {
-      return { measured: hf, center: hf, offsetApplied: 0 };
+    if (!hc || isNaN(offset) || offset === 0) {
+      return { measured: hc, center: hc, offsetApplied: 0 };
     }
 
-    var dN = pivot.n - hf.n;
-    var dE = pivot.e - hf.e;
+    var dN = pivot.n - hc.n;
+    var dE = pivot.e - hc.e;
     var len = Math.hypot(dN, dE);
     if (len < 1e-9) {
-      return { measured: hf, center: hf, offsetApplied: 0 };
+      return { measured: hc, center: hc, offsetApplied: 0 };
     }
 
     var uN = dN / len;
     var uE = dE / len;
     return {
-      measured: hf,
+      measured: hc,
       center: {
-        n: hf.n + offset * uN,
-        e: hf.e + offset * uE,
-        z: hf.z,
-        name: hf.name,
-        csvName: hf.csvName,
+        n: hc.n + offset * uN,
+        e: hc.e + offset * uE,
+        z: hc.z,
+        name: hc.name,
+        csvName: hc.csvName,
       },
       offsetApplied: offset,
     };
@@ -380,10 +395,10 @@ var PD25Calc = (function () {
     var mf = findPoint(rows, 'MF', layout);
     if (mf) points.MF = mf;
 
-    var hf = findPoint(rows, 'HF', layout);
-    if (hf) points.HF = hf;
+    var hc = findPoint(rows, 'HC', layout);
+    if (hc) points.HC = hc;
     else if (!points.MF) {
-      warnings.push('HF or MF not in CSV — T1 (CENTER REF to hammer jaw center) will be skipped.');
+      warnings.push('HC or MF not in CSV — T1 (CENTER REF to hammer center) will be skipped.');
     }
 
     var refLinePt1 = findPoint(rows, 'LINEPT1', layout);
@@ -406,9 +421,9 @@ var PD25Calc = (function () {
     var linePt2 = offset.linePt2;
     var centerRef = buildCenterRef(linePt1, linePt2, units);
 
-    /** Prefer Siteworks COGO points from CSV so D&O matches manual COGO exactly. */
-    var dnoCenterRef = refCenter || centerRef;
-    var dnoLinePt2 = refLinePt2 || linePt2;
+    /** Prefer Siteworks COGO points from CSV; otherwise snap computed points to 3-decimal storage. */
+    var dnoCenterRef = refCenter || snapSiteworksCoord(centerRef);
+    var dnoLinePt2 = refLinePt2 || snapSiteworksCoord(linePt2);
     if (refLinePt1) linePt1 = refLinePt1;
 
     var pivot = yPivotCenter(points.ML, points.MR);
@@ -463,14 +478,16 @@ var PD25Calc = (function () {
       },
     };
 
-    var hfCorrection = null;
-    var hfCenter = null;
+    var hcCorrection = null;
+    var hcCenter = null;
     var hammerCenter = null;
+    var hcFaceOffset =
+      surveyOptions.hcFaceOffset != null ? surveyOptions.hcFaceOffset : surveyOptions.hfFaceOffset;
 
-    if (points.HF) {
-      hfCorrection = correctHfToHammerCenter(points.HF, pivot, surveyOptions.hfFaceOffset);
-      hfCenter = hfCorrection.center;
-      hammerCenter = hfCenter;
+    if (points.HC) {
+      hcCorrection = correctHcToHammerCenter(points.HC, pivot, hcFaceOffset);
+      hcCenter = hcCorrection.center;
+      hammerCenter = hcCenter;
     } else if (points.MF) {
       hammerCenter = points.MF;
     }
@@ -479,18 +496,18 @@ var PD25Calc = (function () {
       var t1Horiz = horizDist(dnoCenterRef, hammerCenter);
       var t1Dno = downAndOutFromBaseline(dnoCenterRef, dnoLinePt2, hammerCenter);
       results.T1 = {
-        label: 'Horizontal distance — CENTER REF (Y pivot line) to hammer jaw center',
+        label: 'Horizontal distance — CENTER REF (Y pivot line) to hammer center',
         value: t1Horiz,
         signedOut: t1Dno.out,
         signedDown: t1Dno.down,
         vertical: hammerCenter.z - centerRef.z,
         source:
-          (points.HF
-            ? 'Plan distance — CENTER REF → corrected HF jaw center'
-            : 'Plan distance — CENTER REF → MF (hammer jaw center at reference position)') +
-          (hfCorrection && hfCorrection.offsetApplied
+          (points.HC
+            ? 'Plan distance — CENTER REF → corrected HC (hammer center)'
+            : 'Plan distance — CENTER REF → MF (hammer center at reference position)') +
+          (hcCorrection && hcCorrection.offsetApplied
             ? ' (face offset ' +
-              hfCorrection.offsetApplied +
+              hcCorrection.offsetApplied +
               ' ' +
               offset.constants.unitLabel +
               ' toward ML/MR applied)'
@@ -508,7 +525,7 @@ var PD25Calc = (function () {
       message: validation.hasReferencePoints
         ? 'Survey parsed. Computed COGO points compared to optional reference points in CSV.'
         : 'Survey parsed. G1, G2, G5, G6, and G7 calculated from ML, MR, MB, and H.' +
-          (hammerCenter ? ' T1 included from ' + (points.HF ? 'HF' : 'MF') + '.' : ''),
+          (hammerCenter ? ' T1 included from ' + (points.HC ? 'HC' : 'MF') + '.' : ''),
       intermediate: {
         linePt1: linePt1,
         linePt2: linePt2,
@@ -516,9 +533,9 @@ var PD25Calc = (function () {
         dnoCenterRef: dnoCenterRef,
         dnoLinePt2: dnoLinePt2,
         yPivotCenter: pivot,
-        hfMeasured: points.HF || null,
-        hfJawCenter: hfCenter,
-        hfFaceOffset: hfCorrection ? hfCorrection.offsetApplied : 0,
+        hcMeasured: points.HC || null,
+        hcCenter: hcCenter,
+        hcFaceOffset: hcCorrection ? hcCorrection.offsetApplied : 0,
         offsetConstants: {
           horizontal: offset.constants.horizontal,
           vertical: offset.constants.vertical,
@@ -546,7 +563,8 @@ var PD25Calc = (function () {
     buildCenterRef: buildCenterRef,
     defaultRodHeight: defaultRodHeight,
     applyApcCorrection: applyApcCorrection,
-    correctHfToHammerCenter: correctHfToHammerCenter,
+    correctHcToHammerCenter: correctHcToHammerCenter,
+    correctHfToHammerCenter: correctHcToHammerCenter,
     g7Vertical: g7Vertical,
     leftBackFromCenterRef: antennaOffsetsFromCenterRef,
     antennaOffsetsFromCenterRef: antennaOffsetsFromCenterRef,

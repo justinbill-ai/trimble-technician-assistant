@@ -53,7 +53,7 @@ var PD25_GUIDE = {
     { id: 'MR', label: 'Mast Right — Y pivot pin (MR)', required: true },
     { id: 'MB', label: 'Moving Base antenna APC (MB)', required: true },
     { id: 'H', label: 'Heading antenna APC (H)', required: true },
-    { id: 'HF', label: 'Hammer face / jaw center (HF — optional T1)', required: false },
+    { id: 'HC', label: 'Hammer center (HC — optional T1)', required: false },
   ],
 
   groundworksDefaults: {
@@ -147,9 +147,9 @@ var PD25_GUIDE = {
           body: 'Use EW measure-up tool P/N 105568; post vertical. Rod height 0.204 m / 0.669 ft.',
         },
         {
-          id: 'p2-hf',
-          title: 'Target HF — hammer face (optional)',
-          body: 'Center of hammer face for T1 calculation. Optional if tuning T1 on pile later.',
+          id: 'p2-hc',
+          title: 'Target HC — hammer center (optional)',
+          body: 'Hammer center (pile guide / jaw opening center) for T1. Optional if tuning T1 on pile later.',
           optional: true,
         },
         {
@@ -175,12 +175,12 @@ var PD25_GUIDE = {
           id: 'p3-settings',
           title: 'Target settings',
           body:
-            'Rod height 0.00 for ML, MR, MF, HF. Rod height 0.204 m / 0.669 ft for MB and H. Target type: acrylic.',
+            'Rod height 0.00 for ML, MR, MF, HC. Rod height 0.204 m / 0.669 ft for MB and H. Target type: acrylic.',
         },
         {
           id: 'p3-shoot',
           title: 'Measure & record',
-          body: 'Shoot ML, MR, MF, MB, H, and HF if used. Record all as control points. Export CSV for calculator below.',
+          body: 'Shoot ML, MR, MF, MB, H, and HC if used. Record all as control points. Export CSV for calculator below.',
         },
       ],
     },

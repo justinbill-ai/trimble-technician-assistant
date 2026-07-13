@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#005f9e" />
   <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -57,7 +57,7 @@
 
         <div id="calcContent">
           <p class="note">
-            Upload Siteworks CSV with <strong>ML</strong>, <strong>MR</strong>, <strong>MB</strong>, and <strong>H</strong>. Optional <strong>HF</strong> (hammer opening center) or <strong>MF</strong> (reference position) enables <strong>T1</strong>. The app builds CENTER REF and outputs <strong>G6, G5, G2, G1, G7</strong>, and <strong>T1</strong> when HF or MF is present.
+            Upload Siteworks CSV with <strong>ML</strong>, <strong>MR</strong>, <strong>MB</strong>, and <strong>H</strong>. Optional <strong>HC</strong> (hammer center) or <strong>MF</strong> (reference position) enables <strong>T1</strong>. The app builds CENTER REF and outputs <strong>G6, G5, G2, G1, G7</strong>, and <strong>T1</strong> when HC or MF is present.
           </p>
 
           <div class="tc-field">
@@ -102,19 +102,19 @@
             </div>
           </div>
 
-          <div class="pd25-rod-callout pd25-hf-callout" id="hfOffsetSection" hidden>
-            <p class="pd25-rod-callout__title">HF — hammer face to jaw center offset</p>
+          <div class="pd25-rod-callout pd25-hc-callout" id="hcOffsetSection" hidden>
+            <p class="pd25-rod-callout__title">HC — hammer center offset</p>
             <p class="pd25-rod-callout__lead">
-              Most techs shoot <strong>HF</strong> on the <strong>hammer face</strong>, not the center of the jaw opening.
-              Enter how far the shot is from the true jaw center, measured <strong>toward or away from ML/MR</strong>.
+              <strong>HC</strong> is the <strong>hammer center</strong> (pile guide / jaw opening center). If you shot the
+              hammer face instead, enter the offset to the true center, measured <strong>toward or away from ML/MR</strong>.
             </p>
             <div class="tc-field">
-              <label class="tc-label" for="hfFaceOffset">HF face offset (+ / −)</label>
-              <input type="number" id="hfFaceOffset" class="tc-input" step="0.001" value="0" />
-              <p class="note pd25-rod-note" id="hfOffsetHint">
-                <strong>Positive (+)</strong> — HF is on the face, <em>ahead</em> of jaw center (farther from ML/MR). Example: face shot 160&nbsp;mm back toward ML/MR → enter <strong>+0.160&nbsp;m</strong> (metric).<br />
-                <strong>Zero (0)</strong> — HF is at the jaw center (pile center).<br />
-                <strong>Negative (−)</strong> — HF is between jaw center and ML/MR.
+              <label class="tc-label" for="hcFaceOffset">HC center offset (+ / −)</label>
+              <input type="number" id="hcFaceOffset" class="tc-input" step="0.001" value="0" />
+              <p class="note pd25-rod-note" id="hcOffsetHint">
+                <strong>Positive (+)</strong> — shot is on the face, <em>ahead</em> of hammer center (farther from ML/MR). Example: face shot 160&nbsp;mm back toward ML/MR → enter <strong>+0.160&nbsp;m</strong> (metric).<br />
+                <strong>Zero (0)</strong> — shot is at hammer center.<br />
+                <strong>Negative (−)</strong> — shot is between hammer center and ML/MR.
               </p>
             </div>
           </div>
@@ -131,9 +131,9 @@
 
   <footer class="tc-footer">PD25 · Trimble Groundworks · Technician Assistant</footer>
 
-  <script src="guide-data.js?v=6"></script>
-  <script src="viz.js?v=3"></script>
-  <script src="calc.js?v=13"></script>
-  <script src="app.js?v=15"></script>
+  <script src="guide-data.js?v=7"></script>
+  <script src="viz.js?v=4"></script>
+  <script src="calc.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
