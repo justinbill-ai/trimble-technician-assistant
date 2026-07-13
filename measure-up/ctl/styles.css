@@ -1,0 +1,403 @@
+/* CTL Measure-Up — tool-specific styles (shared chrome in trimble-connect.css) */
+
+.mu-product-note {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  background: var(--tc-blue-soft);
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius-lg);
+  font-size: 0.88rem;
+  color: var(--tc-grey-600);
+  line-height: 1.45;
+}
+
+.mu-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tc-grey-300);
+}
+
+.mu-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.mu-section__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tc-grey-600);
+  margin: 0 0 12px;
+  padding-left: 10px;
+  border-left: 3px solid var(--tc-yellow);
+}
+
+.mu-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mu-row .tc-field {
+  flex: 1 1 200px;
+  margin-bottom: 0;
+}
+
+.mu-funnel {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: var(--tc-warn-bg);
+  border: 1px solid #f0d878;
+  border-left: 4px solid var(--tc-yellow);
+  border-radius: var(--tc-radius);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--tc-text);
+}
+
+.mu-funnel--ok {
+  background: var(--tc-success-bg);
+  border-color: #b8d9cc;
+  border-left-color: var(--tc-success);
+}
+
+.mu-method-hint {
+  font-size: 0.82rem;
+  color: var(--tc-grey-600);
+  margin: 6px 0 0;
+  line-height: 1.45;
+  padding: 8px 10px;
+  background: var(--tc-grey-100);
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius);
+  display: none;
+}
+
+.mu-method-hint.visible {
+  display: block;
+}
+
+.mu-method-hint b {
+  color: var(--tc-text);
+}
+
+select.mu-select--pending {
+  border-color: var(--tc-yellow);
+  box-shadow: 0 0 0 1px rgba(251, 173, 38, 0.35);
+}
+
+.tc-field input.valid {
+  border-color: var(--tc-success);
+  background: var(--tc-success-bg);
+}
+
+.tc-field input.invalid {
+  border-color: var(--tc-error);
+  background: var(--tc-error-bg);
+}
+
+.mu-actions {
+  margin-top: 20px;
+}
+
+.mu-right {
+  text-align: right;
+}
+
+#targetNote {
+  display: none;
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: var(--tc-grey-100);
+  border: 1px solid var(--tc-grey-300);
+  border-left: 4px solid var(--tc-blue);
+  border-radius: var(--tc-radius);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+#guideImage {
+  display: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius-lg);
+}
+
+#pointCheckList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.pt-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--tc-radius);
+  background: var(--tc-grey-200);
+  color: var(--tc-grey-600);
+  border: 1px solid var(--tc-grey-300);
+}
+
+.pt-badge.found {
+  background: var(--tc-success-bg);
+  color: var(--tc-success);
+  border-color: #b8d9cc;
+}
+
+.pt-badge.missing {
+  background: var(--tc-error-bg);
+  color: var(--tc-error);
+  border-color: #f5c2c8;
+}
+
+#viz-container {
+  width: 100%;
+  height: 350px;
+  background: #fff;
+  border-radius: var(--tc-radius-lg);
+  margin-top: 12px;
+  display: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--tc-grey-300);
+}
+
+#viz-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: var(--tc-blue-dark);
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 6px 10px;
+  border-radius: var(--tc-radius);
+  pointer-events: none;
+  border: 1px solid var(--tc-grey-300);
+  z-index: 2;
+}
+
+#viz-legend {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 6px 10px;
+  border-radius: var(--tc-radius);
+  pointer-events: none;
+  border: 1px solid var(--tc-grey-300);
+  z-index: 2;
+}
+
+.mu-legend-pt {
+  color: var(--tc-blue);
+}
+
+.mu-legend-hdg {
+  color: var(--tc-yellow);
+}
+
+#results[hidden],
+#exportSection[hidden],
+#helpLinks[hidden] {
+  display: none !important;
+}
+
+#results {
+  margin-top: 20px;
+}
+
+#results table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius-lg);
+  overflow: hidden;
+}
+
+#results thead th {
+  text-align: left;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tc-grey-600);
+  background: var(--tc-grey-100);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--tc-grey-300);
+}
+
+#results thead th.mu-th-copy {
+  width: 72px;
+}
+
+.mu-res-label {
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tc-grey-600);
+  background: var(--tc-grey-100);
+  border-top: 1px solid var(--tc-grey-300);
+  width: 52%;
+}
+
+.mu-res-value {
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--tc-blue);
+  border-top: 1px solid var(--tc-grey-300);
+}
+
+.mu-res-copy {
+  padding: 6px 8px;
+  border-top: 1px solid var(--tc-grey-300);
+  text-align: center;
+  width: 72px;
+}
+
+.copy-res-btn {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border: 1px solid var(--tc-grey-400);
+  border-radius: var(--tc-radius);
+  background: var(--tc-surface);
+  color: var(--tc-blue);
+  cursor: pointer;
+}
+
+.copy-res-btn:hover {
+  background: var(--tc-blue-tint);
+}
+
+#trxIdDisplay {
+  font-size: 0.68rem;
+  color: var(--tc-grey-600);
+  text-align: right;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+#errorBox {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--tc-error-bg);
+  border: 1px solid #f5c2c8;
+  border-left: 4px solid var(--tc-error);
+  border-radius: var(--tc-radius);
+  color: var(--tc-error);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+#errorBox[hidden] {
+  display: none !important;
+}
+
+.mu-help-box {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tc-grey-300);
+}
+
+.mu-help-box__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tc-grey-600);
+  margin-bottom: 8px;
+}
+
+.mu-help-item {
+  display: block;
+  margin: 6px 0;
+  color: var(--tc-blue);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.mu-version {
+  margin-top: 20px;
+  font-size: 0.72rem;
+  color: var(--tc-grey-500);
+  text-align: center;
+}
+
+.mu-legacy-link {
+  font-size: 0.82rem;
+}
+
+.dealer-logo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.dealer-logo-preview {
+  width: 160px;
+  height: 64px;
+  border: 1px dashed var(--tc-grey-400);
+  border-radius: var(--tc-radius-lg);
+  background: var(--tc-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.dealer-logo-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.dealer-logo-preview--empty {
+  font-size: 0.72rem;
+  color: var(--tc-grey-600);
+  text-align: center;
+  padding: 4px;
+}
+
+.dealer-logo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dealer-logo-saved-note {
+  font-size: 0.78rem;
+  color: var(--tc-success);
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.export-hint-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--tc-radius-lg);
+  border: 1px solid var(--tc-grey-400);
+  background: var(--tc-grey-100);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.export-hint-box.hidden {
+  display: none !important;
+}
+
+.export-hint-box strong {
+  color: var(--tc-blue);
+}

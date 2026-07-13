@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTL Measure-Up — Siteworks</title>
+  <meta name="theme-color" content="#005f9e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="CTL Measure-Up" />
+
+  <link rel="icon" type="image/png" sizes="192x192" href="../../app-icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
+  <link rel="shortcut icon" href="../../favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+  <link rel="manifest" href="../../app.webmanifest" />
+
+  <link rel="stylesheet" href="../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="styles.css?v=1" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <header class="tc-app-header">
+    <a class="tc-back-link" href="../index.html">&larr; Measure-Up tools</a>
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img
+          class="tc-header__logo"
+          src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
+          alt="Trimble"
+        />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">CTL Measure-Up Calculator</h1>
+          <p class="tc-header__sub">Siteworks machine guidance · survey to machine file values</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main">
+    <div class="card">
+      <p class="mu-product-note">
+        <strong>Siteworks CTL</strong> — upload your survey CSV, choose total-station or manual tape methods, and get machine measure-up values with PDF export.
+      </p>
+
+      <div class="mu-section">
+        <h2 class="mu-section__title">Machine &amp; job details</h2>
+
+        <div class="mu-row">
+          <div class="tc-field">
+            <label class="tc-label" for="techName">Technician name (optional)</label>
+            <input type="text" id="techName" class="tc-input" placeholder="e.g. John Doe" />
+          </div>
+          <div class="tc-field">
+            <label class="tc-label" for="dealerName">Dealer name (optional)</label>
+            <input type="text" id="dealerName" class="tc-input" placeholder="e.g. SITECH …" />
+          </div>
+        </div>
+
+        <div class="tc-field">
+          <label class="tc-label">Dealer logo (optional)</label>
+          <p class="note" style="margin: 0 0 10px;">
+            Upload your dealer logo for the PDF header — same optional branding as wear inspection and install deliverable. Stored <strong>on this device only</strong>.
+          </p>
+          <div class="dealer-logo-row">
+            <div id="dealerLogoPreview" class="dealer-logo-preview dealer-logo-preview--empty">No dealer logo</div>
+            <div class="dealer-logo-actions">
+              <button type="button" class="btn-sm" id="uploadDealerLogoBtn">Upload dealer logo</button>
+              <button type="button" class="btn-sm hidden" id="clearDealerLogoBtn">Remove saved logo</button>
+            </div>
+          </div>
+          <p id="dealerLogoSavedNote" class="dealer-logo-saved-note hidden">Saved on this device for future reports.</p>
+        </div>
+
+        <div class="mu-row">
+          <div class="tc-field">
+            <label class="tc-label" for="machineModel">Machine make / model</label>
+            <input type="text" id="machineModel" class="tc-input" placeholder="e.g. Cat 299D3" />
+          </div>
+          <div class="tc-field">
+            <label class="tc-label" for="serialNumber">Serial number</label>
+            <input type="text" id="serialNumber" class="tc-input" placeholder="e.g. CAT0299…123" />
+          </div>
+        </div>
+      </div>
+
+      <div class="mu-section">
+        <h2 class="mu-section__title">Measurements</h2>
+
+        <div id="measurementFunnelBanner" class="mu-funnel">
+          <strong>Step 1</strong> — Use the two dropdowns below to choose <b>total station</b> (CSV has the points) or <b>manual tape</b> (you type measurements).
+        </div>
+
+        <div class="tc-field">
+          <label class="tc-label" for="units">Units</label>
+          <select id="units" class="tc-input">
+            <option value="US FT">US FT</option>
+            <option value="METRIC">METRIC</option>
+          </select>
+        </div>
+
+        <div class="tc-field">
+          <label class="tc-label" for="centerlineMethod">Receiver to centerline method</label>
+          <select id="centerlineMethod" class="tc-input mu-select--pending">
+            <option value="" selected disabled>Choose method…</option>
+            <option value="Total Station">Total station — CSV includes BL &amp; BR</option>
+            <option value="Manual">Manual tape — measure lift arm width, enter below</option>
+          </select>
+          <p id="centerlineHintTS" class="mu-method-hint">
+            <b>Total station:</b> Your CSV must include control points <b>BL</b> and <b>BR</b> (plus G, CT1, CT2, CL, BB). Use the offset field for rear of bracket to machine face if needed.
+          </p>
+          <p id="centerlineHintManual" class="mu-method-hint">
+            <b>Manual tape:</b> Enter the full distance between lift arms and the bracket offset below. <b>BL</b> and <b>BR</b> are <b>not</b> required in the CSV.
+          </p>
+        </div>
+
+        <div id="offsetGroup" class="tc-field" hidden>
+          <label class="tc-label" for="offset">Rear of receiver bracket to machine face (BL)</label>
+          <input type="number" id="offset" class="tc-input" value="0.030" step="0.001" />
+        </div>
+
+        <div id="manualCenterlineGroup" hidden>
+          <div class="tc-field">
+            <label class="tc-label" for="manualCenterlineVal">Distance between lift arms (BL to BR)</label>
+            <input type="number" id="manualCenterlineVal" class="tc-input" placeholder="Enter full width (required)" step="0.001" />
+          </div>
+          <div class="tc-field">
+            <label class="tc-label" for="manualCenterlineOffset">Lift arm face to rear of GNSS bracket</label>
+            <input type="number" id="manualCenterlineOffset" class="tc-input" value="0.030" step="0.001" />
+          </div>
+        </div>
+
+        <div class="tc-field">
+          <label class="tc-label" for="widthMethod">Attachment width method</label>
+          <select id="widthMethod" class="tc-input mu-select--pending">
+            <option value="" selected disabled>Choose method…</option>
+            <option value="Total Station">Total station — CSV includes CR with CL</option>
+            <option value="Manual">Manual tape — measure width, enter below</option>
+          </select>
+          <p id="widthHintTS" class="mu-method-hint">
+            <b>Total station:</b> Your CSV must include <b>CR</b> (with CL, G, CT1, CT2, BB). Width is computed from coordinates.
+          </p>
+          <p id="widthHintManual" class="mu-method-hint">
+            <b>Manual tape:</b> Enter measured attachment width below. <b>CR</b> is optional in the CSV.
+          </p>
+        </div>
+
+        <div id="manualWidthGroup" class="tc-field" hidden>
+          <label class="tc-label" for="manualWidthVal">Measured attachment width</label>
+          <input type="number" id="manualWidthVal" class="tc-input" placeholder="Enter width (required)" step="0.001" />
+        </div>
+      </div>
+
+      <div class="mu-section">
+        <h2 class="mu-section__title">Survey data</h2>
+
+        <div class="tc-field">
+          <label class="tc-label" for="csvFormat">CSV format (if header is missing)</label>
+          <select id="csvFormat" class="tc-input">
+            <option value="PNEZ">P, N, E, Z</option>
+            <option value="PENZ">P, E, N, Z</option>
+          </select>
+        </div>
+
+        <div class="mu-right">
+          <button type="button" class="btn btn-secondary btn-sm img-toggle-btn">Show field notes &amp; diagram</button>
+        </div>
+
+        <div id="targetNote" class="info-box">
+          <strong>Positioning the machine</strong><br />
+          Use a <b>level</b> surface when possible.<br /><br />
+          <strong>Target layout</strong><br />
+          • <b>CT1 &amp; CT2</b> define forward direction; keep parallel to centerline.<br />
+          • <b>CL / CR</b> on a straight, unworn section of the edge.<br />
+          • CT1 and CT2 should sit on the <b>same plane</b> and use the <b>same target thickness</b>.
+        </div>
+
+        <img id="guideImage" src="" alt="Survey point guide" />
+
+        <div class="drop-zone" id="dropZone">
+          <span class="drop-zone__prompt">Drag CSV here or <b>click to upload</b></span>
+          <input type="file" id="csvFile" class="drop-zone__input" accept=".csv" hidden />
+        </div>
+
+        <div id="pointCheckList"></div>
+
+        <div id="viz-container" aria-label="3D survey point preview"></div>
+
+        <div class="mu-actions">
+          <button type="button" class="btn btn-primary" id="calcBtn" disabled>Run calculations</button>
+        </div>
+
+        <div id="errorBox" hidden role="alert"></div>
+
+        <div id="results" hidden>
+          <div id="trxIdDisplay"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Measurement</th>
+                <th>Result</th>
+                <th class="mu-th-copy" aria-label="Copy column"></th>
+              </tr>
+            </thead>
+            <tbody id="resBody"></tbody>
+          </table>
+        </div>
+
+        <div id="exportSection" class="mu-section" hidden>
+          <h2 class="mu-section__title">Export report</h2>
+          <p class="note" style="margin-top: 0;">
+            Save a PDF copy to this device (USB, synced Google Drive / OneDrive, network share, etc.).
+          </p>
+          <div class="tc-field">
+            <label class="tc-label" for="reportName">Report name (optional)</label>
+            <input type="text" id="reportName" class="tc-input" placeholder="e.g. Site 5 CTL measure-up" />
+          </div>
+          <button type="button" class="btn btn-primary" id="generatePdfBtn">Generate PDF report</button>
+          <div id="exportHintBox" class="export-hint-box hidden" role="status"></div>
+        </div>
+      </div>
+
+      <div class="mu-help-box" id="helpLinks" hidden>
+        <div class="mu-help-box__title">Support resources</div>
+        <div id="linksContainer"></div>
+      </div>
+
+      <p class="mu-version">Technician Assistant · CTL measure-up v1.0</p>
+    </div>
+  </main>
+
+  <footer class="tc-footer">CTL Measure-Up · Trimble Technician Assistant</footer>
+
+  <input type="file" id="dealerLogoInput" accept="image/*" hidden />
+
+  <script src="calc.js?v=2"></script>
+  <script src="pdf.js?v=2"></script>
+  <script src="app.js?v=2"></script>
+</body>
+</html>

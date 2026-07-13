@@ -3,45 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Siteworks Machine Guidance — Measure-Up</title>
+  <title>CTL Measure-Up — Siteworks</title>
   <meta name="theme-color" content="#005f9e" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../app-icon-192.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
-  <link rel="shortcut icon" href="../favicon-32.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
-  <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <style>
+    .mu-hub-intro { margin-bottom: 20px; }
+    .tool-list { list-style: none; margin: 0; padding: 0; }
+    .tool-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--tc-grey-400);
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-surface);
+      text-decoration: none;
+      color: inherit;
+      margin-bottom: 10px;
+      box-shadow: var(--tc-shadow);
+    }
+    .tool-link:hover { border-color: var(--tc-blue); background: var(--tc-blue-soft); }
+    .tool-link__icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-blue);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tool-link__name { font-weight: 700; color: var(--tc-blue); display: block; }
+    .tool-link__summary { font-size: 0.84rem; color: var(--tc-grey-600); }
+    .tool-link__arrow { margin-left: auto; color: var(--tc-grey-500); font-size: 1.2rem; }
+    .mu-legacy { margin-top: 16px; font-size: 0.84rem; }
+  </style>
 </head>
 <body>
   <header class="tc-app-header">
     <a class="tc-back-link" href="../index.html">&larr; Technician Assistant</a>
     <div class="tc-header__inner">
       <div class="tc-header__brand">
-        <img
-          class="tc-header__logo"
-          src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
-          alt="Trimble"
-        />
+        <img class="tc-header__logo" src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400" alt="Trimble" />
         <div class="tc-header__titles">
-          <h1 class="tc-header__product">Siteworks Machine Guidance</h1>
-          <p class="tc-header__sub">CTL measure-up — GitHub port in progress</p>
+          <h1 class="tc-header__product">Siteworks CTL Measure-Up</h1>
+          <p class="tc-header__sub">Survey to machine file values</p>
         </div>
       </div>
     </div>
   </header>
+
   <main class="tc-main">
-    <div class="card">
-      <p class="note">
-        The full Measure-Up calculator is being ported from Apps Script to this combined GitHub app.
-        Your live Apps Script deployment is unchanged for current users.
-      </p>
-      <p class="note">
-        <strong>Next step:</strong> calculation logic from <code>Code.gs</code> will run in the browser here,
-        with the same UI you already use today.
-      </p>
-      <a class="btn" href="https://script.google.com/macros/s/AKfycbxjt5FugRY-Y3e57f1YKDDgd8tjuOlkcgeZ7rZanQXcHHEBuLcwi9e7xVVUSY4lWUQ_/exec" target="_blank" rel="noopener noreferrer">Open live Measure-Up (Apps Script)</a>
-      <a class="btn btn-secondary" href="../index.html">Back to Technician Assistant</a>
-    </div>
+    <p class="intro mu-hub-intro">
+      Siteworks CTL measure-up calculator — CSV upload, total-station or manual tape methods, 3D preview, and PDF export with optional dealer logo.
+    </p>
+
+    <ul class="tool-list">
+      <li>
+        <a class="tool-link" href="./ctl/index.html">
+          <span class="tool-link__icon">CTL</span>
+          <span>
+            <span class="tool-link__name">Open CTL calculator</span>
+            <span class="tool-link__summary">Receiver-to-centerline, attachment width, and reporting</span>
+          </span>
+          <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+      </li>
+    </ul>
+
+    <p class="note mu-legacy">
+      Legacy Apps Script deployment:
+      <a href="https://script.google.com/macros/s/AKfycbxjt5FugRY-Y3e57f1YKDDgd8tjuOlkcgeZ7rZanQXcHHEBuLcwi9e7xVVUSY4lWUQ_/exec" target="_blank" rel="noopener noreferrer">Open live Measure-Up (Apps Script)</a>
+    </p>
+    <p class="note" style="margin-top:12px;">
+      Trimble Groundworks tools (e.g. Vermeer PD25R) are listed under <strong>Trimble Groundworks</strong> on the Technician Assistant home page.
+    </p>
   </main>
+
+  <footer class="tc-footer">Siteworks CTL Measure-Up · Trimble Technician Assistant</footer>
 </body>
 </html>
