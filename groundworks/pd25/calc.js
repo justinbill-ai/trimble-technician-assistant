@@ -231,26 +231,16 @@ var PD25Calc = (function () {
   }
 
   /**
-   * Antenna offsets relative to CENTER REF using the offset line (Line PT1 → Line PT2).
-   * Matches Siteworks Down & Out from baseline on the PD25 ECM dataset:
-   *   back (G5/G1) = perpendicular distance to the offset line
-   *   left  (G6/G2) = |along-line distance from Line PT1 to the perpendicular foot|
+   * Siteworks Down & Out from CENTER REF — baseline CENTER REF → Line PT2.
+   * G6/G2 = |Down|; G5/G1 = |Out| (matches Siteworks Down & Out from Baseline UI).
    */
-  function antennaOffsetsFromOffsetLine(linePt1, linePt2, antenna) {
-    var dN = linePt2.n - linePt1.n;
-    var dE = linePt2.e - linePt1.e;
-    var lenSq = dN * dN + dE * dE;
-    if (lenSq < 1e-12) throw new Error('Offset line length is zero (Line PT1 and Line PT2).');
-
-    var len = Math.sqrt(lenSq);
-    var t = ((antenna.n - linePt1.n) * dN + (antenna.e - linePt1.e) * dE) / lenSq;
-    var footN = linePt1.n + t * dN;
-    var footE = linePt1.e + t * dE;
-
+  function antennaOffsetsFromCenterRef(centerRef, linePt2, antenna) {
+    var dno = downAndOutFromBaseline(centerRef, linePt2, antenna);
     return {
-      back: Math.hypot(antenna.n - footN, antenna.e - footE),
-      left: Math.abs(t * len),
-      alongSignedFromLinePt1: t * len,
+      down: dno.down,
+      out: dno.out,
+      g6g2: Math.abs(dno.down),
+      g5g1: Math.abs(dno.out),
     };
   }
 
@@ -429,32 +419,32 @@ var PD25Calc = (function () {
       hasReferencePoints: !!(refLinePt1 || refLinePt2 || refCenter),
     };
 
-    var mbOff = antennaOffsetsFromOffsetLine(linePt1, linePt2, mbApc);
-    var hOff = antennaOffsetsFromOffsetLine(linePt1, linePt2, hApc);
+    var mbOff = antennaOffsetsFromCenterRef(centerRef, linePt2, mbApc);
+    var hOff = antennaOffsetsFromCenterRef(centerRef, linePt2, hApc);
 
     var g7Signed = inverseVertical(mbApc, points.ML);
     var g7Value = g7Vertical(mbApc, points.ML);
 
     var results = {
       G6: {
-        label: 'Moving base antenna — left of CENTER REF',
-        value: mbOff.left,
-        source: 'Offset line (Line PT1 → Line PT2) — along-line from Line PT1 to MB foot',
+        label: 'Moving base antenna — Down from CENTER REF',
+        value: mbOff.g6g2,
+        source: 'Down & Out from Baseline — CENTER REF → Line PT2, MB APC',
       },
       G5: {
-        label: 'Moving base antenna — back from CENTER REF',
-        value: mbOff.back,
-        source: 'Offset line (Line PT1 → Line PT2) — perpendicular distance to MB',
+        label: 'Moving base antenna — Out from CENTER REF',
+        value: mbOff.g5g1,
+        source: 'Down & Out from Baseline — CENTER REF → Line PT2, MB APC',
       },
       G2: {
-        label: 'Heading antenna — left of CENTER REF',
-        value: hOff.left,
-        source: 'Offset line (Line PT1 → Line PT2) — along-line from Line PT1 to H foot',
+        label: 'Heading antenna — Down from CENTER REF',
+        value: hOff.g6g2,
+        source: 'Down & Out from Baseline — CENTER REF → Line PT2, H APC',
       },
       G1: {
-        label: 'Heading antenna — back from CENTER REF',
-        value: hOff.back,
-        source: 'Offset line (Line PT1 → Line PT2) — perpendicular distance to H',
+        label: 'Heading antenna — Out from CENTER REF',
+        value: hOff.g5g1,
+        source: 'Down & Out from Baseline — CENTER REF → Line PT2, H APC',
       },
       G7: {
         label: 'Vertical — Moving Base APC to ML (Y pivot pin center)',
@@ -551,8 +541,8 @@ var PD25Calc = (function () {
     applyApcCorrection: applyApcCorrection,
     correctHfToHammerCenter: correctHfToHammerCenter,
     g7Vertical: g7Vertical,
-    leftBackFromCenterRef: antennaOffsetsFromOffsetLine,
-    antennaOffsetsFromOffsetLine: antennaOffsetsFromOffsetLine,
+    leftBackFromCenterRef: antennaOffsetsFromCenterRef,
+    antennaOffsetsFromCenterRef: antennaOffsetsFromCenterRef,
     yPivotCenter: yPivotCenter,
     inverseVertical: inverseVertical,
     inverseDistance: inverseDistance,
