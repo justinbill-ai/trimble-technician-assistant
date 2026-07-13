@@ -406,6 +406,11 @@ var PD25Calc = (function () {
     var linePt2 = offset.linePt2;
     var centerRef = buildCenterRef(linePt1, linePt2, units);
 
+    /** Prefer Siteworks COGO points from CSV so D&O matches manual COGO exactly. */
+    var dnoCenterRef = refCenter || centerRef;
+    var dnoLinePt2 = refLinePt2 || linePt2;
+    if (refLinePt1) linePt1 = refLinePt1;
+
     var pivot = yPivotCenter(points.ML, points.MR);
 
     var mbApc = applyApcCorrection(points.MB, rodSubtract);
@@ -419,8 +424,8 @@ var PD25Calc = (function () {
       hasReferencePoints: !!(refLinePt1 || refLinePt2 || refCenter),
     };
 
-    var mbOff = antennaOffsetsFromCenterRef(centerRef, linePt2, mbApc);
-    var hOff = antennaOffsetsFromCenterRef(centerRef, linePt2, hApc);
+    var mbOff = antennaOffsetsFromCenterRef(dnoCenterRef, dnoLinePt2, mbApc);
+    var hOff = antennaOffsetsFromCenterRef(dnoCenterRef, dnoLinePt2, hApc);
 
     var g7Signed = inverseVertical(mbApc, points.ML);
     var g7Value = g7Vertical(mbApc, points.ML);
@@ -471,8 +476,8 @@ var PD25Calc = (function () {
     }
 
     if (hammerCenter) {
-      var t1Horiz = horizDist(centerRef, hammerCenter);
-      var t1Dno = downAndOutFromBaseline(centerRef, linePt2, hammerCenter);
+      var t1Horiz = horizDist(dnoCenterRef, hammerCenter);
+      var t1Dno = downAndOutFromBaseline(dnoCenterRef, dnoLinePt2, hammerCenter);
       results.T1 = {
         label: 'Horizontal distance — CENTER REF (Y pivot line) to hammer jaw center',
         value: t1Horiz,
@@ -508,6 +513,8 @@ var PD25Calc = (function () {
         linePt1: linePt1,
         linePt2: linePt2,
         centerRef: centerRef,
+        dnoCenterRef: dnoCenterRef,
+        dnoLinePt2: dnoLinePt2,
         yPivotCenter: pivot,
         hfMeasured: points.HF || null,
         hfJawCenter: hfCenter,
