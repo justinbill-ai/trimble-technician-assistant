@@ -504,7 +504,7 @@ function renderGroundworksDimensions(options) {
     if (value == null || value === '') return '';
     var str = formatDim(value);
     return (
-      ' <button type="button" class="copy-res-btn" data-copy="' +
+      '<button type="button" class="copy-res-btn" data-copy="' +
       encodeURIComponent(str) +
       '" aria-label="Copy ' +
       esc(label) +
@@ -512,42 +512,75 @@ function renderGroundworksDimensions(options) {
     );
   }
 
-  function valueCell(value, label, emphasize, approximate) {
-    if (value == null || value === '') {
-      return '<td class="pd25-muted">—</td>';
-    }
+  function valueRow(unit, value, label, emphasize, approximate) {
+    if (value == null || value === '') return '';
     var str = formatDim(value);
     var prefix = approximate ? '~' : '';
     return (
-      '<td class="pd25-dim-copy-cell">' +
-      '<span class="pd25-mono' +
+      '<div class="pd25-dim-card__value">' +
+      '<span class="pd25-dim-card__unit">' +
+      esc(unit) +
+      '</span>' +
+      '<span class="pd25-mono pd25-dim-card__amount' +
       (emphasize ? ' pd25-dim-value--critical' : '') +
       '">' +
       prefix +
       esc(str) +
       '</span>' +
       copyButton(value, label) +
-      '</td>'
+      '</div>'
     );
   }
 
-  function valueCells(row) {
+  function renderDimCard(row) {
+    var cardClass =
+      'pd25-dim-card' +
+      (row.emphasize ? ' pd25-dim-card--critical' : '') +
+      (row.entry === 'na' ? ' pd25-dim-card--na' : '');
+    var html =
+      '<article class="' +
+      cardClass +
+      '">' +
+      '<div class="pd25-dim-card__head">' +
+      '<strong class="pd25-dim-card__id">' +
+      esc(row.id) +
+      '</strong>' +
+      '<span class="pd25-dim-entry pd25-dim-entry--' +
+      esc(row.entry) +
+      '">' +
+      esc(entryLabel(row.entry)) +
+      '</span>' +
+      '</div>' +
+      '<p class="pd25-dim-card__name">' +
+      esc(row.name) +
+      '</p>';
+
+    if (row.notes) {
+      html += '<p class="pd25-dim-card__note">' + esc(row.notes) + '</p>';
+    }
+
     if (row.entry === 'na') {
-      return '<td class="pd25-muted" colspan="2">Not used on PD25</td>';
-    }
-    if (row.entry === 'measure') {
+      html += '<p class="pd25-dim-card__source">Not used on PD25</p>';
+    } else if (row.entry === 'measure') {
       if (row.typicalFt != null) {
-        return (
-          valueCell(row.typicalFt, row.id + ' typical ft', false, true) +
-          valueCell(row.typicalM, row.id + ' typical m', false, true)
-        );
+        html +=
+          '<div class="pd25-dim-card__values">' +
+          valueRow('ft', row.typicalFt, row.id + ' typical ft', false, true) +
+          valueRow('m', row.typicalM, row.id + ' typical m', false, true) +
+          '</div>';
+      } else {
+        html += '<p class="pd25-dim-card__source">From survey / calculator</p>';
       }
-      return '<td class="pd25-muted" colspan="2">From survey / calculator</td>';
+    } else {
+      html +=
+        '<div class="pd25-dim-card__values">' +
+        valueRow('ft', row.defaultFt, row.id + ' ft', row.emphasize, false) +
+        valueRow('m', row.defaultM, row.id + ' m', row.emphasize, false) +
+        '</div>';
     }
-    return (
-      valueCell(row.defaultFt, row.id + ' ft', row.emphasize, false) +
-      valueCell(row.defaultM, row.id + ' m', row.emphasize, false)
-    );
+
+    html += '</article>';
+    return html;
   }
 
   var html =
@@ -585,45 +618,27 @@ function renderGroundworksDimensions(options) {
   }
 
   data.sections.forEach(function (section) {
-    var openAttr = section.id === 'boom' ? ' open' : '';
-    html += '<details class="pd25-dimensions__section"' + openAttr + '>';
     html +=
-      '<summary class="pd25-dimensions__summary">' +
+      '<section class="pd25-dim-group" id="pd25-dim-' +
+      esc(section.id) +
+      '">' +
+      '<h3 class="pd25-dim-group__title">' +
       esc(section.title) +
       '<span class="pd25-dimensions__count">' +
       section.rows.length +
-      ' params</span></summary>';
-    html += '<div class="pd25-dimensions__section-body">';
+      ' params</span></h3>';
     if (section.subtitle) {
       html += '<p class="pd25-dimensions__subtitle">' + esc(section.subtitle) + '</p>';
     }
-    html +=
-      '<div class="pd25-table-wrap"><table class="pd25-table pd25-dimensions__table"><thead><tr>' +
-      '<th>Param</th><th>Description</th><th>Default (ft)</th><th>Default (m)</th><th>Entry</th>' +
-      '</tr></thead><tbody>';
+    html += '<div class="pd25-dim-cards">';
     section.rows.forEach(function (row) {
-      var rowClass = row.emphasize ? ' class="pd25-dim-row--critical"' : '';
-      html +=
-        '<tr' +
-        rowClass +
-        '><td><strong>' +
-        esc(row.id) +
-        '</strong></td><td>' +
-        esc(row.name) +
-        (row.notes ? '<br><span class="pd25-muted">' + esc(row.notes) + '</span>' : '') +
-        '</td>' +
-        valueCells(row) +
-        '<td><span class="pd25-dim-entry pd25-dim-entry--' +
-        esc(row.entry) +
-        '">' +
-        esc(entryLabel(row.entry)) +
-        '</span></td></tr>';
+      html += renderDimCard(row);
     });
-    html += '</tbody></table></div>';
+    html += '</div>';
     if (section.footnote) {
       html += '<p class="note pd25-dimensions__footnote">' + esc(section.footnote) + '</p>';
     }
-    html += '</div></details>';
+    html += '</section>';
   });
 
   html += '</div>';
@@ -976,29 +991,38 @@ function renderCalcResults(analysis) {
   var GROUNDWORKS_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1', 'T5'];
 
   html += '<h3 class="pd25-results__h">Groundworks measure-up values</h3>';
-  html +=
-    '<div class="pd25-table-wrap"><table class="pd25-table"><thead><tr><th>Value</th><th>Result (' +
-    esc(u) +
-    ')</th><th class="pd25-th-copy">Copy</th></tr></thead><tbody>';
+  html += '<div class="pd25-dim-cards pd25-result-cards">';
   GROUNDWORKS_ORDER.forEach(function (key) {
     var row = analysis.groundworks[key];
     if (!row) return;
     var valueStr = Number(row.value).toFixed(3);
-    var valueCell = esc(valueStr);
     html +=
-      '<tr><td><strong>' +
+      '<article class="pd25-dim-card pd25-result-card">' +
+      '<div class="pd25-dim-card__head">' +
+      '<strong class="pd25-dim-card__id">' +
       esc(key) +
-      '</strong><br><span class="pd25-muted">' +
+      '</strong>' +
+      '<span class="pd25-dim-entry pd25-dim-entry--measure">Result</span>' +
+      '</div>' +
+      '<p class="pd25-dim-card__name">' +
       esc(row.label) +
-      '</span></td><td class="pd25-mono pd25-results__value">' +
-      valueCell +
-      '</td><td class="pd25-copy-cell"><button type="button" class="copy-res-btn" data-copy="' +
+      '</p>' +
+      '<div class="pd25-dim-card__values">' +
+      '<div class="pd25-dim-card__value">' +
+      '<span class="pd25-dim-card__unit">' +
+      esc(u) +
+      '</span>' +
+      '<span class="pd25-mono pd25-dim-card__amount pd25-results__value">' +
+      esc(valueStr) +
+      '</span>' +
+      '<button type="button" class="copy-res-btn" data-copy="' +
       encodeURIComponent(valueStr) +
       '" aria-label="Copy ' +
       esc(key) +
-      '">Copy</button></td></tr>';
+      '">Copy</button>' +
+      '</div></div></article>';
   });
-  html += '</tbody></table></div>';
+  html += '</div>';
 
   if (analysis.rodCorrection && analysis.rodCorrection.rodSubtract > 0) {
     var rc = analysis.rodCorrection;
