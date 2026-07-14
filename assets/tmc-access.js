@@ -189,8 +189,7 @@
     var lead = document.querySelector('#tmcAccessModal .tmc-access-modal__lead');
     if (!lead) return;
     if (context === 'category') {
-      lead.textContent =
-        'Enter your Trimble email to open the TMC section. Unauthorized users cannot view TMC tools or categories.';
+      lead.textContent = 'Enter your email to open the TMC section.';
     } else {
       lead.textContent = 'Enter your email to open this tool.';
     }
