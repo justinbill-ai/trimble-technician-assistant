@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="./assets/trimble-connect.css" />
   <link rel="stylesheet" href="./assets/landing-help.css" />
   <link rel="stylesheet" href="./assets/tmc-access.css" />
+  <link rel="stylesheet" href="./assets/feedback.css" />
 </head>
 <body>
   <header class="tc-app-header">
@@ -43,6 +44,20 @@
   <main class="tc-main">
     <section id="hubHome" class="hub-view">
       <div id="categoryPicker" class="category-picker-grid" role="list"></div>
+      <div class="hub-feedback-tile">
+        <button
+          type="button"
+          class="category-pick category-pick--feedback"
+          id="feedbackOpenBtn"
+          aria-haspopup="dialog"
+        >
+          <span class="category-pick__title">Developer feedback</span>
+          <span class="category-pick__count">Enhancement</span>
+        </button>
+        <p class="hub-feedback-tile__note note">
+          Suggest improvements or report issues — delivered to the app developer as an enhancement request.
+        </p>
+      </div>
     </section>
 
     <section id="hubCategory" class="hub-view" hidden>
@@ -181,6 +196,68 @@
     </div>
   </div>
 
+  <div class="feedback-modal" id="feedbackModal" hidden aria-hidden="true">
+    <button type="button" class="feedback-modal__backdrop" id="feedbackModalBackdrop" aria-label="Close"></button>
+    <div class="feedback-modal__panel card" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+      <div class="feedback-modal__head">
+        <h2 id="feedbackModalTitle" class="feedback-modal__title">Developer feedback</h2>
+        <button type="button" class="btn-icon" id="feedbackModalClose" aria-label="Close">✕</button>
+      </div>
+      <p class="feedback-modal__lead">
+        Share an enhancement request, bug report, or question. Your message goes to the Technician Assistant developer.
+      </p>
+      <form id="feedbackForm" class="feedback-modal__form" novalidate>
+        <label class="feedback-modal__label" for="feedbackType">Type</label>
+        <select class="feedback-modal__input" id="feedbackType" name="type" required>
+          <option value="Enhancement request">Enhancement request</option>
+          <option value="Bug report">Bug report</option>
+          <option value="Question">Question</option>
+        </select>
+        <label class="feedback-modal__label" for="feedbackTopic">Topic (optional)</label>
+        <input
+          class="feedback-modal__input"
+          id="feedbackTopic"
+          name="topic"
+          type="text"
+          placeholder="e.g. PD25 calculator, hub navigation"
+          maxlength="120"
+        />
+        <label class="feedback-modal__label" for="feedbackName">Your name (optional)</label>
+        <input class="feedback-modal__input" id="feedbackName" name="name" type="text" autocomplete="name" maxlength="80" />
+        <label class="feedback-modal__label" for="feedbackEmail">Your email (optional)</label>
+        <input
+          class="feedback-modal__input"
+          id="feedbackEmail"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder="So the developer can follow up"
+        />
+        <label class="feedback-modal__label" for="feedbackMessage">Message</label>
+        <textarea
+          class="feedback-modal__input feedback-modal__textarea"
+          id="feedbackMessage"
+          name="message"
+          rows="5"
+          required
+          placeholder="Describe what you would like improved, what happened, or what you need help with…"
+        ></textarea>
+        <p class="feedback-modal__error" id="feedbackError" hidden role="alert"></p>
+        <p class="feedback-modal__success" id="feedbackSuccess" hidden role="status"></p>
+        <div class="feedback-modal__actions">
+          <button type="button" class="btn-secondary" id="feedbackModalCancel">Cancel</button>
+          <button type="submit" class="btn-primary" id="feedbackSubmit">Send feedback</button>
+        </div>
+      </form>
+      <p class="feedback-modal__note note">
+        Submissions include the current page URL to help with troubleshooting.
+      </p>
+    </div>
+  </div>
+
+  <script src="./assets/feedback-config.js"></script>
+  <script src="./assets/feedback.js"></script>
   <script src="./assets/hub-nav.js"></script>
   <script src="./assets/landing-help.js"></script>
   <script src="./assets/tmc-access.js"></script>

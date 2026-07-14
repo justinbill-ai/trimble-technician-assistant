@@ -1,0 +1,117 @@
+/* Developer feedback modal — hub home */
+
+body.feedback-modal-open {
+  overflow: hidden;
+}
+
+.feedback-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.feedback-modal[hidden] {
+  display: none;
+}
+
+.feedback-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 45, 74, 0.72);
+  cursor: pointer;
+}
+
+.feedback-modal__panel {
+  position: relative;
+  width: min(100%, 480px);
+  max-height: min(92vh, 720px);
+  overflow: auto;
+  padding: 22px 20px 18px;
+  border: 1px solid var(--tc-grey-300);
+  box-shadow: var(--tc-shadow-md);
+}
+
+.feedback-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.feedback-modal__title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--tc-blue);
+}
+
+.feedback-modal__lead {
+  margin: 0 0 16px;
+  color: var(--tc-grey-600);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.feedback-modal__form {
+  display: grid;
+  gap: 8px;
+}
+
+.feedback-modal__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--tc-text);
+  margin-top: 4px;
+}
+
+.feedback-modal__input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--tc-grey-400);
+  border-radius: var(--tc-radius);
+  font: inherit;
+  background: #fff;
+}
+
+.feedback-modal__textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.45;
+}
+
+.feedback-modal__input:focus {
+  outline: 2px solid var(--tc-blue);
+  outline-offset: 1px;
+  border-color: var(--tc-blue);
+}
+
+.feedback-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.feedback-modal__error {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  color: var(--tc-error);
+}
+
+.feedback-modal__success {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  color: #2e7d32;
+}
+
+.feedback-modal__note {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+}
