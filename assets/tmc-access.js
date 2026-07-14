@@ -213,6 +213,7 @@
 
   var pendingSuccess = null;
   var pendingHref = '';
+  var hubGateModalReady = false;
 
   function openHubModal(targetHref) {
     var modal = document.getElementById('tmcAccessModal');
@@ -269,6 +270,9 @@
         promptForAccess({ href: href, context: 'tool' });
       });
     });
+
+    if (hubGateModalReady) return;
+    hubGateModalReady = true;
 
     bindAccessForm(
       {

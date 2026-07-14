@@ -1042,8 +1042,7 @@ function bindCraneUi() {
 
 function startCraneApp() {
   if (!window.TmcAccess) {
-    document.body.classList.remove('access-locked');
-    bindCraneUi();
+    document.body.classList.add('access-locked');
     return;
   }
   window.TmcAccess.initGate(function () {
