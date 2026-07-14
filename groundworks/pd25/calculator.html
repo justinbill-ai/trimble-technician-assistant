@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#005f9e" />
   <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="styles.css?v=26" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -52,6 +52,19 @@
         If you are new to PD25 or chasing accuracy issues, use the
         <a href="guide.html">guided pre measure-up workflow</a> first.
       </div>
+
+      <div id="pd25CalcTechTip" class="pd25-dimensions__tech-tip pd25-calc-tech-tip" role="note" hidden></div>
+
+      <details class="pd25-dimensions-panel pd25-section" id="groundworksDimensionsSection">
+        <summary class="pd25-dimensions-panel__summary">Groundworks dimensions reference</summary>
+        <div class="pd25-dimensions-panel__body">
+          <p class="note" style="margin:0 0 12px;">
+            OEM default values from the Vermeer PD25R measure-up guide. Enter all <strong>Use default</strong> rows in Groundworks;
+            <strong>Measure</strong> rows come from your survey and the calculator below. Tap <strong>Copy</strong> beside any value to paste into Groundworks.
+          </p>
+          <div id="groundworksDimensions"></div>
+        </div>
+      </details>
 
       <div id="calcContent">
         <div class="pd25-section">
@@ -188,6 +201,23 @@
           </div>
         </div>
 
+        <div class="pd25-rod-callout pd25-t-pile-callout">
+          <p class="pd25-rod-callout__title">T1, T2 &amp; T3 — plumb pile tuning</p>
+          <p class="pd25-rod-callout__lead">
+            Correct <strong>T2</strong> and <strong>T3</strong> (and verify <strong>T1</strong>) on a
+            <strong>plumb installed pile</strong>, not from survey COGO alone.
+          </p>
+          <ol class="pd25-t-pile-callout__steps">
+            <li>Set the machine on a plumb pile and zero guidance in one direction.</li>
+            <li>Rotate the machine <strong>180°</strong>, set back on the same pile, and verify guidance.</li>
+            <li>Adjust T1, T2, and T3 until error is minimized in both orientations.</li>
+          </ol>
+          <p class="note pd25-rod-note" style="margin:0;">
+            If residual error cannot be zeroed and you must enter values much greater than
+            <strong>0.10&nbsp;ft (30.48&nbsp;mm)</strong>, revisit Phase&nbsp;1 calibrations and your full measure-up before relying on guidance.
+          </p>
+        </div>
+
         <div class="mu-actions" style="margin-top:16px;">
           <button type="button" class="btn btn-primary" id="analyzeBtn" disabled>Calculate Results</button>
         </div>
@@ -212,12 +242,14 @@
 
   <footer class="tc-footer">PD25 · Trimble Groundworks · Technician Assistant</footer>
 
-  <script src="pdf.js?v=2"></script>
-  <script src="guide-data.js?v=11"></script>
+  <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>
+  <script src="pdf.js?v=4"></script>
+  <script src="guide-data.js?v=27"></script>
+  <script src="groundworks-dimensions-data.js?v=6"></script>
   <script src="target-placement-data.js?v=20"></script>
   <script src="target-placement.js?v=2"></script>
   <script src="viz.js?v=5"></script>
   <script src="calc.js?v=21"></script>
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=38"></script>
 </body>
 </html>

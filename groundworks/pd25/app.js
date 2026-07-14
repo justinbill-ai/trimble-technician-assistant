@@ -8,7 +8,6 @@ var state = {
   csvText: null,
   csvFileName: '',
   lastAnalysis: null,
-  reportId: null,
 };
 
 var dealerLogo = null;
@@ -55,23 +54,6 @@ function refreshViz(analysis) {
   }
 }
 
-function makeReportId() {
-  var d = new Date();
-  var pad = function (n) {
-    return String(n).padStart(2, '0');
-  };
-  return (
-    'PD25-' +
-    d.getFullYear() +
-    pad(d.getMonth() + 1) +
-    pad(d.getDate()) +
-    '-' +
-    pad(d.getHours()) +
-    pad(d.getMinutes()) +
-    pad(d.getSeconds())
-  );
-}
-
 function showExportSection(show) {
   var section = document.getElementById('exportSection');
   if (section) section.hidden = !show;
@@ -86,6 +68,11 @@ function showExportHints(message) {
 
 function buildPdfNotes(analysis) {
   var notes = [];
+  notes.push({
+    label: 'T1 / T2 / T3',
+    value:
+      'Finalize T2 and T3 on a plumb installed pile: zero guidance in one direction, rotate the machine 180°, set back on the pile, and verify. Use this check to resolve error in T1, T2, and T3. If residual error cannot be zeroed and values exceed 0.10 ft (30.48 mm), revisit Phase 1 calibrations and the full measure-up.',
+  });
   if (analysis.rodCorrection && analysis.rodCorrection.rodSubtract > 0) {
     var rc = analysis.rodCorrection;
     notes.push({
@@ -105,9 +92,6 @@ function buildPdfNotes(analysis) {
         ' subtracted from MB/H',
     });
   }
-  if (analysis.coordUnits) {
-    notes.push({ label: 'Survey coordinate units', value: analysis.coordUnits });
-  }
   return notes;
 }
 
@@ -119,19 +103,16 @@ function getExportPayload() {
     groundworks: analysis.groundworks,
     unitLabel: analysis.unitLabel,
     meta: {
-      id: state.reportId || makeReportId(),
-      machine: 'Trimble Groundworks',
-      units: analysis.units === 'METRIC' ? 'Metric' : 'US survey feet',
       machineModel: document.getElementById('machineModel').value.trim(),
       serialNumber: document.getElementById('serialNumber').value.trim(),
       surveyFile: state.csvFileName || '—',
-      time: new Date().toLocaleString(),
+      surveyCoordinateUnits: analysis.coordUnits || analysis.units || '—',
     },
     dealerName: document.getElementById('dealerName').value.trim(),
     techName: document.getElementById('techName').value.trim(),
     dealerLogo: dealerLogo,
     reportName: reportName,
-    reportTitle: reportName || 'PD25_MeasureUp_' + (state.reportId || makeReportId()),
+    reportTitle: reportName || 'PD25 Groundworks Measure-Up',
     generatedAt: new Date().toLocaleString(),
     notes: buildPdfNotes(analysis),
   };
@@ -490,6 +471,183 @@ function initBodySignExampleModal() {
   });
 }
 
+function renderGroundworksTechTipHtml() {
+  var data = typeof PD25_GROUNDWORKS_DIMENSIONS !== 'undefined' ? PD25_GROUNDWORKS_DIMENSIONS : null;
+  if (!data || !data.techTip) return '';
+  return (
+    '<strong>Tech tip</strong><br>' + esc(data.techTip.replace(/^Tech tip:\s*/i, ''))
+  );
+}
+
+function renderGroundworksDimensions(options) {
+  options = options || {};
+  var data = typeof PD25_GROUNDWORKS_DIMENSIONS !== 'undefined' ? PD25_GROUNDWORKS_DIMENSIONS : null;
+  if (!data) return '';
+
+  function formatDim(value) {
+    if (value == null || value === '') return '—';
+    var n = Number(value);
+    if (isNaN(n)) return '—';
+    var s = n.toFixed(4);
+    if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+    return s;
+  }
+
+  function entryLabel(entry) {
+    if (entry === 'measure') return 'Measure';
+    if (entry === 'default') return 'Use default';
+    if (entry === 'na') return 'N/A';
+    return entry;
+  }
+
+  function copyButton(value, label) {
+    if (value == null || value === '') return '';
+    var str = formatDim(value);
+    return (
+      ' <button type="button" class="copy-res-btn" data-copy="' +
+      encodeURIComponent(str) +
+      '" aria-label="Copy ' +
+      esc(label) +
+      '">Copy</button>'
+    );
+  }
+
+  function valueCell(value, label, emphasize, approximate) {
+    if (value == null || value === '') {
+      return '<td class="pd25-muted">—</td>';
+    }
+    var str = formatDim(value);
+    var prefix = approximate ? '~' : '';
+    return (
+      '<td class="pd25-dim-copy-cell">' +
+      '<span class="pd25-mono' +
+      (emphasize ? ' pd25-dim-value--critical' : '') +
+      '">' +
+      prefix +
+      esc(str) +
+      '</span>' +
+      copyButton(value, label) +
+      '</td>'
+    );
+  }
+
+  function valueCells(row) {
+    if (row.entry === 'na') {
+      return '<td class="pd25-muted" colspan="2">Not used on PD25</td>';
+    }
+    if (row.entry === 'measure') {
+      if (row.typicalFt != null) {
+        return (
+          valueCell(row.typicalFt, row.id + ' typical ft', false, true) +
+          valueCell(row.typicalM, row.id + ' typical m', false, true)
+        );
+      }
+      return '<td class="pd25-muted" colspan="2">From survey / calculator</td>';
+    }
+    return (
+      valueCell(row.defaultFt, row.id + ' ft', row.emphasize, false) +
+      valueCell(row.defaultM, row.id + ' m', row.emphasize, false)
+    );
+  }
+
+  var html =
+    '<div class="pd25-dimensions">' +
+    '<p class="note pd25-dimensions__intro">' +
+    esc(data.intro) +
+    '</p>';
+
+  if (data.b5Callout) {
+    html +=
+      '<div class="pd25-dimensions__b5-callout" role="note">' +
+      '<strong>Critical — B5</strong><br>' +
+      esc(data.b5Callout);
+    if (data.b5Image) {
+      html +=
+        '<figure class="pd25-dimensions__b5-figure">' +
+        '<img class="pd25-dimensions__b5-image" src="' +
+        esc(data.b5Image) +
+        '" alt="' +
+        esc(data.b5ImageAlt || 'B5 measure-up location on PD25') +
+        '" loading="lazy" />' +
+        '<figcaption class="pd25-dimensions__b5-caption">' +
+        esc(data.b5ImageCaption || 'B5 — center of Y pivot pin to X tilt pin') +
+        '</figcaption>' +
+        '</figure>';
+    }
+    html += '</div>';
+  }
+
+  if (data.techTip && !options.omitTechTip) {
+    html +=
+      '<div class="pd25-dimensions__tech-tip" role="note">' +
+      renderGroundworksTechTipHtml() +
+      '</div>';
+  }
+
+  data.sections.forEach(function (section) {
+    var openAttr = section.id === 'boom' ? ' open' : '';
+    html += '<details class="pd25-dimensions__section"' + openAttr + '>';
+    html +=
+      '<summary class="pd25-dimensions__summary">' +
+      esc(section.title) +
+      '<span class="pd25-dimensions__count">' +
+      section.rows.length +
+      ' params</span></summary>';
+    html += '<div class="pd25-dimensions__section-body">';
+    if (section.subtitle) {
+      html += '<p class="pd25-dimensions__subtitle">' + esc(section.subtitle) + '</p>';
+    }
+    html +=
+      '<table class="pd25-table pd25-dimensions__table"><thead><tr>' +
+      '<th>Param</th><th>Description</th><th>Default (ft)</th><th>Default (m)</th><th>Entry</th>' +
+      '</tr></thead><tbody>';
+    section.rows.forEach(function (row) {
+      var rowClass = row.emphasize ? ' class="pd25-dim-row--critical"' : '';
+      html +=
+        '<tr' +
+        rowClass +
+        '><td><strong>' +
+        esc(row.id) +
+        '</strong></td><td>' +
+        esc(row.name) +
+        (row.notes ? '<br><span class="pd25-muted">' + esc(row.notes) + '</span>' : '') +
+        '</td>' +
+        valueCells(row) +
+        '<td><span class="pd25-dim-entry pd25-dim-entry--' +
+        esc(row.entry) +
+        '">' +
+        esc(entryLabel(row.entry)) +
+        '</span></td></tr>';
+    });
+    html += '</tbody></table>';
+    if (section.footnote) {
+      html += '<p class="note pd25-dimensions__footnote">' + esc(section.footnote) + '</p>';
+    }
+    html += '</div></details>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function mountGroundworksDimensions(targetId, options) {
+  var el = document.getElementById(targetId);
+  if (!el) return;
+  el.innerHTML = renderGroundworksDimensions(options);
+}
+
+function mountCalculatorTechTip() {
+  var el = document.getElementById('pd25CalcTechTip');
+  if (!el) return;
+  var html = renderGroundworksTechTipHtml();
+  if (!html) {
+    el.hidden = true;
+    return;
+  }
+  el.innerHTML = html;
+  el.hidden = false;
+}
+
 function renderPhases() {
   var root = document.getElementById('phaseList');
   root.innerHTML = '';
@@ -583,6 +741,22 @@ function renderPhases() {
         '</span>';
       body.appendChild(row);
     });
+
+    if (phase.calculator) {
+      var dimWrap = document.createElement('details');
+      dimWrap.className = 'pd25-dimensions-panel pd25-phase__dimensions';
+      dimWrap.innerHTML =
+        '<summary class="pd25-dimensions-panel__summary">Groundworks dimensions reference</summary>' +
+        '<div class="pd25-dimensions-panel__body">' +
+        renderGroundworksDimensions() +
+        '</div>';
+      body.appendChild(dimWrap);
+      var calcLink = document.createElement('p');
+      calcLink.className = 'note pd25-page-crosslink';
+      calcLink.innerHTML =
+        'Open the <a href="calculator.html">measure-up calculator</a> to upload your CSV and generate G/T values from survey.';
+      body.appendChild(calcLink);
+    }
 
     head.addEventListener('click', function () {
       var willExpand = body.hidden;
@@ -787,7 +961,6 @@ function renderCalcResults(analysis) {
   }
 
   state.lastAnalysis = analysis;
-  if (!state.reportId) state.reportId = makeReportId();
   showExportSection(true);
 
   var u = analysis.unitLabel;
@@ -803,10 +976,6 @@ function renderCalcResults(analysis) {
   var GROUNDWORKS_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1', 'T5'];
 
   html += '<h3 class="pd25-results__h">Groundworks measure-up values</h3>';
-  html +=
-    '<p class="note pd25-trx-id" style="margin:0 0 10px;"><strong>Report ID:</strong> ' +
-    esc(state.reportId) +
-    '</p>';
   html +=
     '<table class="pd25-table"><thead><tr><th>Value</th><th>Result (' +
     esc(u) +
@@ -862,7 +1031,6 @@ function bindCsv() {
   function handleFile(file) {
     if (!file) return;
     state.csvFileName = file.name;
-    state.reportId = null;
     showExportSection(false);
     showExportHints('');
     zone.querySelector('.drop-zone__prompt').innerHTML = '✅ <b>' + esc(file.name) + '</b>';
@@ -928,13 +1096,14 @@ function bindCsv() {
 }
 
 function bindCopyResults() {
-  var box = document.getElementById('calcResults');
-  if (!box) return;
-  box.addEventListener('click', function (e) {
+  if (bindCopyResults._bound) return;
+  bindCopyResults._bound = true;
+  document.addEventListener('click', function (e) {
     var btn = e.target.closest('.copy-res-btn');
     if (!btn) return;
     var enc = btn.getAttribute('data-copy');
     if (!enc) return;
+    e.preventDefault();
     copyResultValue(decodeURIComponent(enc), btn);
   });
 }
@@ -953,10 +1122,11 @@ function initGuide() {
 }
 
 function initCalculator() {
+  mountCalculatorTechTip();
+  mountGroundworksDimensions('groundworksDimensions', { omitTechTip: true });
   bindCsv();
   bindRodUi();
   bindHfUi();
-  bindCopyResults();
   bindPdfExport();
   loadSavedDealerBranding();
   updateHcOffsetHint();
@@ -967,6 +1137,7 @@ function initCalculator() {
 
 function init() {
   var page = getPageMode();
+  bindCopyResults();
   if (page === 'guide' || page === 'combined') {
     initGuide();
     if (page === 'combined') bindTabs();

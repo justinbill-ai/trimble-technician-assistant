@@ -533,7 +533,6 @@ function runCalc() {
 
       lastResponse = response;
       var data = response.calculations;
-      document.getElementById('trxIdDisplay').textContent = 'TX ID: ' + response.meta.id;
       var body = document.getElementById('resBody');
       body.innerHTML = '';
       var ri;
@@ -578,7 +577,7 @@ function getExportPayload() {
     techName: document.getElementById('techName').value.trim(),
     dealerLogo: dealerLogo,
     reportName: reportName,
-    reportTitle: reportName || 'MeasureUp_' + meta.id,
+    reportTitle: reportName || 'CTL Measure-Up',
     generatedAt: meta.time || new Date().toLocaleString(),
   };
 }

@@ -72,7 +72,6 @@ var MeasureUpCalc = (function () {
     techName,
     dealerName
   ) {
-    var transactionId = 'TX-' + Math.floor(100000 + Math.random() * 900000);
     var timestamp = new Date();
 
     var csvData;
@@ -232,7 +231,6 @@ var MeasureUpCalc = (function () {
     return {
       calculations: res,
       meta: {
-        id: transactionId,
         time: timestamp.toLocaleString(),
         machine: machine,
         units: units,

@@ -248,9 +248,25 @@ var PD25_GUIDE = {
       id: 'phase-4-5',
       title: 'Phase 4–5 — COGO & Groundworks values',
       critical: false,
-      summary: 'Use the calculator tab after Phases 1–3 are verified.',
+      summary:
+        'Use the measure-up calculator after Phases 1–3. Enter G values and T5/T1 from survey, then finalize T2 and T3 on a plumb installed pile.',
       calculator: true,
-      steps: [],
+      steps: [
+        {
+          id: 'p45-gw-values',
+          title: 'Enter survey values in Groundworks',
+          body:
+            'From the measure-up calculator, enter G6, G5, G2, G1, G7, and T5/T1 when computed. T2 and T3 are set on a plumb pile after the machine is on piles (next step).',
+        },
+        {
+          id: 'p45-pile-tune',
+          title: 'Tune T1, T2 & T3 on a plumb pile',
+          body:
+            'Drive or place a plumb pile, then set the machine on that pile. Zero guidance in one direction, then rotate the machine 180°, set back on the same pile, and verify. Use this check to dial in T1, T2, and T3.',
+          note:
+            'Final T2 and T3 values come from this plumb-pile procedure — not from the static measure-up calculator. After the 180° check, residual error in T1, T2, or T3 should be small. If you cannot zero the error and must enter values much greater than 0.10 ft (30.48 mm), revisit Phase 1 calibrations and your full measure-up before relying on guidance.',
+        },
+      ],
     },
     {
       id: 'phase-6',

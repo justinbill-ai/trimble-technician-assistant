@@ -4,7 +4,13 @@
 var PD25Pdf = (function () {
   var PDF_RESULT_ROW_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1', 'T5'];
 
-  var TRIMBLE_LOGO_URL = '../../assets/brand/trimble-logo-blue.png';
+  function trimblePdfLogoSrc() {
+    return typeof TRIMBLE_PDF_LOGO_SRC !== 'undefined'
+      ? TRIMBLE_PDF_LOGO_SRC
+      : '../../assets/brand/trimble-logo-blue.png';
+  }
+
+  var TRIMBLE_LOGO_URL = trimblePdfLogoSrc();
 
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
@@ -92,7 +98,7 @@ var PD25Pdf = (function () {
       "body{font-family:'Open Sans','Segoe UI',Tahoma,sans-serif;color:#252a2e;margin:0;padding:0;}" +
       ".rpt-hdr{background:#fff;padding:20px 24px 16px;border-bottom:3px solid #005f9e;}" +
       ".rpt-hdr__brands{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:14px;}" +
-      ".trimble-logo{height:32px;width:auto;display:block;}" +
+      ".trimble-logo{height:32px;width:auto;display:block;background:#fff;}" +
       ".dealer-logo-wrap{flex:0 0 180px;min-height:52px;display:flex;align-items:center;justify-content:flex-end;}" +
       ".dealer-logo{max-width:180px;max-height:52px;object-fit:contain;}" +
       ".dealer-logo-slot{width:180px;height:52px;}" +
@@ -114,9 +120,8 @@ var PD25Pdf = (function () {
       row('Technician', data.techName) +
       row('Machine model', meta.machineModel) +
       row('Serial number', meta.serialNumber) +
-      row('Guidance system', meta.machine + ' (' + meta.units + ')') +
       row('Survey file', meta.surveyFile) +
-      row('Transaction ID', meta.id) +
+      row('Survey coordinate units', meta.surveyCoordinateUnits) +
       '</table>' +
       '<h2>Groundworks measure-up results</h2>' +
       buildMeasurementsTableHtml(data.groundworks, data.unitLabel) +
