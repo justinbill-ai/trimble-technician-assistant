@@ -107,7 +107,7 @@ var PD25_GUIDE = {
             title: 'Right side down — positive roll',
             caption:
               'When the right side of the machine is lower than the left, enter a positive (+) roll value in Groundworks.',
-            maxDisplayWidth: 400,
+            maxDisplayWidth: 300,
           },
         },
       ],

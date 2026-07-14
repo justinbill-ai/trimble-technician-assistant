@@ -207,6 +207,24 @@
   .pd25-dim-card {
     padding: 10px 12px;
   }
+
+  .pd25-body-sign-modal .pd25-target-modal__panel {
+    width: min(320px, 92vw);
+    padding: 14px 12px 12px;
+  }
+
+  .pd25-body-sign-modal .pd25-target-modal__img {
+    max-width: min(260px, 100%) !important;
+    max-height: 46vh;
+  }
+
+  .pd25-target-modal__panel {
+    padding: 14px 12px 12px;
+  }
+
+  .pd25-target-modal__img {
+    max-height: 46vh;
+  }
 }
 
 .pd25-step__title {
@@ -955,7 +973,10 @@
 
 .pd25-body-sign-modal .pd25-target-modal__img {
   width: auto;
-  max-width: 100%;
+  max-width: min(360px, 100%);
+  max-height: 62vh;
+  height: auto;
+  object-fit: contain;
   margin: 0 auto;
 }
 
@@ -1404,8 +1425,12 @@ body.pd25-target-modal-open {
 
 .pd25-target-modal__img {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 62vh;
   height: auto;
+  object-fit: contain;
+  margin: 0 auto;
   border-radius: var(--tc-radius-lg);
   border: 1px solid var(--tc-grey-300);
 }

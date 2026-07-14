@@ -21,10 +21,21 @@ window.FEEDBACK_CONFIG = {
 
 /*
 --- Google Apps Script (copy into script.google.com) ---
+IMPORTANT: After updating, Deploy → Manage deployments → edit → New version → Deploy
+
+function parseFeedbackPayload(e) {
+  if (e.parameter && e.parameter.payload) {
+    return JSON.parse(e.parameter.payload);
+  }
+  if (e.postData && e.postData.contents) {
+    return JSON.parse(e.postData.contents);
+  }
+  return e.parameter || {};
+}
 
 function doPost(e) {
   var recipient = 'justin_bill@trimble.com';
-  var data = JSON.parse(e.postData.contents);
+  var data = parseFeedbackPayload(e);
   var subject =
     '[Tech Assistant] ' +
     (data.type || 'Feedback') +

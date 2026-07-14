@@ -10,6 +10,7 @@
   var errorEl;
   var successEl;
   var submitBtn;
+  var submitFrame;
 
   function cfg(key, fallback) {
     return config[key] != null && config[key] !== '' ? config[key] : fallback;
@@ -26,7 +27,10 @@
     }
     if (errorEl) errorEl.hidden = true;
     if (successEl) successEl.hidden = true;
-    if (submitBtn) submitBtn.disabled = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send feedback';
+    }
     var first = document.getElementById('feedbackType');
     if (first) first.focus();
   }
@@ -65,6 +69,18 @@
     };
   }
 
+  function ensureSubmitFrame() {
+    if (submitFrame && submitFrame.parentNode) return submitFrame;
+    submitFrame = document.createElement('iframe');
+    submitFrame.name = 'feedbackSubmitFrame';
+    submitFrame.id = 'feedbackSubmitFrame';
+    submitFrame.hidden = true;
+    submitFrame.setAttribute('aria-hidden', 'true');
+    submitFrame.setAttribute('tabindex', '-1');
+    document.body.appendChild(submitFrame);
+    return submitFrame;
+  }
+
   function submitViaMailto(payload) {
     var recipient = cfg('recipientEmail', '');
     if (!recipient) {
@@ -89,25 +105,51 @@
     if (submitBtn) submitBtn.disabled = true;
   }
 
+  /**
+   * POST via hidden form + iframe — avoids browser CORS blocks on Apps Script fetch().
+   */
   function submitViaEndpoint(payload) {
     var endpoint = cfg('endpoint', '');
-    return fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-    })
-      .then(function (res) {
-        return res.json().catch(function () {
-          return { ok: res.ok };
-        });
-      })
-      .then(function (data) {
-        if (data && data.ok === false) {
-          throw new Error(data.error || 'Submission failed');
-        }
-        showSuccess('Thanks — your feedback was sent to the developer.');
-        if (submitBtn) submitBtn.disabled = true;
-      });
+    ensureSubmitFrame();
+
+    return new Promise(function (resolve, reject) {
+      var hiddenForm = document.createElement('form');
+      hiddenForm.method = 'POST';
+      hiddenForm.action = endpoint;
+      hiddenForm.target = 'feedbackSubmitFrame';
+      hiddenForm.acceptCharset = 'UTF-8';
+      hiddenForm.style.display = 'none';
+
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      input.value = JSON.stringify(payload);
+      hiddenForm.appendChild(input);
+
+      var settled = false;
+      function finish(ok) {
+        if (settled) return;
+        settled = true;
+        hiddenForm.remove();
+        if (ok) resolve();
+        else reject(new Error('Submission failed'));
+      }
+
+      submitFrame.onload = function () {
+        finish(true);
+      };
+
+      document.body.appendChild(hiddenForm);
+      hiddenForm.submit();
+
+      // Cross-origin iframe may not fire onload — assume success after brief delay.
+      setTimeout(function () {
+        finish(true);
+      }, 1800);
+    }).then(function () {
+      showSuccess('Thanks — your feedback was sent to the developer.');
+      if (submitBtn) submitBtn.disabled = true;
+    });
   }
 
   function onSubmit(e) {
@@ -126,14 +168,18 @@
     }
     var endpoint = cfg('endpoint', '');
     if (endpoint) {
-      submitViaEndpoint(payload)
-        .catch(function (err) {
-          showError(err.message || 'Could not send feedback. Try again or use email fallback.');
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Send feedback';
-          }
-        });
+      submitViaEndpoint(payload).catch(function () {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send feedback';
+        }
+        showError(
+          'Could not reach the feedback service. Opening your email app instead…'
+        );
+        setTimeout(function () {
+          submitViaMailto(payload);
+        }, 600);
+      });
     } else {
       if (submitBtn) {
         submitBtn.disabled = false;
