@@ -72,15 +72,44 @@ var PD25_GUIDE = {
     pitch: {
       title: 'Pitch calibration (front-to-back)',
       rules: [
-        { condition: 'Rear is UP', sign: 'Positive (+)' },
-        { condition: 'Rear is DOWN', sign: 'Negative (−)' },
+        {
+          condition: 'Rear is UP',
+          sign: 'Positive (+)',
+          example: {
+            image: 'assets/images/pd25-body-pitch-rear-up.png?v=2',
+            imageAlt: 'PD25R with rear elevated — positive pitch example',
+            title: 'Rear up — positive pitch',
+            caption: 'When the rear of the machine is higher than the front, enter a positive (+) pitch value in Groundworks.',
+          },
+        },
+        {
+          condition: 'Rear is DOWN',
+          sign: 'Negative (−)',
+          example: {
+            image: 'assets/images/pd25-body-pitch-rear-down.png',
+            imageAlt: 'PD25R with rear lowered — negative pitch example',
+            title: 'Rear down — negative pitch',
+            caption: 'When the rear of the machine is lower than the front, enter a negative (−) pitch value in Groundworks.',
+          },
+        },
       ],
     },
     roll: {
       title: 'Roll calibration (side-to-side)',
       rules: [
         { condition: 'Right side is UP', sign: 'Negative (−)' },
-        { condition: 'Right side is DOWN', sign: 'Positive (+)' },
+        {
+          condition: 'Right side is DOWN',
+          sign: 'Positive (+)',
+          example: {
+            image: 'assets/images/pd25-body-roll-right-down.png',
+            imageAlt: 'PD25R with right side lowered — positive roll example',
+            title: 'Right side down — positive roll',
+            caption:
+              'When the right side of the machine is lower than the left, enter a positive (+) roll value in Groundworks.',
+            maxDisplayWidth: 400,
+          },
+        },
       ],
     },
   },
@@ -94,22 +123,47 @@ var PD25_GUIDE = {
         'Do not skip. Groundworks relies on Vermeer internal sensors for mast position relative to the chassis.',
       steps: [
         {
-          id: 'p1-depth',
-          title: 'Depth sensor adjustment (high-left & low-left)',
+          id: 'p1-depth-high',
+          title: 'Depth sensor adjustment — high-left',
           body:
             'Set magnetic pickup face ~1/8" (3 mm) from the strip. Too close risks damage; too far causes Z dropout and inconsistent pile depth.',
+          image: 'assets/images/pd25-depth-sensor-high-left.png',
+          imageAlt: 'High-left depth proximity sensor mounted on the mast slide — pickup face near the magnetic strip',
+        },
+        {
+          id: 'p1-depth-low',
+          title: 'Depth sensor adjustment — low-left',
+          body:
+            'Set magnetic pickup face ~1/8" (3 mm) from the strip on the low-left sensor. Match the same gap as the high-left sensor.',
+          image: 'assets/images/pd25-depth-sensor-low-left.png',
+          imageAlt: 'Low-left depth proximity sensor on the mast — pickup face near the vertical beam',
         },
         {
           id: 'p1-slides',
           title: 'Mast slide & carriage calibration',
           body:
-            'Tighten mast slides to minimize left/right hammer movement without binding. Zero X & Y carriage position sensors per Vermeer procedure.',
+            'Tighten mast slides to minimize left/right hammer movement without binding. Zero X & Y carriage position sensors per Vermeer procedure using the Vermeer Operator Remote.',
+          image: 'assets/images/pd25-mast-slide-carriage-calibration.png',
+          imageAlt: 'Technician adjusting mast slide hardware on the PD25 mast carriage',
+          noteWarning: true,
+          note:
+            'X and Y slide calibration must be done with the Vermeer Operator Remote. Be careful and watch the mast throughout this procedure. If the mast is slid all the way toward the engine bay, it may hit the Zephyr antenna when the mast automatically lowers for calibration.',
+        },
+        {
+          id: 'p1-plumb',
+          title: 'Plumb the mast (X & Y)',
+          body:
+            'Before zeroing the SICK sensor, plumb the mast in both X and Y. With the hammer relatively tight to the mast (minimal left/right play), use the hammer as your vertical reference — place a calibrated smart level on the hammer face or mast member and adjust until you read plumb in both directions.',
+          image: 'assets/images/pd25-plumb-mast-smart-level.png',
+          imageAlt: 'Smart level used on the PD25 mast and hammer to verify plumb in X and Y before SICK calibration',
         },
         {
           id: 'p1-sick',
           title: 'Mast inclination (SICK sensor)',
           body:
-            'Plumb mast in X and Y. Zero SICK inclination in Vermeer UI. Confirm isolator kit is installed between SICK sensor and mast (dealer if missing).',
+            'With the mast plumb, zero SICK inclination in the Vermeer UI. Confirm isolator kit is installed between SICK sensor and mast (dealer if missing).',
+          image: 'assets/images/pd25-mast-inclination-sick-sensor.png',
+          imageAlt: 'SICK mast inclination sensor mounted under protective bracket on the PD25 mast',
         },
       ],
     },
@@ -209,11 +263,23 @@ var PD25_GUIDE = {
           id: 'p6-level',
           title: 'Smart level on body frame',
           body: 'Stable surface (not necessarily level). Place calibrated smart level on a frame member that represents the machine body plane.',
+          image: 'assets/images/pd25-smart-level-body-frame.png',
+          imageAlt: 'Sola GO smart level placed on the PD25 body frame for pitch and roll readings',
+          note:
+            'As long as your TS900 body sensor is mounted truly vertical on both the X and Y axes, the offset value generated in Groundworks will be small. If you enter pitch and roll with the incorrect sign (− vs +) and then calibrate the TS900, your offsets may be quite large (much larger than a degree). It is always recommended to calibrate the body TS900 on a level pad; if that is not possible, entering the correct sign (−/+) is critical for accurate readings on a non-level plane.',
         },
         {
           id: 'p6-read',
           title: 'Read pitch & roll from smart level',
           body: 'Record the pitch (front-to-back) and roll (side-to-side) values shown on the smart level before entering them in Groundworks.',
+          image: 'assets/images/pd25-body-cal-diagnostics-roll.png',
+          imageAlt: 'Groundworks body tilt sensor diagnostics showing computed roll value to compare against smart level',
+          imageModal: true,
+          imageModalTitle: 'Groundworks diagnostics — computed roll',
+          imageModalCaption:
+            'Open Body tilt sensor diagnostics and compare computed pitch and roll to your smart level readings on the body frame.',
+          note:
+            'Cross-check in Groundworks diagnostics (Body tilt sensor): the computed pitch and roll values should closely match what your smart level reads on the body frame. A large mismatch often means the wrong sign was entered or the TS900 is not mounted vertically.',
         },
         {
           id: 'p6-enter',

@@ -357,20 +357,41 @@ function renderBodyCalibrationSigns() {
   var data = PD25_GUIDE.bodyCalibrationSigns;
   if (!data) return '';
 
+  function ruleRow(rule) {
+    var viewBtn = '';
+    if (rule.example && rule.example.image) {
+      viewBtn =
+        '<button type="button" class="pd25-body-signs__view" ' +
+        'data-body-example-image="' +
+        esc(rule.example.image) +
+        '" data-body-example-alt="' +
+        esc(rule.example.imageAlt || rule.condition) +
+        '" data-body-example-title="' +
+        esc(rule.example.title || rule.condition) +
+        '" data-body-example-caption="' +
+        esc(rule.example.caption || '') +
+        '"' +
+        (rule.example.maxDisplayWidth
+          ? ' data-body-example-max-width="' + esc(String(rule.example.maxDisplayWidth)) + '"'
+          : '') +
+        '>View example photo</button>';
+    }
+    return (
+      '<div class="pd25-body-signs__rule">' +
+      '<div class="pd25-body-signs__rule-main">' +
+      '<span class="pd25-body-signs__condition">' +
+      esc(rule.condition) +
+      '</span>' +
+      '<span class="pd25-body-signs__sign">' +
+      esc(rule.sign) +
+      '</span></div>' +
+      viewBtn +
+      '</div>'
+    );
+  }
+
   function block(section) {
-    var rules = section.rules
-      .map(function (r) {
-        return (
-          '<div class="pd25-body-signs__rule">' +
-          '<span class="pd25-body-signs__condition">' +
-          esc(r.condition) +
-          '</span>' +
-          '<span class="pd25-body-signs__sign">' +
-          esc(r.sign) +
-          '</span></div>'
-        );
-      })
-      .join('');
+    var rules = section.rules.map(ruleRow).join('');
     return (
       '<div class="pd25-body-signs__block">' +
       '<p class="pd25-body-signs__title">' +
@@ -391,6 +412,82 @@ function renderBodyCalibrationSigns() {
     block(data.roll) +
     '</div></div>'
   );
+}
+
+var bodySignExampleModal = null;
+
+function ensureBodySignExampleModal() {
+  if (bodySignExampleModal) return bodySignExampleModal;
+  var modalEl = document.createElement('div');
+  modalEl.className = 'pd25-target-modal pd25-body-sign-modal';
+  modalEl.hidden = true;
+  modalEl.innerHTML =
+    '<div class="pd25-target-modal__backdrop" data-close="1"></div>' +
+    '<div class="pd25-target-modal__panel" role="dialog" aria-modal="true" aria-labelledby="pd25BodySignModalTitle">' +
+    '<button type="button" class="pd25-target-modal__close" data-close="1" aria-label="Close">&times;</button>' +
+    '<h3 class="pd25-target-modal__title" id="pd25BodySignModalTitle"></h3>' +
+    '<div class="pd25-target-modal__media">' +
+    '<img class="pd25-target-modal__img" alt="" />' +
+    '</div>' +
+    '<p class="pd25-target-modal__caption"></p>' +
+    '</div>';
+  document.body.appendChild(modalEl);
+
+  function closeModal() {
+    modalEl.hidden = true;
+    document.body.classList.remove('pd25-target-modal-open');
+  }
+
+  modalEl.addEventListener('click', function (e) {
+    if (e.target.getAttribute('data-close') === '1') closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modalEl.hidden) closeModal();
+  });
+
+  bodySignExampleModal = {
+    el: modalEl,
+    title: modalEl.querySelector('.pd25-target-modal__title'),
+    img: modalEl.querySelector('.pd25-target-modal__img'),
+    caption: modalEl.querySelector('.pd25-target-modal__caption'),
+    close: closeModal,
+  };
+  return bodySignExampleModal;
+}
+
+function openBodySignExampleModal(example) {
+  var modal = ensureBodySignExampleModal();
+  modal.title.textContent = example.title || '';
+  modal.img.src = example.image;
+  modal.img.alt = example.alt || example.title || '';
+  modal.caption.textContent = example.caption || '';
+  if (example.maxDisplayWidth) {
+    modal.img.style.maxWidth = example.maxDisplayWidth + 'px';
+  } else {
+    modal.img.style.maxWidth = '';
+  }
+  modal.el.hidden = false;
+  document.body.classList.add('pd25-target-modal-open');
+}
+
+function initBodySignExampleModal() {
+  if (initBodySignExampleModal._bound) return;
+  initBodySignExampleModal._bound = true;
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.pd25-body-signs__view, .pd25-image-expand');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openBodySignExampleModal({
+      image: btn.getAttribute('data-body-example-image'),
+      alt: btn.getAttribute('data-body-example-alt'),
+      title: btn.getAttribute('data-body-example-title'),
+      caption: btn.getAttribute('data-body-example-caption'),
+      maxDisplayWidth: btn.getAttribute('data-body-example-max-width')
+        ? Number(btn.getAttribute('data-body-example-max-width'))
+        : 0,
+    });
+  });
 }
 
 function renderPhases() {
@@ -431,17 +528,59 @@ function renderPhases() {
     phase.steps.forEach(function (step) {
       var row = document.createElement('label');
       row.className = 'pd25-step' + (step.optional ? ' pd25-step--optional' : '');
+      var imageHtml = '';
+      var imageViewBtn = '';
+      if (step.image && step.imageModal) {
+        imageViewBtn =
+          '<button type="button" class="pd25-step__view-image pd25-image-expand" ' +
+          'data-body-example-image="' +
+          esc(step.image) +
+          '" data-body-example-alt="' +
+          esc(step.imageAlt || step.title) +
+          '" data-body-example-title="' +
+          esc(step.imageModalTitle || step.title) +
+          '" data-body-example-caption="' +
+          esc(step.imageModalCaption || '') +
+          '">View diagnostics example</button>';
+      } else if (step.image) {
+        imageHtml =
+          '<figure class="pd25-step__figure">' +
+          '<img class="pd25-step__image" src="' +
+          esc(step.image) +
+          '" alt="' +
+          esc(step.imageAlt || step.title) +
+          '" loading="lazy" />' +
+          (step.imageCaption
+            ? '<figcaption class="pd25-step__caption">' + esc(step.imageCaption) + '</figcaption>'
+            : '') +
+          '</figure>';
+      }
+      var noteHtml = step.note
+        ? '<div class="pd25-step__note' +
+          (step.noteWarning ? ' pd25-step__note--warning' : '') +
+          '" role="note">' +
+          (step.noteWarning ? '<strong>Warning — </strong>' : '') +
+          esc(step.note) +
+          '</div>'
+        : '';
       row.innerHTML =
         '<input type="checkbox" data-step="' +
         esc(step.id) +
         '" ' +
         (state.checked[step.id] ? 'checked' : '') +
         ' />' +
-        '<span><div class="pd25-step__title">' +
+        '<span class="pd25-step__inner">' +
+        '<span class="pd25-step__text">' +
+        '<div class="pd25-step__title">' +
         esc(step.title) +
         '</div><div class="pd25-step__body">' +
         esc(step.body) +
-        '</div></span>';
+        '</div>' +
+        noteHtml +
+        imageViewBtn +
+        '</span>' +
+        imageHtml +
+        '</span>';
       body.appendChild(row);
     });
 
@@ -810,6 +949,7 @@ function initGuide() {
   loadProgress();
   renderTooling();
   renderPhases();
+  initBodySignExampleModal();
 }
 
 function initCalculator() {
