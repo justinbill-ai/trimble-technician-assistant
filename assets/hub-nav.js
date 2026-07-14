@@ -75,8 +75,8 @@
         {
           href: './groundworks/pd25/index.html',
           icon: 'PD',
-          name: 'Vermeer PD25R Measure-Up',
-          summary: 'Guided calibration funnel, body pitch/roll signs, and COGO measure-up calculator',
+          name: 'Vermeer PD25',
+          summary: 'Guided pre measure-up workflow and COGO measure-up calculator',
         },
       ],
     },
@@ -155,6 +155,17 @@
   function openCategory(id, pushHash) {
     var cat = findCategory(id);
     if (!cat || !homeView || !categoryView) return;
+
+    if (cat.tmc && window.TmcAccess && !window.TmcAccess.isAuthorized()) {
+      window.TmcAccess.promptForAccess({
+        context: 'category',
+        onSuccess: function () {
+          openCategory(id, pushHash);
+        },
+      });
+      return;
+    }
+
     homeView.hidden = true;
     categoryView.hidden = false;
     if (titleEl) titleEl.textContent = cat.title;

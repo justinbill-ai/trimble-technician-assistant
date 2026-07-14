@@ -185,6 +185,35 @@
     if (emailInput) emailInput.focus();
   }
 
+  function setModalContext(context) {
+    var lead = document.querySelector('#tmcAccessModal .tmc-access-modal__lead');
+    if (!lead) return;
+    if (context === 'category') {
+      lead.textContent =
+        'Enter your Trimble email to open the TMC section. Unauthorized users cannot view TMC tools or categories.';
+    } else {
+      lead.textContent = 'Enter your email to open this tool.';
+    }
+  }
+
+  function promptForAccess(options) {
+    options = options || {};
+    if (isAuthorized()) {
+      ensureSessionFromStorage();
+      if (typeof options.onSuccess === 'function') options.onSuccess(getStoredEmail());
+      return true;
+    }
+
+    pendingSuccess = options.onSuccess || null;
+    pendingHref = options.href || '';
+    setModalContext(options.context || (options.href ? 'tool' : 'category'));
+    openHubModal(options.href || '');
+    return false;
+  }
+
+  var pendingSuccess = null;
+  var pendingHref = '';
+
   function openHubModal(targetHref) {
     var modal = document.getElementById('tmcAccessModal');
     if (!modal) {
@@ -237,7 +266,7 @@
         }
 
         e.preventDefault();
-        openHubModal(href);
+        promptForAccess({ href: href, context: 'tool' });
       });
     });
 
@@ -251,9 +280,16 @@
       function (email) {
         updateHubAccessUi();
         var modal = document.getElementById('tmcAccessModal');
-        var href = modal && modal.dataset.pendingHref;
+        var href = (modal && modal.dataset.pendingHref) || pendingHref;
+        var onSuccess = pendingSuccess;
+        pendingSuccess = null;
+        pendingHref = '';
         closeHubModal();
-        if (href) window.location.href = href;
+        if (typeof onSuccess === 'function') {
+          onSuccess(email);
+        } else if (href) {
+          window.location.href = href;
+        }
       }
     );
 
@@ -274,6 +310,7 @@
     STORAGE_KEY: STORAGE_KEY,
     initGate: initGate,
     initHubGate: initHubGate,
+    promptForAccess: promptForAccess,
     clearAccess: clearAccess,
     isAuthorized: isAuthorized,
     getStoredEmail: getStoredEmail,

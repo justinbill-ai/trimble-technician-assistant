@@ -1,10 +1,17 @@
 var STORAGE_KEY = 'tta_pd25_measureup_progress_v1';
+var DEALER_LOGO_KEY = 'tta_preinspection_dealer_logo_v1';
+var DEALER_NAME_KEY = 'tta_preinspection_dealer_name_v1';
 
 var state = {
   checked: {},
   expandedPhases: {},
   csvText: null,
+  csvFileName: '',
+  lastAnalysis: null,
+  reportId: null,
 };
+
+var dealerLogo = null;
 
 function copyResultValue(text, buttonEl) {
   function flashDone() {
@@ -45,6 +52,184 @@ function copyResultValue(text, buttonEl) {
 function refreshViz(analysis) {
   if (typeof PD25Viz !== 'undefined' && analysis) {
     PD25Viz.updateFromAnalysis(analysis);
+  }
+}
+
+function makeReportId() {
+  var d = new Date();
+  var pad = function (n) {
+    return String(n).padStart(2, '0');
+  };
+  return (
+    'PD25-' +
+    d.getFullYear() +
+    pad(d.getMonth() + 1) +
+    pad(d.getDate()) +
+    '-' +
+    pad(d.getHours()) +
+    pad(d.getMinutes()) +
+    pad(d.getSeconds())
+  );
+}
+
+function showExportSection(show) {
+  var section = document.getElementById('exportSection');
+  if (section) section.hidden = !show;
+}
+
+function showExportHints(message) {
+  var box = document.getElementById('exportHintBox');
+  if (!box) return;
+  box.textContent = message || '';
+  box.classList.toggle('hidden', !message);
+}
+
+function buildPdfNotes(analysis) {
+  var notes = [];
+  if (analysis.rodCorrection && analysis.rodCorrection.rodSubtract > 0) {
+    var rc = analysis.rodCorrection;
+    notes.push({
+      label: 'APC correction',
+      value:
+        rc.rodPostHeight +
+        ' ' +
+        rc.unitLabel +
+        ' post + ' +
+        rc.apcOffsetAdded +
+        ' ' +
+        rc.unitLabel +
+        ' APC = ' +
+        rc.rodSubtract +
+        ' ' +
+        rc.unitLabel +
+        ' subtracted from MB/H',
+    });
+  }
+  if (analysis.coordUnits) {
+    notes.push({ label: 'Survey coordinate units', value: analysis.coordUnits });
+  }
+  return notes;
+}
+
+function getExportPayload() {
+  var analysis = state.lastAnalysis;
+  if (!analysis || analysis.status !== 'ok') return null;
+  var reportName = document.getElementById('reportName').value.trim();
+  return {
+    groundworks: analysis.groundworks,
+    unitLabel: analysis.unitLabel,
+    meta: {
+      id: state.reportId || makeReportId(),
+      machine: 'Trimble Groundworks',
+      units: analysis.units === 'METRIC' ? 'Metric' : 'US survey feet',
+      machineModel: document.getElementById('machineModel').value.trim(),
+      serialNumber: document.getElementById('serialNumber').value.trim(),
+      surveyFile: state.csvFileName || '—',
+      time: new Date().toLocaleString(),
+    },
+    dealerName: document.getElementById('dealerName').value.trim(),
+    techName: document.getElementById('techName').value.trim(),
+    dealerLogo: dealerLogo,
+    reportName: reportName,
+    reportTitle: reportName || 'PD25_MeasureUp_' + (state.reportId || makeReportId()),
+    generatedAt: new Date().toLocaleString(),
+    notes: buildPdfNotes(analysis),
+  };
+}
+
+function generateReport() {
+  if (!state.lastAnalysis || state.lastAnalysis.status !== 'ok') return;
+  try {
+    PD25Pdf.exportPdf(getExportPayload());
+    showExportHints('In the print dialog, choose Save as PDF and pick a folder on this device.');
+  } catch (err) {
+    alert(err.message || 'PDF export failed.');
+  }
+}
+
+function uploadDealerLogo() {
+  document.getElementById('dealerLogoInput').click();
+}
+
+function clearDealerLogo() {
+  dealerLogo = null;
+  try {
+    localStorage.removeItem(DEALER_LOGO_KEY);
+  } catch (err) {}
+  renderDealerLogoPreview();
+  document.getElementById('dealerLogoSavedNote').classList.add('hidden');
+}
+
+function renderDealerLogoPreview() {
+  var box = document.getElementById('dealerLogoPreview');
+  var clearBtn = document.getElementById('clearDealerLogoBtn');
+  if (!box) return;
+  if (dealerLogo) {
+    box.className = 'dealer-logo-preview';
+    box.innerHTML = '<img src="' + dealerLogo.dataUrl + '" alt="Dealer logo">';
+    if (clearBtn) clearBtn.classList.remove('hidden');
+  } else {
+    box.className = 'dealer-logo-preview dealer-logo-preview--empty';
+    box.textContent = 'No dealer logo';
+    if (clearBtn) clearBtn.classList.add('hidden');
+  }
+}
+
+function loadSavedDealerBranding() {
+  try {
+    var raw = localStorage.getItem(DEALER_LOGO_KEY);
+    if (raw) dealerLogo = JSON.parse(raw);
+    var name = localStorage.getItem(DEALER_NAME_KEY);
+    var dealerField = document.getElementById('dealerName');
+    if (name && dealerField && !dealerField.value) dealerField.value = name;
+    if (dealerLogo) {
+      document.getElementById('dealerLogoSavedNote').classList.remove('hidden');
+    }
+  } catch (err) {}
+  renderDealerLogoPreview();
+}
+
+function handleDealerLogoFile(file) {
+  if (!file || file.type.indexOf('image/') !== 0) return;
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    dealerLogo = { name: file.name, dataUrl: e.target.result };
+    try {
+      localStorage.setItem(DEALER_LOGO_KEY, JSON.stringify(dealerLogo));
+      document.getElementById('dealerLogoSavedNote').classList.remove('hidden');
+    } catch (err) {}
+    renderDealerLogoPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function bindPdfExport() {
+  var generateBtn = document.getElementById('generatePdfBtn');
+  if (generateBtn) generateBtn.addEventListener('click', generateReport);
+
+  var uploadBtn = document.getElementById('uploadDealerLogoBtn');
+  if (uploadBtn) uploadBtn.addEventListener('click', uploadDealerLogo);
+
+  var clearBtn = document.getElementById('clearDealerLogoBtn');
+  if (clearBtn) clearBtn.addEventListener('click', clearDealerLogo);
+
+  var logoInput = document.getElementById('dealerLogoInput');
+  if (logoInput) {
+    logoInput.addEventListener('change', function () {
+      if (logoInput.files && logoInput.files[0]) handleDealerLogoFile(logoInput.files[0]);
+      logoInput.value = '';
+    });
+  }
+
+  var dealerName = document.getElementById('dealerName');
+  if (dealerName) {
+    dealerName.addEventListener('change', function () {
+      try {
+        var v = dealerName.value.trim();
+        if (v) localStorage.setItem(DEALER_NAME_KEY, v);
+        else localStorage.removeItem(DEALER_NAME_KEY);
+      } catch (err) {}
+    });
   }
 }
 
@@ -302,6 +487,7 @@ function bindTabs() {
 
 function renderPointBadges(points, missing) {
   var box = document.getElementById('pointCheckList');
+  if (!box) return;
   box.innerHTML = '';
   PD25_GUIDE.surveyPoints.forEach(function (sp) {
     var badge = document.createElement('span');
@@ -319,7 +505,8 @@ function renderPointBadges(points, missing) {
     }
     box.appendChild(badge);
   });
-  document.getElementById('analyzeBtn').disabled = missing.length > 0;
+  var analyzeBtn = document.getElementById('analyzeBtn');
+  if (analyzeBtn) analyzeBtn.disabled = missing.length > 0;
 }
 
 function getSurveyOptions() {
@@ -452,10 +639,17 @@ function bindHfUi() {
 function renderCalcResults(analysis) {
   var box = document.getElementById('calcResults');
   if (analysis.status !== 'ok') {
+    state.lastAnalysis = analysis;
+    showExportSection(false);
+    showExportHints('');
     box.hidden = false;
     box.innerHTML = '<strong>Survey status:</strong> ' + esc(analysis.message);
     return;
   }
+
+  state.lastAnalysis = analysis;
+  if (!state.reportId) state.reportId = makeReportId();
+  showExportSection(true);
 
   var u = analysis.unitLabel;
   var html = '';
@@ -467,9 +661,13 @@ function renderCalcResults(analysis) {
       '</div>';
   }
 
-  var GROUNDWORKS_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1'];
+  var GROUNDWORKS_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1', 'T5'];
 
   html += '<h3 class="pd25-results__h">Groundworks measure-up values</h3>';
+  html +=
+    '<p class="note pd25-trx-id" style="margin:0 0 10px;"><strong>Report ID:</strong> ' +
+    esc(state.reportId) +
+    '</p>';
   html +=
     '<table class="pd25-table"><thead><tr><th>Value</th><th>Result (' +
     esc(u) +
@@ -519,9 +717,15 @@ function renderCalcResults(analysis) {
 function bindCsv() {
   var input = document.getElementById('csvFile');
   var zone = document.getElementById('dropZone');
+  var analyzeBtn = document.getElementById('analyzeBtn');
+  if (!input || !zone || !analyzeBtn) return;
 
   function handleFile(file) {
     if (!file) return;
+    state.csvFileName = file.name;
+    state.reportId = null;
+    showExportSection(false);
+    showExportHints('');
     zone.querySelector('.drop-zone__prompt').innerHTML = '✅ <b>' + esc(file.name) + '</b>';
     var reader = new FileReader();
     reader.onload = function (e) {
@@ -558,16 +762,18 @@ function bindCsv() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
 
-  document.getElementById('analyzeBtn').addEventListener('click', function () {
+  analyzeBtn.addEventListener('click', function () {
     if (!state.csvText) return;
     var analysis = runAnalysis();
     renderCalcResults(analysis);
     refreshViz(analysis);
   });
 
-  document.getElementById('units').addEventListener('change', function () {
+  var unitsEl = document.getElementById('units');
+  if (!unitsEl) return;
+  unitsEl.addEventListener('change', function () {
     updateRodHeightDefault();
-    updateHfOffsetHint();
+    updateHcOffsetHint();
     if (!state.csvText) return;
     try {
       var analysis = runAnalysis();
@@ -594,17 +800,40 @@ function bindCopyResults() {
   });
 }
 
-function init() {
-  document.getElementById('accuracyBanner').textContent = PD25_GUIDE.accuracyBanner;
+function getPageMode() {
+  return document.body.getAttribute('data-pd25-page') || 'combined';
+}
+
+function initGuide() {
+  var banner = document.getElementById('accuracyBanner');
+  if (banner) banner.textContent = PD25_GUIDE.accuracyBanner;
   loadProgress();
   renderTooling();
   renderPhases();
-  bindTabs();
+}
+
+function initCalculator() {
   bindCsv();
   bindRodUi();
   bindHfUi();
   bindCopyResults();
-  updateHfOffsetHint();
+  bindPdfExport();
+  loadSavedDealerBranding();
+  updateHcOffsetHint();
+  if (typeof PD25TargetPlacement !== 'undefined') {
+    PD25TargetPlacement.render('targetPlacementMap');
+  }
+}
+
+function init() {
+  var page = getPageMode();
+  if (page === 'guide' || page === 'combined') {
+    initGuide();
+    if (page === 'combined') bindTabs();
+  }
+  if (page === 'calculator' || page === 'combined') {
+    initCalculator();
+  }
 }
 
 if (document.readyState === 'loading') {

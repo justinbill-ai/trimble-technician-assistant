@@ -3,170 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vermeer PD25R — Groundworks Measure-Up</title>
+  <title>Vermeer PD25 — Trimble Groundworks</title>
   <meta name="theme-color" content="#005f9e" />
   <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
-  <link rel="stylesheet" href="styles.css?v=7" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
-<body>
+<body data-pd25-page="hub">
   <header class="tc-app-header">
     <a class="tc-back-link" href="../../index.html#category/groundworks">&larr; Trimble Groundworks</a>
     <div class="tc-header__inner">
       <div class="tc-header__brand">
         <img class="tc-header__logo" src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400" alt="Trimble" />
         <div class="tc-header__titles">
-          <h1 class="tc-header__product">Vermeer PD25R — Groundworks</h1>
-          <p class="tc-header__sub">Guided measure-up &amp; calibration workflow</p>
+          <h1 class="tc-header__product">Vermeer PD25</h1>
+          <p class="tc-header__sub">Groundworks measure-up &amp; calibration</p>
         </div>
       </div>
     </div>
   </header>
 
   <main class="tc-main">
-    <div class="card">
-      <div class="pd25-accuracy" id="accuracyBanner"></div>
+    <p class="intro pd25-hub-intro">
+      Vermeer PD25 pile driver — guided pre measure-up workflow and COGO calculator for Groundworks machine file values.
+    </p>
 
-      <div class="pd25-survey-requirement" role="note">
-        <strong>All points must be measured as control with zero rod height in Siteworks.</strong>
-        Do not enter rod height on MB or H in the field — this calculator adds post height (and APC offset) before computing results.
-      </div>
-
-      <div class="pd25-tabs" role="tablist">
-        <button type="button" class="pd25-tab active" id="tabGuide" data-panel="panelGuide" role="tab">Guided workflow</button>
-        <button type="button" class="pd25-tab" id="tabCalc" data-panel="panelCalc" role="tab">COGO calculator</button>
-      </div>
-
-      <div class="pd25-panel" id="panelGuide" role="tabpanel">
-        <h2 class="tc-panel h2-like">Required tooling</h2>
-        <ul class="pd25-tooling" id="toolingList"></ul>
-
-        <h2 class="tc-panel h2-like" style="margin-top:20px;">Verification phases</h2>
-        <p class="note">Recommended path for first-time setup or troubleshooting. Check each step as you complete it on the machine — phases stay open while you work through the list.</p>
-        <div class="pd25-workflow-progress" id="workflowProgress"></div>
-        <div id="phaseList"></div>
-      </div>
-
-      <div class="pd25-panel" id="panelCalc" role="tabpanel" hidden>
-        <div class="pd25-calc-hint" id="calcHint">
-          <strong>COGO calculator</strong> — upload your survey CSV anytime. Values assume standard PD25 layout:
-          <ul class="pd25-assumptions">
-            <li><strong>MB</strong> = moving-base antenna <em>closest to the mast</em></li>
-            <li><strong>H</strong> = heading antenna at the <em>rear</em> of the machine</li>
-            <li>Antenna brackets are <em>left of the mast</em> (MB and H mounting)</li>
-          </ul>
-          If you are new to PD25 or chasing accuracy issues, use the guided workflow first.
-        </div>
-
-        <div id="calcContent">
-          <p class="note">
-            Upload Siteworks CSV with <strong>ML</strong>, <strong>MR</strong>, <strong>MB</strong>, and <strong>H</strong>. Optional <strong>HC</strong> (hammer center) enables <strong>T1</strong>. The app builds CENTER REF and outputs <strong>G6, G5, G2, G1, G7</strong>, and <strong>T1</strong> when HC is present.
-          </p>
-
-          <div class="tc-field">
-            <label class="tc-label" for="units">Survey coordinate units</label>
-            <select id="units" class="tc-input">
-              <option value="METRIC">Meters</option>
-              <option value="US FT">US survey feet</option>
-            </select>
-            <p class="note" style="margin-top:6px;">
-              Match your Siteworks project units before computing results.
-            </p>
-          </div>
-
-          <div class="drop-zone" id="dropZone">
-            <span class="drop-zone__prompt">Drag survey CSV here or <b>click to upload</b></span>
-            <input type="file" id="csvFile" class="drop-zone__input" accept=".csv" hidden />
-          </div>
-
-          <div id="pointCheckList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;"></div>
-
-          <div id="viz-container" aria-label="3D survey and COGO point preview"></div>
-
-          <div class="pd25-rod-callout" id="rodCallout">
-            <p class="pd25-rod-callout__title">MB &amp; H rod height — APC required for G7</p>
-            <p class="pd25-rod-callout__lead">
-              <strong>Did you shoot MB and H with the measure-up rod/post?</strong> Groundworks needs
-              <strong> antenna phase center (APC)</strong>, not the prism height on top of the post.
-            </p>
-            <fieldset class="pd25-rod-fieldset pd25-rod-fieldset--measureup">
-              <legend class="pd25-rod-legend">Measure-up rod used on MB &amp; H?</legend>
-              <div class="pd25-rod-yes-block" id="measureupToolBlock">
-                <label class="pd25-rod-option">
-                  <input type="radio" name="shotWithRod" id="shotWithRodYes" value="yes" checked />
-                  Yes — EW rod / vertical post
-                </label>
-                <figure class="pd25-measureup-tool" id="measureupToolFigure">
-                  <img
-                    class="pd25-measureup-tool__img"
-                    src="https://drive.google.com/thumbnail?id=1QHl-55tFsMQKLt6HA96Z5wo-PSP6paZM&amp;sz=w480"
-                    alt="Trimble Earthworks measure-up rod and vertical post for PD25 MB and H antenna shots"
-                    width="200"
-                    height="320"
-                    loading="lazy"
-                  />
-                  <figcaption class="pd25-measureup-tool__caption">
-                    Earthworks measure-up tool P/N 105568 — used with this option
-                  </figcaption>
-                </figure>
-              </div>
-              <label class="pd25-rod-option">
-                <input type="radio" name="shotWithRod" id="shotWithRodNo" value="no" />
-                No — acrylic target at APC only
-              </label>
-            </fieldset>
-            <div id="rodHeightSection">
-              <fieldset class="pd25-rod-fieldset">
-                <legend class="pd25-rod-legend">Rod height entered in Siteworks for MB &amp; H?</legend>
-                <label class="pd25-rod-option"><input type="radio" name="rodInSw" id="rodInSwYes" value="yes" checked /> Yes — Siteworks already has rod height (APC in CSV)</label>
-                <label class="pd25-rod-option"><input type="radio" name="rodInSw" id="rodInSwNo" value="no" /> No — CSV is prism height; correct to APC below</label>
-              </fieldset>
-              <div class="tc-field" id="rodHeightField" hidden>
-                <label class="tc-label" for="rodHeight">Measure-up post height (rod only)</label>
-                <input type="number" id="rodHeight" class="tc-input" step="0.001" min="0" />
-                <p class="note pd25-rod-note" id="rodHeightHint">
-                  Enter <strong>post height only</strong> — not APC. The calculator adds
-                  <strong>4&nbsp;mm</strong> (Zephyr 3 Rugged target center → APC) behind the scenes.
-                  P/N 105568 default: 0.200&nbsp;m / 0.656&nbsp;ft.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="pd25-rod-callout pd25-hc-callout" id="hcOffsetSection" hidden>
-            <p class="pd25-rod-callout__title">HC — hammer center offset</p>
-            <p class="pd25-rod-callout__lead">
-              <strong>HC</strong> is the <strong>hammer center</strong> (pile guide / jaw opening center). If you shot the
-              hammer face instead, enter the offset to the true center, measured <strong>toward or away from ML/MR</strong>.
-            </p>
-            <div class="tc-field">
-              <label class="tc-label" for="hcFaceOffset">HC center offset (+ / −)</label>
-              <input type="number" id="hcFaceOffset" class="tc-input" step="0.001" value="0" />
-              <p class="note pd25-rod-note" id="hcOffsetHint">
-                <strong>Positive (+)</strong> — shot is on the face, <em>ahead</em> of hammer center (farther from ML/MR). Example: face shot 160&nbsp;mm back toward ML/MR → enter <strong>+0.160&nbsp;m</strong> (metric).<br />
-                <strong>Zero (0)</strong> — shot is at hammer center.<br />
-                <strong>Negative (−)</strong> — shot is between hammer center and ML/MR.
-              </p>
-            </div>
-          </div>
-
-          <div class="mu-actions" style="margin-top:16px;">
-            <button type="button" class="btn btn-primary" id="analyzeBtn" disabled>Calculate Results</button>
-          </div>
-
-          <div id="calcResults" class="pd25-results" hidden></div>
-        </div>
-      </div>
-    </div>
+    <ul class="tool-list pd25-tool-list">
+      <li>
+        <a class="tool-link" href="guide.html">
+          <span class="tool-link__icon">GW</span>
+          <span class="tool-link__text">
+            <span class="tool-link__name">Guided pre measure-up workflow</span>
+            <span class="tool-link__summary">Required tooling, body pitch/roll signs, and step-by-step verification phases</span>
+          </span>
+          <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+      </li>
+      <li>
+        <a class="tool-link" href="calculator.html">
+          <span class="tool-link__icon">CO</span>
+          <span class="tool-link__text">
+            <span class="tool-link__name">Measure-up calculator</span>
+            <span class="tool-link__summary">Survey CSV upload, COGO values, 3D preview, and PDF report</span>
+          </span>
+          <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+      </li>
+    </ul>
   </main>
 
   <footer class="tc-footer">PD25 · Trimble Groundworks · Technician Assistant</footer>
-
-  <script src="guide-data.js?v=9"></script>
-  <script src="viz.js?v=4"></script>
-  <script src="calc.js?v=20"></script>
-  <script src="app.js?v=18"></script>
 </body>
 </html>

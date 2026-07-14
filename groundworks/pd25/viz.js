@@ -23,9 +23,9 @@ var PD25Viz = (function () {
 
   function makeTextSprite(message, threeRenderer) {
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var padX = 10 * dpr;
-    var padY = 6 * dpr;
-    var fontPx = Math.round(20 * dpr);
+    var padX = 8 * dpr;
+    var padY = 5 * dpr;
+    var fontPx = Math.round(16 * dpr);
     var cvs = document.createElement('canvas');
     var ctx = cvs.getContext('2d');
     ctx.font = '600 ' + fontPx + 'px "Open Sans", "Segoe UI", system-ui, sans-serif';
@@ -63,7 +63,7 @@ var PD25Viz = (function () {
       depthWrite: false,
     });
     var sp = new THREE.Sprite(mat);
-    var scaleFac = 42 * dpr;
+    var scaleFac = 58 * dpr;
     sp.scale.set(rw / scaleFac, rh / scaleFac, 1);
     return sp;
   }
@@ -181,7 +181,7 @@ var PD25Viz = (function () {
     avgE /= keys.length;
     avgZ /= keys.length;
 
-    var sphereGeomTemplate = new THREE.SphereGeometry(0.055, 40, 40);
+    var sphereGeomTemplate = new THREE.SphereGeometry(0.038, 32, 32);
     var sphereMatTemplate = new THREE.MeshStandardMaterial({
       color: 0x005f9e,
       roughness: 0.38,
@@ -197,7 +197,7 @@ var PD25Viz = (function () {
       sphere.position.set(x, y, z);
       scene.add(sphere);
       var sprite = makeTextSprite(k, renderer);
-      sprite.position.set(x, y, z + 0.18);
+      sprite.position.set(x, y, z + 0.14);
       sprite.renderOrder = 10;
       scene.add(sprite);
     });

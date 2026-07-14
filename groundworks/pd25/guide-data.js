@@ -52,16 +52,17 @@ var PD25_GUIDE = {
   },
 
   surveyPoints: [
-    { id: 'ML', label: 'Mast Left — Y pivot pin (ML)', required: true },
-    { id: 'MR', label: 'Mast Right — Y pivot pin (MR)', required: true },
+    { id: 'ML', label: 'Mast Left — inside left pin flange, middle of X pin (ML)', required: true },
+    { id: 'MR', label: 'Mast Right — inside right pin flange, middle of X pin (MR)', required: true },
     { id: 'MB', label: 'Moving Base antenna APC (MB)', required: true },
     { id: 'H', label: 'Heading antenna APC (H)', required: true },
+    { id: 'MF', label: 'Mast foot (MF — T5)', required: false },
     { id: 'HC', label: 'Hammer center (HC — optional T1)', required: false },
   ],
 
   groundworksDefaults: {
     useDefaults: ['T4', 'T6', 'T7', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'B5'],
-    measureRequired: ['G1', 'G2', 'G5', 'G6', 'G7', 'T1', 'T2', 'T3'],
+    measureRequired: ['G1', 'G2', 'G5', 'G6', 'G7', 'T1', 'T5', 'T2', 'T3'],
   },
 
   /** Sign conventions for Groundworks Body Pitch/Roll Calibration */
@@ -127,12 +128,14 @@ var PD25_GUIDE = {
         {
           id: 'p2-ml',
           title: 'Target ML — mast left X-slide pin flange',
-          body: 'Split the X pin; center acrylic target on inside of flange.',
+          body:
+            'Target the inside face of the left pin flange — at the middle of the X pin (not the outer face). Center the acrylic target on that inside flange surface.',
         },
         {
           id: 'p2-mr',
           title: 'Target MR — mast right X-slide pin flange',
-          body: 'Split the X pin; center acrylic target on inside of flange.',
+          body:
+            'Target the inside face of the right pin flange — at the middle of the X pin (not the outer face). Center the acrylic target on that inside flange surface.',
         },
         {
           id: 'p2-mf',

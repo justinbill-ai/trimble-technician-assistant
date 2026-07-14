@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 920 1040" role="img" aria-labelledby="pd25-overview-title">
+  <title id="pd25-overview-title">Vermeer PD25R survey target placement overview</title>
+
+  <defs>
+    <linearGradient id="photo-fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000" stop-opacity="0.04"/>
+      <stop offset="88%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.18"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#000" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <rect width="920" height="1040" fill="#eef0f3"/>
+
+  <rect x="0" y="0" width="920" height="76" fill="#005f9e"/>
+  <text x="24" y="34" fill="#fff" font-family="'Open Sans', Arial, sans-serif" font-size="20" font-weight="700">
+    Vermeer PD25R - Survey Target Placement
+  </text>
+  <text x="24" y="58" fill="#cce4f3" font-family="'Open Sans', Arial, sans-serif" font-size="13">
+    Engine-side view (reference position: mast foot down, Y in, X fully left)
+  </text>
+
+  <!-- Primary photo - natural aspect ratio (680 x 907) -->
+  <g filter="url(#soft-shadow)">
+    <rect x="108" y="92" width="704" height="940" rx="8" fill="#fff"/>
+    <image xlink:href="pd25r-angle-rear-left.png" x="116" y="100" width="688" height="924" preserveAspectRatio="xMidYMid meet"/>
+    <rect x="116" y="100" width="688" height="924" fill="url(#photo-fade)"/>
+  </g>
+
+  <rect x="108" y="972" width="704" height="52" rx="8" fill="#fff" stroke="#d1d5db"/>
+  <text x="124" y="996" fill="#252a2e" font-family="'Open Sans', Arial, sans-serif" font-size="12" font-weight="600">
+    Hotspot map uses this engine-side photo. Detail views use front-left / front-right angles.
+  </text>
+  <text x="124" y="1014" fill="#4b5563" font-family="'Open Sans', Arial, sans-serif" font-size="11">
+    MB and H antennas on deck bar. ML/MR at mast X-slide pins. MF at lowered mast foot. HC on hammer (optional).
+  </text>
+</svg>

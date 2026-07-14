@@ -440,11 +440,14 @@ var PD25Calc = (function () {
 
     var mf = findPoint(rows, 'MF', layout);
     if (mf) points.MF = mf;
+    else {
+      warnings.push('MF not in CSV — T5 (CENTER REF to mast foot vertical) will be skipped.');
+    }
 
     var hc = findPoint(rows, 'HC', layout);
     if (hc) points.HC = hc;
-    else if (!points.MF) {
-      warnings.push('HC or MF not in CSV — T1 (CENTER REF to hammer center) will be skipped.');
+    else {
+      warnings.push('HC not in CSV — T1 (CENTER REF to hammer center) will be skipped.');
     }
 
     var refLinePt1 = findPoint(rows, 'LINEPT1', layout);
@@ -517,8 +520,6 @@ var PD25Calc = (function () {
       hcCorrection = correctHcToHammerCenter(points.HC, pivot, hcFaceOffset);
       hcCenter = hcCorrection.center;
       hammerCenter = hcCenter;
-    } else if (points.MF) {
-      hammerCenter = points.MF;
     }
 
     var results = {
@@ -572,9 +573,7 @@ var PD25Calc = (function () {
         signedDown: t1Dno.down,
         vertical: hammerCenter.z - centerRef.z,
         source:
-          (points.HC
-            ? 'Plan distance — CENTER REF → corrected HC (hammer center)'
-            : 'Plan distance — CENTER REF → MF (hammer center at reference position)') +
+          'Plan distance — CENTER REF → corrected HC (hammer center)' +
           (hcCorrection && hcCorrection.offsetApplied
             ? ' (face offset ' +
               formatGroundworksValue(hcCorrection.offsetApplied) +
@@ -582,6 +581,16 @@ var PD25Calc = (function () {
               displayConstants.unitLabel +
               ' toward ML/MR applied)'
             : ''),
+      };
+    }
+
+    if (points.MF) {
+      var t5Signed = dnoCenterRef.z - points.MF.z;
+      results.T5 = {
+        label: 'Vertical — CENTER REF to mast foot (MF)',
+        value: t5Signed,
+        signedInverse: t5Signed,
+        source: 'Inverse vertical — CENTER REF elevation − MF elevation',
       };
     }
 
@@ -598,7 +607,8 @@ var PD25Calc = (function () {
       message: validation.hasReferencePoints
         ? 'Survey parsed. Computed COGO points compared to optional reference points in CSV.'
         : 'Survey parsed. G1, G2, G5, G6, and G7 calculated from ML, MR, MB, and H.' +
-          (hammerCenter ? ' T1 included from ' + (points.HC ? 'HC' : 'MF') + '.' : ''),
+          (hammerCenter ? ' T1 included from HC.' : '') +
+          (points.MF ? ' T5 included from MF.' : ''),
       intermediate: {
         linePt1: linePt1,
         linePt2: linePt2,
