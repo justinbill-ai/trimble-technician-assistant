@@ -86,7 +86,6 @@ header.tc-app-header,
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
-  filter: brightness(0) invert(1);
 }
 
 .tc-header__titles {

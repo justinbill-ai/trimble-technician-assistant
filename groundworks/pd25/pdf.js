@@ -4,8 +4,7 @@
 var PD25Pdf = (function () {
   var PDF_RESULT_ROW_ORDER = ['G6', 'G5', 'G2', 'G1', 'G7', 'T1', 'T5'];
 
-  var TRIMBLE_LOGO_URL =
-    'https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&sz=w400';
+  var TRIMBLE_LOGO_URL = '../../assets/brand/trimble-logo-blue.png';
 
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';

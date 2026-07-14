@@ -15,12 +15,12 @@
 </head>
 <body>
   <header class="tc-app-header">
-    <a class="tc-back-link" href="../index.html#category/installation">&larr; Installation</a>
+    <a class="tc-back-link" href="../index.html#category/installation">&larr; Machine wear / Installation deliverables</a>
     <div class="tc-header__inner">
       <div class="tc-header__brand">
         <img
           class="tc-header__logo"
-          src="https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&amp;sz=w400"
+          src="../assets/brand/trimble-logo-white.png"
           alt="Trimble"
         />
         <div class="tc-header__titles">
@@ -903,7 +903,7 @@
   </style>
 
   <script>
-    var TRIMBLE_LOGO_URL = "https://drive.google.com/thumbnail?id=1jI06zBPFpu___leR0AjEF-JbTP0PlsFA&sz=w400";
+    var TRIMBLE_LOGO_URL = "../assets/brand/trimble-logo-blue.png";
     var dealerLogo = null;
 
     /** Per-device only — never synced to a server or other users */
@@ -1014,7 +1014,7 @@
           manualTitle: "Trimble Earthworks Grader Commissioning Manual",
           manualVersion: "2.24",
           manualSection: "3.2 Check machine wear",
-          pdfDriveId: "1_sBGqY3P19bjbnrp2DVXB_dhrCewiTru",
+          pdfPath: "../commissioning-manuals/pdfs/trimble-earthworks-grader-commissioning-manual-v-2-24-x.pdf",
           intro:
             "Check and adjust these points so the grade control system can perform accurately. A loose machine cannot produce optimal results. Maintain working condition and component accuracy on an ongoing basis.",
           checks: [
@@ -1087,7 +1087,7 @@
             label: "Cutting edge",
             hint: "Measure 12 in / 0.3 m in from each end. Note bend or uneven wear.",
             tolerance: "≤ 0.005 m (0.2 in) from string line",
-            diagramDriveId: "1uUuueWmJfxTomwTxr_FiflQ-0h2d1SS3",
+            diagramSrc: "assets/diagrams/motor-grader/mg_cutting_edge.jpg",
             diagramCaption: "Green dashed line = within spec (±0.005 m / 0.2 in from string line). Measure 12 in / 0.3 m in from each end."
           },
           {
@@ -1095,7 +1095,7 @@
             label: "Overall wear check",
             hint: "Start here — compare vertical measurement: blade on ground/float vs blade hanging by gravity. Record both values and the total difference, then use the following steps to isolate the largest areas of wear.",
             tolerance: "≤ 13 mm total vertical difference (relaxed vs compressed)",
-            diagramDriveId: "1typlaRu9dvWCH3D0CgiVAqUudL0uCTdS",
+            diagramSrc: "assets/diagrams/motor-grader/mg_overall_wear.jpg",
             diagramCaption: "A good place to start: compare vertical values between relaxed (blade hanging) and compressed (blade on ground/float). Under normal circumstances the total difference should not exceed 13 mm. Blade rail shims, moldboard pivot pins, and circle wear can all contribute to a reading larger than 13 mm — use the steps below to isolate the areas of largest concern for the greatest performance."
           },
           {
@@ -1109,7 +1109,7 @@
             label: "Circle backlash",
             hint: "Mark A-frame and circle — compare to RS400 sensor as you rotate. Record gap; over 12 mm hurts blade corner accuracy.",
             tolerance: "< 12 mm (0.5 in) on outside of circle",
-            diagramDriveId: "1Aoo867yHyXLhuh8jIGKjR1Bcx-VGW-fx",
+            diagramSrc: "assets/diagrams/motor-grader/mg_circle_backlash.jpg",
             diagramImageSize: "large",
             diagramImageWidth: 1600,
             diagramCaption: "Mark indicators on A-frame and circle — compare against RS400 readings. Over 12 mm causes errors at blade corners."
@@ -1119,7 +1119,7 @@
             label: "A-frame trunnion ball",
             hint: "Raise/lower A-frame with down pressure — watch ball in socket. Record play in your notes; shims can be removed to tighten.",
             tolerance: "Record amount of play",
-            diagramDriveId: "186HqP8uGtdabNDFlkH1hFZqrlKevT6lH",
+            diagramSrc: "assets/diagrams/motor-grader/mg_aframe_trunnion.jpg",
             diagramCaption: "Trunnion ball pivot — watch for ball movement in/out of socket under A-frame pressure."
           },
           {
@@ -1127,7 +1127,7 @@
             label: "Lift cylinder backlash",
             hint: "With the blade lifted off the ground, measure play between the blade and the circle.",
             tolerance: "≤ 3 mm (0.1 in) maximum play",
-            diagramDriveId: "189ymlNFshrz6qPmiSmY6Bo-KgjCyzrL8",
+            diagramSrc: "assets/diagrams/motor-grader/mg_lift_backlash.jpg",
             diagramCaption: "Ensure that the distance between the blade and the circle has a maximum of 3 mm (0.1 in) of play when the blade is lifted off the ground."
           },
           {
@@ -1135,7 +1135,7 @@
             label: "Lift cylinder ball joints",
             hint: "Compare rod-to-circle height: circle on blade vs blade hanging.",
             tolerance: "< 1 mm (0.04 in) difference",
-            diagramDriveId: "1NnSWYVZspzWOUBSzViQUIUbhrStwhqA8",
+            diagramSrc: "assets/diagrams/motor-grader/mg_lift_ball_joints.jpg",
             diagramCaption: "Compare rod-to-circle height in both positions."
           },
           {
@@ -1143,8 +1143,7 @@
             label: "Blade lift cylinder yoke",
             hint: "Push blade to ground with hydraulics — watch yoke on frame. Visible raise/lower means worn yoke bushings.",
             tolerance: "No visible movement",
-            diagramDriveId: "1bp6dLD1rex2eG9o2E-59o8RRCXauoY35",
-            diagramVersion: 4,
+            diagramSrc: "assets/diagrams/motor-grader/mg_lift_yoke.jpg",
             diagramCaption: "Lift cylinder yoke on the frame (blue circle). Push blade down and watch for movement — none expected if bushings are good."
           },
           {
@@ -1152,7 +1151,7 @@
             label: "Moldboard pivot pins",
             hint: "Blade down pressure with hydraulics — watch pivot pins as pressure is applied and released. Visible play means wear.",
             tolerance: "No visible play",
-            diagramDriveId: "1QQ37Cewtan-o9GHXZxw5_lkQgwcG7LCd",
+            diagramSrc: "assets/diagrams/motor-grader/mg_moldboard_pivot_pins.jpg",
             diagramCaption: "Moldboard pivot pins — watch for play when adding or removing blade down pressure."
           },
           {
@@ -1160,7 +1159,7 @@
             label: "Blade rail shims",
             hint: "Moldboard to wear strips — note excess clearance. Visible brass on the moldboard wear bar means shims are nearly or fully worn and need replacement.",
             tolerance: "≤ 1 mm (0.04 in)",
-            diagramDriveId: "1rpfNkmposFeqM19Fg-rEwDepOS4hkLoG",
+            diagramSrc: "assets/diagrams/motor-grader/mg_blade_rail.jpg",
             diagramCaption: "Maximum clearance between moldboard and wear strips — ≤ 1 mm (0.04 in). If wear is becoming excessive you may start to see brass on the wear bar of the moldboard; this indicates the shims are nearly worn out or are fully worn and require replacement."
           },
           {

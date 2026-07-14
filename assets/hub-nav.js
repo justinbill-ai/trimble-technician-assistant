@@ -32,9 +32,22 @@
       ],
     },
     {
+      id: 'commissioning',
+      title: 'Commissioning and Installation Manuals',
+      desc: 'Trimble Earthworks v2.24 commissioning and installation PDFs — stored in the app for field access.',
+      tools: [
+        {
+          href: './commissioning-manuals/index.html',
+          icon: 'CM',
+          name: 'Earthworks v2.24 Manuals',
+          summary: 'Excavator, grader, dozer, loader, compactor, and scraper — commissioning & installation PDFs',
+        },
+      ],
+    },
+    {
       id: 'installation',
-      title: 'Installation',
-      desc: 'Pre-install wear documentation and post-install photo deliverables for dealer quality records.',
+      title: 'Machine wear / Installation deliverables',
+      desc: 'Pre-install machine wear reports and post-install photo deliverables — not commissioning PDFs.',
       howto:
         'Start with <strong>Pre-Inspection</strong> before the install. After install, open <strong>Install Deliverable</strong> for photos, voice notes, and PDF export.',
       tools: [
@@ -62,7 +75,7 @@
           href: './bench-crane/index.html#overview',
           icon: 'BC',
           name: 'TMC Bench Crane Assembly Guide',
-          summary: 'Segment-based assembly, Ruthex hardware catalog, and Google Drive step photos',
+          summary: 'Segment-based assembly, Ruthex hardware catalog, and step photos',
           tmcGated: true,
         },
       ],

@@ -18,11 +18,11 @@ const CRANE_DRIVE_FOLDERS = {
 
 /** Google Drive file IDs — paste IDs here (Anyone with the link can view). */
 const CRANE_DRIVE_IMAGES = {
-  ruthexTipSet: '1es6bZtfu68YrNKheIwu9nM0c3LW4wfZr', // Required Tools / Ruthex tips.jpg
-  base01Join: '1eHzC3z76X4utOGR7O3i42zuB1WMiqhbL', // base step 1 join plates + optional dowels
-  base02BoomMount: '1NytNrWaykBqriE_87UFKLq4RFcrmJXJK', // base step 2 boom mount prep
-  base03AxioMount: '1P_uveZbafe54jDlvrlchW-tPoUi9u5JE', // base step 3 — mount axio on base plates
-  base04Extrusions: '16mX-ZVtX3UWbRuCr6iHM3m-zjwtUpehC', // base step 4 — extrusions
+  ruthexTipSet: '', // local: assets/images/tools/ruthex-tip-set.png
+  base01Join: '', // local: assets/images/base-plates/base-01-join.png
+  base02BoomMount: '', // local: assets/images/base-plates/base-02-boom-mount.png
+  base03AxioMount: '', // local: assets/images/base-plates/base-03-axio-mount.png
+  base04Extrusions: '', // local: assets/images/base-plates/base-04-extrusions.png
   bucketPrintOrientation: '', // bucket attachment — recommended slicer layout
 };
 
@@ -80,7 +80,7 @@ const GUIDE = {
             name: 'ruthex® heat-set tip set',
             detail:
               'Use the tip that matches each insert size: M3 tip for RX-M3×5.7 inserts, M6 tip for RX-M6Sx6.8 inserts. Tips are compatible with 900M- and T18-series soldering irons.',
-            imageDriveId: 'ruthexTipSet',
+            image: 'assets/images/tools/ruthex-tip-set.png',
             imageAlt: 'ruthex heat-set insert tip set — M2 through M8 tips for 900M and T18 soldering irons',
             warnings: [
               'Tips are for installing inserts only — not suitable for removal',
@@ -211,7 +211,7 @@ const GUIDE = {
               'Plate joint solid — no gap at seam',
             ],
           },
-          imageDriveId: 'base01Join',
+          image: 'assets/images/base-plates/base-01-join.png',
           imageAlt: 'Join base plates — M3×8 cap screws (blue) and optional M3×12 dowel pins (green)',
           imagePlaceholder: 'Rear plate inserts + front/rear plate connection',
         },
@@ -250,7 +250,7 @@ const GUIDE = {
             'All 4× M6×20 cap screws installed from underside',
             'Pivot swings freely before proceeding to extrusion mount',
           ],
-          imageDriveId: 'base02BoomMount',
+          image: 'assets/images/base-plates/base-02-boom-mount.png',
           imageAlt: 'Underside view — M6×20 boom mount screws (blue) before extrusions',
           imagePlaceholder: 'Pin through mounts + lower boom, then 4 underside mount screws',
           imageNote: 'Perform before base plates are on extrusions',
@@ -286,7 +286,7 @@ const GUIDE = {
             'Both M6×20 cap screws installed from underside',
             'Axio Group secure before proceeding to extrusion mount',
           ],
-          imageDriveId: 'base03AxioMount',
+          image: 'assets/images/base-plates/base-03-axio-mount.png',
           imageAlt: 'Axio Group on base plate — 6× M3×8 and 2× underside M6×20 screws',
           imageNote: 'Perform before base plates are on extrusions',
         },
@@ -330,7 +330,7 @@ const GUIDE = {
             'All 4 end caps installed on extrusion rail ends',
             'Extrusions parallel',
           ],
-          imageDriveId: 'base04Extrusions',
+          image: 'assets/images/base-plates/base-04-extrusions.png',
           imageAlt: 'Base plate assembly mounted on 8020 extrusions — rear left, front right',
           imagePlaceholder: '8020 40-4040-LITE-BLACK — 500 mm extrusion + base plates',
           imageNote: 'Reference: 8020.net · 40-4040-Lite-Black · 40 Series · cut to 500 mm',

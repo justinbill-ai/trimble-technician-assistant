@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commissioning and Installation Manuals — Trimble Earthworks v2.24</title>
+  <meta name="theme-color" content="#005f9e" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <style>
+    .cm-intro { margin-bottom: 20px; }
+    .cm-section { margin-bottom: 24px; }
+    .cm-section__title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--tc-grey-600);
+      margin: 0 0 10px;
+    }
+    .cm-manual-list { list-style: none; margin: 0; padding: 0; }
+    .cm-manual-list li { margin-bottom: 8px; }
+    .cm-manual-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--tc-grey-400);
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-surface);
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--tc-shadow);
+    }
+    .cm-manual-link:hover {
+      border-color: var(--tc-blue);
+      background: var(--tc-blue-soft);
+    }
+    .cm-manual-link__icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-blue);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cm-manual-link__name {
+      font-weight: 700;
+      color: var(--tc-blue);
+      display: block;
+    }
+    .cm-manual-link__meta {
+      font-size: 0.82rem;
+      color: var(--tc-grey-600);
+    }
+    .cm-manual-link__arrow {
+      margin-left: auto;
+      color: var(--tc-grey-500);
+      font-size: 1.1rem;
+    }
+    .cm-manual-link:target,
+    .cm-manual-link.cm-manual-link--highlight {
+      border-color: var(--tc-yellow);
+      box-shadow: 0 0 0 2px rgba(251, 173, 38, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <header class="tc-app-header">
+    <a class="tc-back-link" href="../index.html#category/commissioning">&larr; Commissioning and Installation Manuals</a>
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img class="tc-header__logo" src="../assets/brand/trimble-logo-white.png" alt="Trimble" />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Commissioning &amp; Installation Manuals</h1>
+          <p class="tc-header__sub">Trimble Earthworks v2.24 PDFs</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main">
+    <p class="intro cm-intro" id="cmIntro"></p>
+    <div id="cmSections"></div>
+  </main>
+
+  <footer class="tc-footer">Commissioning manuals · Trimble Technician Assistant</footer>
+
+  <script src="manuals-data.js?v=1"></script>
+  <script>
+    (function () {
+      var data = COMMISSIONING_MANUALS;
+      document.getElementById('cmIntro').textContent = data.subtitle;
+      document.title = data.title + ' — Technician Assistant';
+
+      var root = document.getElementById('cmSections');
+      var hash = (location.hash || '').replace(/^#/, '');
+
+      data.sections.forEach(function (section) {
+        var block = document.createElement('section');
+        block.className = 'cm-section card';
+        block.id = 'section-' + section.id;
+
+        var title = document.createElement('h2');
+        title.className = 'cm-section__title';
+        title.textContent = section.title;
+        block.appendChild(title);
+
+        var list = document.createElement('ul');
+        list.className = 'cm-manual-list';
+
+        section.manuals.forEach(function (manual) {
+          var li = document.createElement('li');
+          var a = document.createElement('a');
+          a.className = 'cm-manual-link';
+          a.id = manual.id;
+          a.href = manual.file;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          if (hash && hash === manual.id) {
+            a.classList.add('cm-manual-link--highlight');
+          }
+          a.innerHTML =
+            '<span class="cm-manual-link__icon">PDF</span>' +
+            '<span>' +
+            '<span class="cm-manual-link__name">' +
+            manual.label +
+            '</span>' +
+            '<span class="cm-manual-link__meta">v' +
+            data.version +
+            ' · Open PDF</span>' +
+            '</span>' +
+            '<span class="cm-manual-link__arrow" aria-hidden="true">&#8250;</span>';
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+
+        block.appendChild(list);
+        root.appendChild(block);
+      });
+
+      if (hash) {
+        var el = document.getElementById(hash);
+        if (el) {
+          requestAnimationFrame(function () {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          });
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
