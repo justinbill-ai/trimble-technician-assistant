@@ -90,7 +90,7 @@ var PD25_TARGET_MAP = {
     },
     {
       id: 'mast-mf',
-      title: 'MF - Mast foot',
+      title: 'MF - Mast foot (optional)',
       image: 'assets/diagrams/panels/pd25-mf-overview.jpg',
       points: [
         {
