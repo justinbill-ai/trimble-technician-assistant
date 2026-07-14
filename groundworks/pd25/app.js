@@ -598,7 +598,7 @@ function renderGroundworksDimensions(options) {
       html += '<p class="pd25-dimensions__subtitle">' + esc(section.subtitle) + '</p>';
     }
     html +=
-      '<table class="pd25-table pd25-dimensions__table"><thead><tr>' +
+      '<div class="pd25-table-wrap"><table class="pd25-table pd25-dimensions__table"><thead><tr>' +
       '<th>Param</th><th>Description</th><th>Default (ft)</th><th>Default (m)</th><th>Entry</th>' +
       '</tr></thead><tbody>';
     section.rows.forEach(function (row) {
@@ -619,7 +619,7 @@ function renderGroundworksDimensions(options) {
         esc(entryLabel(row.entry)) +
         '</span></td></tr>';
     });
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     if (section.footnote) {
       html += '<p class="note pd25-dimensions__footnote">' + esc(section.footnote) + '</p>';
     }
@@ -977,7 +977,7 @@ function renderCalcResults(analysis) {
 
   html += '<h3 class="pd25-results__h">Groundworks measure-up values</h3>';
   html +=
-    '<table class="pd25-table"><thead><tr><th>Value</th><th>Result (' +
+    '<div class="pd25-table-wrap"><table class="pd25-table"><thead><tr><th>Value</th><th>Result (' +
     esc(u) +
     ')</th><th class="pd25-th-copy">Copy</th></tr></thead><tbody>';
   GROUNDWORKS_ORDER.forEach(function (key) {
@@ -998,9 +998,7 @@ function renderCalcResults(analysis) {
       esc(key) +
       '">Copy</button></td></tr>';
   });
-  html += '</tbody></table>';
-
-  if (analysis.rodCorrection && analysis.rodCorrection.rodSubtract > 0) {
+  html += '</tbody></table></div>';
     var rc = analysis.rodCorrection;
     html +=
       '<p class="note"><strong>APC correction applied:</strong> ' +
