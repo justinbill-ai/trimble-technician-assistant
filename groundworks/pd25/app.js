@@ -999,6 +999,8 @@ function renderCalcResults(analysis) {
       '">Copy</button></td></tr>';
   });
   html += '</tbody></table></div>';
+
+  if (analysis.rodCorrection && analysis.rodCorrection.rodSubtract > 0) {
     var rc = analysis.rodCorrection;
     html +=
       '<p class="note"><strong>APC correction applied:</strong> ' +

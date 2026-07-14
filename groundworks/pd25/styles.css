@@ -492,13 +492,12 @@
 }
 
 .pd25-table-wrap .pd25-table {
-  width: max-content;
   min-width: 100%;
   margin-bottom: 0;
 }
 
 .pd25-dimensions__table {
-  min-width: 34rem;
+  min-width: 32rem;
 }
 
 .pd25-dimensions__section-body {
