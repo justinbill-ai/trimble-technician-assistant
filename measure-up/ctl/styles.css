@@ -102,12 +102,36 @@ select.mu-select--pending {
   margin-top: 20px;
 }
 
-.mu-right {
-  text-align: right;
+.mu-survey-requirement {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: var(--tc-error-bg);
+  border: 1px solid #f5c2c8;
+  border-left: 4px solid var(--tc-error);
+  border-radius: var(--tc-radius-lg);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--tc-error);
+}
+
+.mu-survey-requirement > strong {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.82rem;
+}
+
+.mu-survey-requirement p {
+  margin: 0;
+}
+
+.mu-survey-requirement b {
+  font-weight: 700;
 }
 
 #targetNote {
-  display: none;
   margin: 12px 0;
   padding: 12px 14px;
   background: var(--tc-grey-100);
@@ -119,7 +143,7 @@ select.mu-select--pending {
 }
 
 #guideImage {
-  display: none;
+  display: block;
   width: 100%;
   max-width: 100%;
   height: auto;

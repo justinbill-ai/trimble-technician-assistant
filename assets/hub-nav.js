@@ -125,15 +125,7 @@
       btn.type = 'button';
       btn.className = 'category-pick category-pick--' + cat.id;
       btn.setAttribute('data-category-id', cat.id);
-      btn.innerHTML =
-        '<span class="category-pick__title">' +
-        cat.title +
-        '</span>' +
-        '<span class="category-pick__count">' +
-        cat.tools.length +
-        ' tool' +
-        (cat.tools.length === 1 ? '' : 's') +
-        '</span>';
+      btn.innerHTML = '<span class="category-pick__title">' + cat.title + '</span>';
       btn.addEventListener('click', function () {
         if (window.WorkspaceApi) {
           window.WorkspaceApi.logEvent('category_open', { detail: cat.id });

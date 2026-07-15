@@ -68,7 +68,7 @@ var PD25Calc = (function () {
     return POINT_ALIASES[key] || [key];
   }
 
-  function detectCsvLayout(rows) {
+  function detectCsvLayout(rows, csvFormat) {
     if (!rows.length) throw new Error('CSV file is empty.');
 
     function headerScore(row) {
@@ -121,7 +121,26 @@ var PD25Calc = (function () {
       return { hasHeader: true, dataStart: 1, idxName: idxName, idxN: idxN, idxE: idxE, idxZ: idxZ };
     }
 
-    return { hasHeader: false, dataStart: 0, idxName: idxName, idxN: idxN, idxE: idxE, idxZ: idxZ };
+    var format = csvFormat === 'PENZ' ? 'PENZ' : 'PNEZ';
+    idxName = 0;
+    idxZ = 3;
+    if (format === 'PNEZ') {
+      idxN = 1;
+      idxE = 2;
+    } else {
+      idxE = 1;
+      idxN = 2;
+    }
+
+    return {
+      hasHeader: false,
+      dataStart: 0,
+      idxName: idxName,
+      idxN: idxN,
+      idxE: idxE,
+      idxZ: idxZ,
+      csvFormat: format,
+    };
   }
 
   function rowToPoint(row, layout) {
@@ -425,7 +444,7 @@ var PD25Calc = (function () {
     var rows = parseSurveyCsv(csvString);
     if (!rows.length) throw new Error('CSV file is empty.');
 
-    var layout = detectCsvLayout(rows);
+    var layout = detectCsvLayout(rows, surveyOptions.csvFormat);
 
     var coreRequired = ['ML', 'MR', 'MB', 'H'];
     var points = {};

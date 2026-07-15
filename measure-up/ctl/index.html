@@ -125,20 +125,29 @@
           </select>
         </div>
 
-        <div class="mu-right">
-          <button type="button" class="btn btn-secondary btn-sm img-toggle-btn">Show field notes &amp; diagram</button>
+        <div class="mu-survey-requirement" role="note">
+          <strong>Positioning the machine</strong>
+          <p>
+            Calibrating on a <b>level pad</b> is highly recommended.
+            Siteworks Machine Guidance does <b>not</b> compensate for roll during measure-up.
+            If the machine is not on level ground, preferably position it with <b>pitch</b> but <b>no or very little roll</b>.
+          </p>
         </div>
 
         <div id="targetNote" class="info-box">
-          <strong>Positioning the machine</strong><br />
-          Use a <b>level</b> surface when possible.<br /><br />
           <strong>Target layout</strong><br />
-          • <b>CT1 &amp; CT2</b> define forward direction; keep parallel to centerline.<br />
-          • <b>CL / CR</b> on a straight, unworn section of the edge.<br />
-          • CT1 and CT2 should sit on the <b>same plane</b> and use the <b>same target thickness</b>.
+          • <b>CT1 &amp; CT2</b> define forward direction — keep them parallel to centerline, on the <b>same plane</b>, and use the <b>same target thickness</b>.<br />
+          • <b>CL</b> on a straight, unworn section of the cutting edge; <b>CR</b> on the opposite corner when measuring width.<br />
+          • <b>G</b> is the <b>attachment pivot pin</b>.<br /><br />
+          <strong>Optional total-station points (see diagram)</strong><br />
+          • <b>BL</b> and <b>BR</b> — boom lift arms. If you choose <b>Total station</b> for centerline and shoot BL and BR, the calculator bisects that width to find center automatically.<br />
+          • <b>CR</b> — opposite cutting-edge corner. If you choose <b>Total station</b> for width and shoot CR (with CL), the calculator computes cutting-edge width from coordinates.<br /><br />
+          <strong>Antenna bracket (BB)</strong><br />
+          • <b>BB</b> is the <b>bottom bolt</b> of the antenna bracket.<br />
+          • After calculations, always confirm your centerline to the <b>rear of the antenna bracket</b>.
         </div>
 
-        <img id="guideImage" src="" alt="Survey point guide" />
+        <img id="guideImage" src="assets/ctl-survey-point-guide.png" alt="CTL survey point guide — G, CT1, CT2, CL, BB, and optional BL, BR, CR" />
 
         <div class="drop-zone" id="dropZone">
           <span class="drop-zone__prompt">Drag CSV here or <b>click to upload</b></span>

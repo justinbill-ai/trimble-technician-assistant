@@ -80,6 +80,11 @@ function testPd25() {
   });
   assert(analysis.status === 'ok', 'PD25 analysis status ok');
   assert(analysis.groundworks && analysis.groundworks.G6, 'PD25 produces G6 groundworks value');
+
+  var penzLayout = calcSandbox.PD25Calc.detectCsvLayout([['ML', '200', '100', '10']], 'PENZ');
+  assert(penzLayout.idxE === 1 && penzLayout.idxN === 2, 'PD25 PENZ column order');
+  var pnezLayout = calcSandbox.PD25Calc.detectCsvLayout([['ML', '100', '200', '10']], 'PNEZ');
+  assert(pnezLayout.idxN === 1 && pnezLayout.idxE === 2, 'PD25 PNEZ column order');
 }
 
 console.log('--- CTL measure-up ---');

@@ -914,6 +914,9 @@ function getSurveyOptions() {
     hcFaceOffset: document.getElementById('hcFaceOffset')
       ? document.getElementById('hcFaceOffset').value
       : '0',
+    csvFormat: document.getElementById('csvFormat')
+      ? document.getElementById('csvFormat').value
+      : 'PNEZ',
   };
 }
 
@@ -1114,6 +1117,21 @@ function renderCalcResults(analysis) {
   box.innerHTML = html;
 }
 
+function revalidateCsvIfLoaded() {
+  if (!state.csvText) return;
+  try {
+    var analysis = runAnalysis();
+    renderPointBadges(analysis.points, analysis.missing);
+    syncHcUi(!!(analysis.points && analysis.points.HC));
+    refreshViz(analysis);
+    if (!document.getElementById('calcResults').hidden && analysis.status === 'ok') {
+      renderCalcResults(analysis);
+    }
+  } catch (err) {
+    alert(err.message || String(err));
+  }
+}
+
 function bindCsv() {
   var input = document.getElementById('csvFile');
   var zone = document.getElementById('dropZone');
@@ -1172,22 +1190,18 @@ function bindCsv() {
   });
 
   var unitsEl = document.getElementById('units');
-  if (!unitsEl) return;
-  unitsEl.addEventListener('change', function () {
-    updateRodHeightDefault();
-    updateHcOffsetHint();
-    if (!state.csvText) return;
-    try {
-      var analysis = runAnalysis();
-      renderPointBadges(analysis.points, analysis.missing);
-      syncHcUi(!!(analysis.points && analysis.points.HC));
-      if (!document.getElementById('calcResults').hidden && analysis.status === 'ok') {
-        renderCalcResults(analysis);
-      }
-    } catch (err) {
-      alert(err.message || String(err));
-    }
-  });
+  if (unitsEl) {
+    unitsEl.addEventListener('change', function () {
+      updateRodHeightDefault();
+      updateHcOffsetHint();
+      revalidateCsvIfLoaded();
+    });
+  }
+
+  var csvFormatEl = document.getElementById('csvFormat');
+  if (csvFormatEl) {
+    csvFormatEl.addEventListener('change', revalidateCsvIfLoaded);
+  }
 }
 
 function bindCopyResults() {

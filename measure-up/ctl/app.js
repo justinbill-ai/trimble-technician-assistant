@@ -1,6 +1,6 @@
 /* CTL Measure-Up — Technician Assistant (client-side port) */
 var MU_CONFIG = {
-  guideImageId: '1v9okRH1qkhWalxhhuWqB9naR2U83U6f3',
+  guideImage: 'assets/ctl-survey-point-guide.png',
   helpLinks: [],
 };
 
@@ -11,10 +11,6 @@ var lastResponse = null;
 var dealerLogo = null;
 var scene, camera, renderer, controls;
 var vizAnimFrame = null;
-
-function driveThumb(id, w) {
-  return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + w;
-}
 
 function escapeHtmlResult(s) {
   if (s === null || s === undefined) return '';
@@ -75,21 +71,6 @@ function buildResultRowHtml(label, valueStr) {
     escapeHtmlResult(label) +
     '">Copy</button></td></tr>'
   );
-}
-
-function toggleImage() {
-  var img = document.getElementById('guideImage');
-  var note = document.getElementById('targetNote');
-  var btn = document.querySelector('.img-toggle-btn');
-  if (img.style.display === 'none' || img.style.display === '') {
-    img.style.display = 'block';
-    note.style.display = 'block';
-    btn.textContent = 'Hide field notes & diagram';
-  } else {
-    img.style.display = 'none';
-    note.style.display = 'none';
-    btn.textContent = 'Show field notes & diagram';
-  }
 }
 
 function updateSelectPendingClass() {
@@ -752,7 +733,7 @@ function renderHelpLinks() {
 }
 
 function bindMeasureUpUi() {
-  document.getElementById('guideImage').src = driveThumb(MU_CONFIG.guideImageId, 1000);
+  document.getElementById('guideImage').src = MU_CONFIG.guideImage;
 
   updateOffset();
   toggleCenterlineInputs();
@@ -771,7 +752,6 @@ function bindMeasureUpUi() {
   if (exportToggle) exportToggle.addEventListener('click', toggleExportPanel);
   document.getElementById('uploadDealerLogoBtn').addEventListener('click', uploadDealerLogo);
   document.getElementById('clearDealerLogoBtn').addEventListener('click', clearDealerLogo);
-  document.querySelector('.img-toggle-btn').addEventListener('click', toggleImage);
 
   document.getElementById('dealerLogoInput').addEventListener('change', function () {
     if (this.files && this.files[0]) handleDealerLogoFile(this.files[0]);
