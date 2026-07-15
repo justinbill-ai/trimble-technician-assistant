@@ -466,6 +466,9 @@ function makeTextSprite(message, threeRenderer) {
 function handleFile(file, dropZone) {
   dropZone.querySelector('.drop-zone__prompt').innerHTML = '✅ <b>' + escapeHtmlResult(file.name) + '</b>';
   dropZone.style.borderColor = 'var(--tc-success)';
+  if (window.WorkspaceApi) {
+    window.WorkspaceApi.logEvent('csv_uploaded', { detail: file.name });
+  }
   parseCSVForPreview(file);
 }
 
@@ -549,12 +552,19 @@ function runCalc() {
       }
       document.getElementById('results').hidden = false;
       document.getElementById('exportSection').hidden = false;
+      if (window.ReportUpload) window.ReportUpload.injectCheckboxes();
       calcBtn.textContent = 'Run calculations';
+      if (window.WorkspaceApi) {
+        window.WorkspaceApi.logEvent('csv_analyzed:ok', { detail: 'ctl' });
+      }
       if (response.vizPoints) init3D(response.vizPoints);
     } catch (err) {
       errorBox.textContent = err.message || String(err);
       errorBox.hidden = false;
       calcBtn.textContent = 'Run calculations';
+      if (window.WorkspaceApi) {
+        window.WorkspaceApi.logEvent('csv_analyzed:fail', { detail: err.message || String(err) });
+      }
     }
   };
   reader.readAsText(file);
@@ -585,8 +595,21 @@ function getExportPayload() {
 function generateReport() {
   if (!lastResponse) return;
   try {
-    MeasureUpPdf.exportPdf(getExportPayload());
+    var payload = getExportPayload();
+    MeasureUpPdf.exportPdf(payload);
     showExportHints('In the print dialog, choose Save as PDF and pick a folder on this device.');
+    if (window.ReportUpload) {
+      window.ReportUpload.afterPdfExport({
+        reportType: 'ctl-measure-up',
+        html: MeasureUpPdf.buildHtml(payload),
+        fileName: 'ctl-measure-up',
+        dealerName: payload.dealerName,
+        techName: payload.techName,
+        machineModel: payload.meta && payload.meta.machineModel,
+        serialNumber: payload.meta && payload.meta.serial,
+        reportName: payload.reportName,
+      });
+    }
   } catch (err) {
     alert(err.message || 'PDF export failed.');
   }

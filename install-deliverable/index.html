@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
   <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/report-upload.css?v=1" />
 
   <style>
     .session-banner {
@@ -506,7 +507,7 @@
         <div id="installPhotos" class="photo-grid" aria-label="Install photos"></div>
       </div>
 
-      <div class="card" id="exportCard">
+      <div class="card" id="exportCard" data-report-upload="install-deliverable">
         <h2>Export finished report</h2>
         <p class="note" style="margin-top:0;">
           When the install is complete, save a copy to a folder on this device (USB, synced Google Drive / OneDrive, network share, etc.). In-progress work above stays on this device until you export or delete it.
@@ -526,6 +527,9 @@
   <input type="file" id="dealerLogoInput" accept="image/*" hidden />
   <input type="file" id="draftImportInput" accept="application/json,.json,.tta-install.json" hidden />
 
+  <script src="../assets/workspace-config.js?v=1"></script>
+  <script src="../assets/workspace-api.js?v=2"></script>
+  <script src="../assets/report-upload.js?v=1"></script>
   <script src="../assets/header-home.js"></script>
   <script src="../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script>
@@ -1246,6 +1250,18 @@
       popup.focus();
       setTimeout(function () { popup.print(); }, 400);
       showExportHints("In the print dialog, choose Save as PDF and pick a folder on this device.");
+      if (window.ReportUpload) {
+        window.ReportUpload.afterPdfExport({
+          reportType: 'install-deliverable',
+          html: buildPdfHtml(data),
+          fileName: 'install-deliverable',
+          dealerName: data.dealerName,
+          techName: data.techName,
+          machineModel: data.machineMake + ' ' + data.machineType,
+          serialNumber: data.serialNumber,
+          reportName: data.reportName,
+        });
+      }
     }
 
     function parseSpeechToMachineFields(text) {

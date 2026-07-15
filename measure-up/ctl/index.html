@@ -15,6 +15,7 @@
   <link rel="manifest" href="../../app.webmanifest" />
 
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../../assets/report-upload.css?v=1" />
   <link rel="stylesheet" href="styles.css?v=1" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -206,7 +207,7 @@
           </table>
         </div>
 
-        <div id="exportSection" class="mu-section" hidden>
+        <div id="exportSection" class="mu-section" hidden data-report-upload="ctl-measure-up">
           <h2 class="mu-section__title">Export report</h2>
           <p class="note" style="margin-top: 0;">
             Save a PDF copy to this device (USB, synced Google Drive / OneDrive, network share, etc.).
@@ -233,6 +234,9 @@
 
   <input type="file" id="dealerLogoInput" accept="image/*" hidden />
 
+  <script src="../../assets/workspace-config.js?v=1"></script>
+  <script src="../../assets/workspace-api.js?v=2"></script>
+  <script src="../../assets/report-upload.js?v=1"></script>
   <script src="../../assets/header-home.js"></script>
   <script src="calc.js?v=2"></script>
   <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>

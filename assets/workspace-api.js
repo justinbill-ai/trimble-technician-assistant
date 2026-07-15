@@ -1,0 +1,208 @@
+/**
+ * Trimble Technician Assistant — Google Workspace client (telemetry, feedback, report upload).
+ * Uses hidden iframe form POST (same pattern as feedback) to avoid CORS on Apps Script.
+ */
+(function () {
+  'use strict';
+
+  var DEALER_NAME_KEYS = [
+    'tta_preinspection_dealer_name_v1',
+    'tta_pd25_dealer_name_v1',
+  ];
+  var SUBMIT_FRAME_NAME = 'ttaWorkspaceSubmitFrame';
+  var submitFrame;
+
+  function cfg(key, fallback) {
+    var c = window.WORKSPACE_CONFIG || {};
+    return c[key] != null && c[key] !== '' ? c[key] : fallback;
+  }
+
+  function isEnabled() {
+    return cfg('telemetryEnabled', true) !== false && !!cfg('endpoint', '');
+  }
+
+  function isSubAppPath(path) {
+    return (
+      path.indexOf('/groundworks/') !== -1 ||
+      path.indexOf('/measure-up/') !== -1 ||
+      path.indexOf('/pre-inspection/') !== -1 ||
+      path.indexOf('/install-deliverable/') !== -1 ||
+      path.indexOf('/excavator/') !== -1 ||
+      path.indexOf('/bench-crane/') !== -1 ||
+      path.indexOf('/commissioning-manuals/') !== -1
+    );
+  }
+
+  function detectTool() {
+    var path = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+    if (path.indexOf('/groundworks/pd25/calculator') !== -1) return 'pd25-calculator';
+    if (path.indexOf('/groundworks/pd25/guide') !== -1) return 'pd25-guide';
+    if (path.indexOf('/groundworks/pd25/') !== -1) return 'pd25-hub';
+    if (path.indexOf('/measure-up/ctl/') !== -1) return 'ctl-calculator';
+    if (path.indexOf('/measure-up/') !== -1) return 'measure-up-hub';
+    if (path.indexOf('/pre-inspection/') !== -1) return 'pre-inspection';
+    if (path.indexOf('/install-deliverable/') !== -1) return 'install-deliverable';
+    if (path.indexOf('/excavator/') !== -1) return 'excavator';
+    if (path.indexOf('/bench-crane/') !== -1) return 'bench-crane';
+    if (path.indexOf('/commissioning-manuals/') !== -1) return 'commissioning-manuals';
+
+    if (!isSubAppPath(path)) {
+      if (/\/index\.html$/i.test(path)) return 'hub';
+      var segs = path.split('/').filter(Boolean);
+      var last = segs[segs.length - 1] || '';
+      if (!last || path.endsWith('/') || last.indexOf('.') === -1) return 'hub';
+    }
+    return 'unknown';
+  }
+
+  function deviceType() {
+    var ua = navigator.userAgent || '';
+    if (/iPad|Tablet|Android(?!.*Mobile)/i.test(ua)) return 'tablet';
+    if (/Mobile|iPhone|Android/i.test(ua)) return 'mobile';
+    return 'desktop';
+  }
+
+  function readStorage(key) {
+    try {
+      return localStorage.getItem(key) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function getDealerName() {
+    var i;
+    for (i = 0; i < DEALER_NAME_KEYS.length; i++) {
+      var v = readStorage(DEALER_NAME_KEYS[i]).trim();
+      if (v) return v;
+    }
+    var dealerField = document.getElementById('dealerName') || document.getElementById('dealer-name');
+    if (dealerField && dealerField.value) return dealerField.value.trim();
+    return '';
+  }
+
+  function getOptionalEmail() {
+    if (window.TmcAccess && typeof window.TmcAccess.getStoredEmail === 'function') {
+      return window.TmcAccess.getStoredEmail() || '';
+    }
+    var emailField = document.getElementById('feedbackEmail');
+    if (emailField && emailField.value) return emailField.value.trim();
+    return '';
+  }
+
+  function baseContext() {
+    return {
+      tool: detectTool(),
+      page: window.location.href,
+      appVersion: cfg('appVersion', ''),
+      dealer: getDealerName(),
+      email: getOptionalEmail(),
+      userAgent: navigator.userAgent,
+      deviceType: deviceType(),
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  function ensureSubmitFrame() {
+    if (submitFrame && submitFrame.parentNode) return submitFrame;
+    submitFrame = document.createElement('iframe');
+    submitFrame.name = SUBMIT_FRAME_NAME;
+    submitFrame.id = SUBMIT_FRAME_NAME;
+    submitFrame.hidden = true;
+    submitFrame.setAttribute('aria-hidden', 'true');
+    submitFrame.setAttribute('tabindex', '-1');
+    document.body.appendChild(submitFrame);
+    return submitFrame;
+  }
+
+  function postPayload(payload) {
+    if (!isEnabled()) return Promise.resolve({ ok: false, skipped: true });
+    ensureSubmitFrame();
+    return new Promise(function (resolve) {
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = cfg('endpoint', '');
+      form.target = SUBMIT_FRAME_NAME;
+      form.acceptCharset = 'UTF-8';
+      form.style.display = 'none';
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      input.value = JSON.stringify(payload);
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function () {
+        form.remove();
+        resolve({ ok: true });
+      }, 1200);
+    });
+  }
+
+  function logEvent(event, props) {
+    props = props || {};
+    var payload = Object.assign({ action: 'event', event: event }, baseContext(), props);
+    if (props.detail != null && typeof props.detail !== 'string') {
+      payload.detail = JSON.stringify(props.detail);
+    }
+    return postPayload(payload);
+  }
+
+  function submitFeedback(data) {
+    var payload = Object.assign({ action: 'feedback' }, baseContext(), data || {});
+    return postPayload(payload);
+  }
+
+  function uploadReport(options) {
+    options = options || {};
+    var payload = Object.assign(
+      {
+        action: 'upload',
+        reportType: options.reportType || 'report',
+        fileName: options.fileName || 'report',
+        mimeType: options.mimeType || 'text/html',
+        fileBase64: options.fileBase64 || '',
+        technician: options.technician || '',
+        machineModel: options.machineModel || '',
+        serialNumber: options.serialNumber || '',
+        reportName: options.reportName || '',
+      },
+      baseContext()
+    );
+    return postPayload(payload);
+  }
+
+  function utf8ToBase64(str) {
+    try {
+      return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+      return btoa(str);
+    }
+  }
+
+  function initPageTelemetry() {
+    var tool = detectTool();
+    if (tool === 'hub') {
+      logEvent('hub_open');
+    } else if (tool !== 'unknown') {
+      logEvent('tool_open', { detail: tool });
+    }
+  }
+
+  window.WorkspaceApi = {
+    logEvent: logEvent,
+    submitFeedback: submitFeedback,
+    uploadReport: uploadReport,
+    utf8ToBase64: utf8ToBase64,
+    detectTool: detectTool,
+    baseContext: baseContext,
+    isEnabled: isEnabled,
+    initPageTelemetry: initPageTelemetry,
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPageTelemetry);
+  } else {
+    initPageTelemetry();
+  }
+})();

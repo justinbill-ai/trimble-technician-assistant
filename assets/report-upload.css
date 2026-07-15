@@ -1,0 +1,30 @@
+.tta-upload-opt-wrap {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed var(--tc-grey-300, #d0d2d9);
+}
+
+.tta-upload-opt {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--tc-text, #252a2e);
+}
+
+.tta-upload-opt__input {
+  flex: 0 0 auto;
+  margin-top: 3px;
+}
+
+.tta-upload-opt__text strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--tc-blue, #005f9e);
+}
+
+.tta-upload-opt__status {
+  margin: 8px 0 0;
+}

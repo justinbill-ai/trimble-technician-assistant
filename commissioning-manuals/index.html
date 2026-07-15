@@ -91,6 +91,8 @@
 
   <footer class="tc-footer">Commissioning manuals · Trimble Technician Assistant</footer>
 
+  <script src="../assets/workspace-config.js?v=1"></script>
+  <script src="../assets/workspace-api.js?v=2"></script>
   <script src="../assets/header-home.js"></script>
   <script src="manuals-data.js?v=1"></script>
   <script>
@@ -123,6 +125,11 @@
           a.href = manual.file;
           a.target = '_blank';
           a.rel = 'noopener noreferrer';
+          a.addEventListener('click', function () {
+            if (window.WorkspaceApi) {
+              window.WorkspaceApi.logEvent('manual_open', { detail: manual.id });
+            }
+          });
           if (hash && hash === manual.id) {
             a.classList.add('cm-manual-link--highlight');
           }

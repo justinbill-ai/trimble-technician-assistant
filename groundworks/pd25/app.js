@@ -58,6 +58,7 @@ function showExportSection(show) {
   var prompt = document.getElementById('exportPrompt');
   if (prompt) prompt.hidden = !show;
   if (!show) hideExportPanel();
+  if (show && window.ReportUpload) window.ReportUpload.injectCheckboxes();
 }
 
 function hideExportPanel() {
@@ -76,6 +77,7 @@ function toggleExportPanel() {
   toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
   if (open) {
     section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (window.ReportUpload) window.ReportUpload.injectCheckboxes();
   }
 }
 
@@ -84,6 +86,38 @@ function showExportHints(message) {
   if (!box) return;
   box.textContent = message || '';
   box.classList.toggle('hidden', !message);
+}
+
+function logCsvAnalyzed(analysis) {
+  if (!window.WorkspaceApi || !analysis) return;
+  if (analysis.status !== 'ok') {
+    window.WorkspaceApi.logEvent('csv_analyzed:fail', {
+      detail: analysis.message || analysis.status,
+    });
+    return;
+  }
+  if (analysis.missing && analysis.missing.length) {
+    analysis.missing.forEach(function (pt) {
+      window.WorkspaceApi.logEvent('csv_analyzed:missing', { detail: pt });
+    });
+  } else {
+    window.WorkspaceApi.logEvent('csv_analyzed:ok');
+  }
+  if (analysis.warnings && analysis.warnings.length) {
+    window.WorkspaceApi.logEvent('calc_warnings', {
+      detail: analysis.warnings.join(' | '),
+    });
+  }
+  var shotRod = document.getElementById('shotWithRodYes');
+  window.WorkspaceApi.logEvent('calc_options', {
+    detail:
+      'rod:' +
+      (shotRod && shotRod.checked ? 'yes' : 'no') +
+      ';hc:' +
+      (analysis.points && analysis.points.HC ? 'yes' : 'no') +
+      ';mf:' +
+      (analysis.points && analysis.points.MF ? 'yes' : 'no'),
+  });
 }
 
 function buildPdfNotes(analysis) {
@@ -141,8 +175,21 @@ function getExportPayload() {
 function generateReport() {
   if (!state.lastAnalysis || state.lastAnalysis.status !== 'ok') return;
   try {
-    PD25Pdf.exportPdf(getExportPayload());
+    var payload = getExportPayload();
+    PD25Pdf.exportPdf(payload);
     showExportHints('In the print dialog, choose Save as PDF and pick a folder on this device.');
+    if (window.ReportUpload) {
+      window.ReportUpload.afterPdfExport({
+        reportType: 'pd25-measure-up',
+        html: PD25Pdf.buildHtml(payload),
+        fileName: 'pd25-measure-up',
+        dealerName: payload.dealerName,
+        techName: payload.techName,
+        machineModel: payload.meta.machineModel,
+        serialNumber: payload.meta.serialNumber,
+        reportName: payload.reportName,
+      });
+    }
   } catch (err) {
     alert(err.message || 'PDF export failed.');
   }
@@ -319,6 +366,11 @@ function updatePhaseBadge(phaseId) {
 
   var done = isPhaseComplete(phase);
   var badge = section.querySelector('.pd25-phase__badge');
+  var wasDone = section.getAttribute('data-phase-done') === '1';
+  if (done && !wasDone && window.WorkspaceApi) {
+    window.WorkspaceApi.logEvent('guide_phase_complete', { detail: phaseId });
+  }
+  section.setAttribute('data-phase-done', done ? '1' : '0');
   if (badge) {
     badge.textContent = done ? 'Complete' : 'In progress';
     badge.classList.toggle('pd25-phase__badge--done', done);
@@ -984,6 +1036,7 @@ function renderCalcResults(analysis) {
     state.lastAnalysis = analysis;
     showExportSection(false);
     showExportHints('');
+    logCsvAnalyzed(analysis);
     box.hidden = false;
     box.innerHTML = '<strong>Survey status:</strong> ' + esc(analysis.message);
     return;
@@ -991,6 +1044,7 @@ function renderCalcResults(analysis) {
 
   state.lastAnalysis = analysis;
   showExportSection(true);
+  logCsvAnalyzed(analysis);
 
   var u = analysis.unitLabel;
   var html = '';
@@ -1069,6 +1123,9 @@ function bindCsv() {
   function handleFile(file) {
     if (!file) return;
     state.csvFileName = file.name;
+    if (window.WorkspaceApi) {
+      window.WorkspaceApi.logEvent('csv_uploaded', { detail: file.name });
+    }
     showExportSection(false);
     showExportHints('');
     zone.querySelector('.drop-zone__prompt').innerHTML = '✅ <b>' + esc(file.name) + '</b>';

@@ -16,6 +16,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
   <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/report-upload.css?v=1" />
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
@@ -286,7 +287,7 @@ details summary::-webkit-details-marker{display:none}
     </details>
   </section>
 
-  <section id="report-panel" class="card report-panel hidden" aria-labelledby="report-panel-title">
+  <section id="report-panel" class="card report-panel hidden" aria-labelledby="report-panel-title" data-report-upload="excavator-tuning">
     <div class="section-divider">
       <h2 id="report-panel-title">PDF Report (Optional)</h2>
       <p class="note" style="margin-bottom:0;">
@@ -345,6 +346,9 @@ details summary::-webkit-details-marker{display:none}
   </section>
 </main>
 
+<script src="../assets/workspace-config.js?v=1"></script>
+<script src="../assets/workspace-api.js?v=2"></script>
+<script src="../assets/report-upload.js?v=1"></script>
 <script>
 const STORAGE_KEY = "earthworks_tuning_prestart_v1";
 const SESSION_KEY = "earthworks_tuning_session_v1";
@@ -691,7 +695,21 @@ function buildPdfHtml(session){
 function exportSessionPdf(){
   const popup=window.open("","_blank");
   if(!popup){ alert("Popup blocked. Please allow popups to export PDF."); return; }
-  popup.document.open(); popup.document.write(buildPdfHtml(getSessionSnapshot())); popup.document.close(); popup.focus(); popup.print();
+  const session=getSessionSnapshot();
+  const html=buildPdfHtml(session);
+  popup.document.open(); popup.document.write(html); popup.document.close(); popup.focus(); popup.print();
+  if(window.ReportUpload){
+    window.ReportUpload.afterPdfExport({
+      reportType:'excavator-tuning',
+      html:html,
+      fileName:'excavator-tuning',
+      dealerName:session.dealerName,
+      techName:session.techName,
+      machineModel:session.machineModel,
+      serialNumber:session.machineId,
+      reportName:session.machineId||'excavator-session'
+    });
+  }
 }
 
 function loadChecklist(){

@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
   <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/report-upload.css?v=1" />
 </head>
 <body>
   <header class="tc-app-header">
@@ -208,7 +209,7 @@
         </label>
       </div>
 
-      <div id="reportActions" class="actions hidden">
+      <div id="reportActions" class="actions hidden" data-report-upload="pre-inspection">
         <button type="button" class="btn btn-primary" id="generatePdfBtn" onclick="generateReport()" disabled>Generate PDF report</button>
         <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear form</button>
       </div>
@@ -902,6 +903,9 @@
     }
   </style>
 
+  <script src="../assets/workspace-config.js?v=1"></script>
+  <script src="../assets/workspace-api.js?v=2"></script>
+  <script src="../assets/report-upload.js?v=1"></script>
   <script src="../assets/header-home.js"></script>
   <script src="../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script>
@@ -2713,6 +2717,19 @@
       popup.document.close();
       popup.focus();
       setTimeout(function () { popup.print(); }, 500);
+
+      if (window.ReportUpload) {
+        window.ReportUpload.afterPdfExport({
+          reportType: 'pre-inspection',
+          html: buildPdfHtml(data),
+          fileName: 'pre-inspection-wear-report',
+          dealerName: data.dealerName,
+          techName: data.techName,
+          machineModel: data.machineType,
+          serialNumber: data.serialNumber,
+          reportName: data.reportTitle,
+        });
+      }
 
       var status = document.getElementById("statusMsg");
       status.style.display = "block";

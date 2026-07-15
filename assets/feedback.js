@@ -13,7 +13,8 @@
   var submitFrame;
 
   function cfg(key, fallback) {
-    return config[key] != null && config[key] !== '' ? config[key] : fallback;
+    var c = window.WORKSPACE_CONFIG || window.FEEDBACK_CONFIG || {};
+    return c[key] != null && c[key] !== '' ? c[key] : fallback;
   }
 
   function openModal() {
@@ -58,7 +59,9 @@
   }
 
   function buildPayload(formData) {
-    return {
+    var base = window.WorkspaceApi ? window.WorkspaceApi.baseContext() : {};
+    return Object.assign(base, {
+      action: 'feedback',
       type: formData.get('type') || 'Enhancement request',
       topic: formData.get('topic') || '',
       name: (formData.get('name') || '').trim(),
@@ -66,7 +69,7 @@
       message: (formData.get('message') || '').trim(),
       page: window.location.href,
       userAgent: navigator.userAgent,
-    };
+    });
   }
 
   function ensureSubmitFrame() {
@@ -167,18 +170,16 @@
       submitBtn.textContent = 'Sending…';
     }
     var endpoint = cfg('endpoint', '');
-    if (endpoint) {
+    if (endpoint && window.WorkspaceApi) {
+      window.WorkspaceApi.submitFeedback(payload).then(function () {
+        showSuccess('Thanks — your feedback was sent to the developer.');
+        if (submitBtn) submitBtn.disabled = true;
+      }).catch(function () {
+        fallbackMailto();
+      });
+    } else if (endpoint) {
       submitViaEndpoint(payload).catch(function () {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Send feedback';
-        }
-        showError(
-          'Could not reach the feedback service. Opening your email app instead…'
-        );
-        setTimeout(function () {
-          submitViaMailto(payload);
-        }, 600);
+        fallbackMailto();
       });
     } else {
       if (submitBtn) {
@@ -186,6 +187,17 @@
         submitBtn.textContent = 'Send feedback';
       }
       submitViaMailto(payload);
+    }
+
+    function fallbackMailto() {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send feedback';
+      }
+      showError('Could not reach the feedback service. Opening your email app instead…');
+      setTimeout(function () {
+        submitViaMailto(payload);
+      }, 600);
     }
   }
 

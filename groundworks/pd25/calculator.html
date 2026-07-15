@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#005f9e" />
   <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../../assets/report-upload.css?v=1" />
   <link rel="stylesheet" href="styles.css?v=33" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -204,7 +205,7 @@
           </button>
         </div>
 
-        <div id="exportSection" class="pd25-section pd25-export-panel" hidden>
+        <div id="exportSection" class="pd25-section pd25-export-panel" hidden data-report-upload="pd25-measure-up">
           <h2 class="pd25-section__title">Optional report details</h2>
           <p class="note" style="margin-top: 0;">
             Fill in only what you want on the PDF header. Skip anything you do not need.
@@ -257,6 +258,9 @@
 
   <footer class="tc-footer">PD25 · Trimble Groundworks · Technician Assistant</footer>
 
+  <script src="../../assets/workspace-config.js?v=1"></script>
+  <script src="../../assets/workspace-api.js?v=2"></script>
+  <script src="../../assets/report-upload.js?v=1"></script>
   <script src="../../assets/header-home.js"></script>
   <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script src="pdf.js?v=4"></script>
