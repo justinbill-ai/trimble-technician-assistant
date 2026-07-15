@@ -113,8 +113,9 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
 | Event | Typical source |
 |-------|----------------|
 | `category_open` | Hub category picker |
-| `tool_open` | Any tool page load |
-| `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculators |
+| `tool_open` | Any tool page load (`ctl-calculator`, `pd25-calculator`, …) |
+| `calc_run` | User ran CTL or PD25 calculator (Calculate / Run calculations) |
+| `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculation outcome |
 | `pdf_exported` | Report upload helper after PDF |
 | `guide_phase_complete` | PD25 guided workflow |
 | `guide_section_view` / `guide_section_complete` | Bench crane assembly |

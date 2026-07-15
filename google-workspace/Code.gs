@@ -157,6 +157,8 @@ function setupReadmeSheet(ss) {
     ['hub_open', 'User opened the hub'],
     ['category_open', 'User opened a hub category'],
     ['tool_open', 'User opened a tool page'],
+    ['calc_run', 'User ran CTL or PD25 measure-up calculator'],
+    ['csv_uploaded', 'Survey CSV uploaded'],
     ['csv_analyzed:ok', 'Calculator succeeded'],
     ['pdf_exported', 'User generated a PDF'],
     ['guide_phase_complete', 'PD25 workflow phase finished'],

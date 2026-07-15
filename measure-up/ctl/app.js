@@ -533,7 +533,8 @@ function runCalc() {
       showExportSection(true);
       calcBtn.textContent = 'Run calculations';
       if (window.WorkspaceApi) {
-        window.WorkspaceApi.logEvent('csv_analyzed:ok', { detail: 'ctl' });
+        window.WorkspaceApi.logCalcRun('ok');
+        window.WorkspaceApi.logEvent('csv_analyzed:ok', { detail: 'ctl-calculator' });
       }
       if (response.vizPoints) init3D(response.vizPoints);
     } catch (err) {
@@ -541,7 +542,10 @@ function runCalc() {
       errorBox.hidden = false;
       calcBtn.textContent = 'Run calculations';
       if (window.WorkspaceApi) {
-        window.WorkspaceApi.logEvent('csv_analyzed:fail', { detail: err.message || String(err) });
+        window.WorkspaceApi.logCalcRun('fail', err.message || String(err));
+        window.WorkspaceApi.logEvent('csv_analyzed:fail', {
+          detail: 'ctl-calculator:' + (err.message || String(err)),
+        });
       }
     }
   };

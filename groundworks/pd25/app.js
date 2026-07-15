@@ -92,7 +92,7 @@ function logCsvAnalyzed(analysis) {
   if (!window.WorkspaceApi || !analysis) return;
   if (analysis.status !== 'ok') {
     window.WorkspaceApi.logEvent('csv_analyzed:fail', {
-      detail: analysis.message || analysis.status,
+      detail: 'pd25-calculator:' + (analysis.message || analysis.status),
     });
     return;
   }
@@ -101,7 +101,7 @@ function logCsvAnalyzed(analysis) {
       window.WorkspaceApi.logEvent('csv_analyzed:missing', { detail: pt });
     });
   } else {
-    window.WorkspaceApi.logEvent('csv_analyzed:ok');
+    window.WorkspaceApi.logEvent('csv_analyzed:ok', { detail: 'pd25-calculator' });
   }
   if (analysis.warnings && analysis.warnings.length) {
     window.WorkspaceApi.logEvent('calc_warnings', {
@@ -1185,6 +1185,12 @@ function bindCsv() {
   analyzeBtn.addEventListener('click', function () {
     if (!state.csvText) return;
     var analysis = runAnalysis();
+    if (window.WorkspaceApi) {
+      window.WorkspaceApi.logCalcRun(
+        analysis.status === 'ok' ? 'ok' : 'fail',
+        analysis.status !== 'ok' ? analysis.message || analysis.status : ''
+      );
+    }
     renderCalcResults(analysis);
     refreshViz(analysis);
   });

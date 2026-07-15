@@ -181,6 +181,12 @@
     }
   }
 
+  function logCalcRun(outcome, extra) {
+    var detail = outcome || 'ok';
+    if (extra) detail += ':' + String(extra).slice(0, 120);
+    return logEvent('calc_run', { detail: detail });
+  }
+
   function initPageTelemetry() {
     var tool = detectTool();
     if (tool === 'hub') {
@@ -192,6 +198,7 @@
 
   window.WorkspaceApi = {
     logEvent: logEvent,
+    logCalcRun: logCalcRun,
     submitFeedback: submitFeedback,
     uploadReport: uploadReport,
     utf8ToBase64: utf8ToBase64,

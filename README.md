@@ -71,8 +71,9 @@ Telemetry, feedback, and optional Drive report archive are configured in `assets
 |-------|------|
 | `hub_open` | Hub home loaded |
 | `category_open` | Hub category opened |
-| `tool_open` | Tool page loaded |
-| `csv_uploaded` / `csv_analyzed:ok` | Survey CSV processed |
+| `tool_open` | Tool page loaded (`ctl-calculator`, `pd25-calculator`, etc.) |
+| `calc_run` | User clicked Calculate / Run calculations (check `tool` column) |
+| `csv_uploaded` / `csv_analyzed:ok` | Survey CSV uploaded or processed |
 | `pdf_exported` | PDF generated |
 | `guide_phase_complete` | PD25 workflow phase finished |
 | `guide_section_view` / `guide_section_complete` | Bench crane segment |
