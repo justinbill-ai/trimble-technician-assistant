@@ -96,8 +96,30 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
    - Tool opens by week (`tool`, `event`)
    - Funnel (`csv_analyzed:ok`, `pdf_exported`)
    - Device split (`deviceType`)
+   - Excavator / bench crane: `symptom_analyzed`, `guide_section_complete`
 3. Use **Feedback** for friction by `type` and `page`.
 4. Use **Uploads** for outcome counts by `dealer` and `reportType`.
+
+---
+
+## Telemetry conventions (when adding features)
+
+1. Add a `detectTool()` branch in `assets/workspace-api.js` if the tool is new.
+2. Page load logs `tool_open` automatically — do **not** duplicate from hub link clicks.
+3. Log domain events with `WorkspaceApi.logEvent('event_name', { detail: '…' })`.
+4. Bump `appVersion` in `workspace-config.js` when shipping meaningful releases.
+5. Re-run **`setupSheets`** in Apps Script if you extend the README tab event list in `Code.gs`.
+
+| Event | Typical source |
+|-------|----------------|
+| `category_open` | Hub category picker |
+| `tool_open` | Any tool page load |
+| `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculators |
+| `pdf_exported` | Report upload helper after PDF |
+| `guide_phase_complete` | PD25 guided workflow |
+| `guide_section_view` / `guide_section_complete` | Bench crane assembly |
+| `prestart_complete` / `symptom_analyzed` | Excavator tuning |
+| `manual_open` | Commissioning manuals |
 
 ---
 

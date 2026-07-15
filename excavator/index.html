@@ -17,6 +17,7 @@
   <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
   <link rel="stylesheet" href="../assets/report-upload.css?v=1" />
+  <link rel="stylesheet" href="../assets/feedback.css?v=1" />
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
@@ -347,12 +348,18 @@ details summary::-webkit-details-marker{display:none}
 </main>
 
 <script src="../assets/workspace-config.js?v=1"></script>
-<script src="../assets/workspace-api.js?v=2"></script>
+<script src="../assets/workspace-api.js?v=3"></script>
 <script src="../assets/report-upload.js?v=1"></script>
 <script>
 const STORAGE_KEY = "earthworks_tuning_prestart_v1";
 const SESSION_KEY = "earthworks_tuning_session_v1";
 const FIXED_MANUAL_LINK = "../commissioning-manuals/pdfs/trimble-earthworks-excavator-commissioning-manual-v2-24-x.pdf";
+
+function logEvt(event, detail) {
+  if (!window.WorkspaceApi) return;
+  if (detail && typeof detail === "object") window.WorkspaceApi.logEvent(event, detail);
+  else window.WorkspaceApi.logEvent(event, { detail: detail || "" });
+}
 
 const checks = Array.from(document.querySelectorAll(".pre-req-check"));
 const unlockBtn = document.getElementById("unlock-btn");
@@ -746,7 +753,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
   });
 });
 checks.forEach(cb=>cb.addEventListener("change",()=>{saveChecklist();updateChecklistUi();}));
-unlockBtn.addEventListener("click",()=>{ if(unlockBtn.disabled) return; activateTab("assistant"); });
+unlockBtn.addEventListener("click",()=>{ if(unlockBtn.disabled) return; logEvt("prestart_complete"); activateTab("assistant"); });
 q("reset-checklist-btn").addEventListener("click",()=>{ checks.forEach(cb=>cb.checked=false); saveChecklist(); updateChecklistUi(); });
 
 q("analyze-btn").addEventListener("click",()=>{
@@ -768,6 +775,7 @@ q("analyze-btn").addEventListener("click",()=>{
 
   renderRecommendations(scored);
   updateVisualization(effectiveMovement,effectiveZone);
+  logEvt("symptom_analyzed", { detail: String(scored.length) });
 });
 
 q("clear-btn").addEventListener("click",()=>{
@@ -815,5 +823,7 @@ updateVisualization(q("movement").value,q("zone").value);
 updateOscillationCallout(q("symptom-text").value||"");
 </script>
   <script src="../assets/header-home.js"></script>
+  <script src="../assets/feedback-config.js?v=3"></script>
+  <script src="../assets/feedback.js?v=4"></script>
 </body>
 </html>

@@ -7,7 +7,6 @@
 
   var DEALER_NAME_KEYS = [
     'tta_preinspection_dealer_name_v1',
-    'tta_pd25_dealer_name_v1',
   ];
   var SUBMIT_FRAME_NAME = 'ttaWorkspaceSubmitFrame';
   var submitFrame;

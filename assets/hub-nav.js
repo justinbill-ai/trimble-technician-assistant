@@ -166,16 +166,6 @@
     if (cat.tmc && window.TmcAccess && window.TmcAccess.initHubGate) {
       window.TmcAccess.initHubGate();
     }
-    if (!toolListEl._ttaToolTelemetry) {
-      toolListEl._ttaToolTelemetry = true;
-      toolListEl.addEventListener('click', function (e) {
-        var link = e.target.closest('a.tool-link');
-        if (!link || !window.WorkspaceApi) return;
-        window.WorkspaceApi.logEvent('tool_open', {
-          detail: (link.getAttribute('href') || '').replace(/^\.\//, ''),
-        });
-      });
-    }
   }
 
   function openCategory(id, pushHash) {

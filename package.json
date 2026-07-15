@@ -1,0 +1,8 @@
+{
+  "name": "trimble-technician-assistant",
+  "private": true,
+  "description": "Static field tools hub — PD25, CTL measure-up, pre-inspection, and related workflows.",
+  "scripts": {
+    "test": "node tests/run-smoke.js"
+  }
+}

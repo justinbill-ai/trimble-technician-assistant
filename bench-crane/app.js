@@ -903,6 +903,9 @@ function bindSectionEvents(section) {
       state.completedSections.delete(section.id);
     } else {
       state.completedSections.add(section.id);
+      if (window.WorkspaceApi) {
+        window.WorkspaceApi.logEvent('guide_section_complete', { detail: section.id });
+      }
     }
     persist();
     render();
@@ -930,6 +933,9 @@ function showSection(id, tab = 'assemble') {
     state.currentTab = 'assemble';
   } else {
     state.currentTab = tab;
+  }
+  if (window.WorkspaceApi) {
+    window.WorkspaceApi.logEvent('guide_section_view', { detail: id });
   }
   closeSegNav();
   persist();

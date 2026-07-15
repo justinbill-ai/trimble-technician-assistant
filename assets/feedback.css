@@ -115,3 +115,19 @@ body.feedback-modal-open {
   margin: 12px 0 0;
   font-size: 0.78rem;
 }
+
+.tc-footer__feedback {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tc-footer__feedback:hover {
+  color: var(--tc-blue);
+}

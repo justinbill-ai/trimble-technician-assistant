@@ -153,16 +153,21 @@ function setupReadmeSheet(ss) {
   ]);
 
   sheet.getRange('A10').setValue('Common events').setFontWeight('bold').setFontColor('#005f9e');
-  sheet.getRange('A11:B16').setValues([
+  sheet.getRange('A11:B20').setValues([
     ['hub_open', 'User opened the hub'],
-    ['tool_open', 'User opened a tool'],
+    ['category_open', 'User opened a hub category'],
+    ['tool_open', 'User opened a tool page'],
     ['csv_analyzed:ok', 'Calculator succeeded'],
     ['pdf_exported', 'User generated a PDF'],
     ['guide_phase_complete', 'PD25 workflow phase finished'],
+    ['guide_section_view', 'Bench crane segment opened'],
+    ['guide_section_complete', 'Bench crane segment marked complete'],
+    ['prestart_complete', 'Excavator prestart checklist finished'],
+    ['symptom_analyzed', 'Excavator symptom search run'],
     ['manual_open', 'Commissioning PDF opened'],
   ]);
 
-  sheet.getRange('A1:D16').setWrap(true).setVerticalAlignment('top');
+  sheet.getRange('A1:D20').setWrap(true).setVerticalAlignment('top');
   sheet.setColumnWidth(1, 160);
   sheet.setColumnWidth(2, 200);
   sheet.setColumnWidth(3, 220);

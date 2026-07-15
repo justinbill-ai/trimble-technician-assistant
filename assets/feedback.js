@@ -1,20 +1,74 @@
 /**
- * Hub developer feedback — modal form with Apps Script email or mailto fallback.
+ * Developer feedback — hub tile, sub-tool footer link, Apps Script or mailto fallback.
  */
 (function () {
   'use strict';
 
-  var config = window.FEEDBACK_CONFIG || {};
   var modal;
   var form;
   var errorEl;
   var successEl;
   var submitBtn;
   var submitFrame;
+  var bound;
 
   function cfg(key, fallback) {
     var c = window.WORKSPACE_CONFIG || window.FEEDBACK_CONFIG || {};
     return c[key] != null && c[key] !== '' ? c[key] : fallback;
+  }
+
+  function injectFeedbackModal() {
+    if (document.getElementById('feedbackModal')) return;
+    var wrap = document.createElement('div');
+    wrap.innerHTML =
+      '<div class="feedback-modal" id="feedbackModal" hidden aria-hidden="true">' +
+      '<button type="button" class="feedback-modal__backdrop" id="feedbackModalBackdrop" aria-label="Close"></button>' +
+      '<div class="feedback-modal__panel card" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">' +
+      '<div class="feedback-modal__head">' +
+      '<h2 id="feedbackModalTitle" class="feedback-modal__title">Developer feedback</h2>' +
+      '<button type="button" class="btn-icon" id="feedbackModalClose" aria-label="Close">✕</button>' +
+      '</div>' +
+      '<p class="feedback-modal__lead">Share enhancement ideas, report issues, or ask for help. Your message includes the current page URL.</p>' +
+      '<form id="feedbackForm" class="feedback-modal__form" novalidate>' +
+      '<label class="feedback-modal__label" for="feedbackType">Type</label>' +
+      '<select class="feedback-modal__input" id="feedbackType" name="type" required>' +
+      '<option value="Enhancement request">Enhancement request</option>' +
+      '<option value="Bug report">Bug report</option>' +
+      '<option value="Question">Question</option>' +
+      '</select>' +
+      '<label class="feedback-modal__label" for="feedbackTopic">Topic (optional)</label>' +
+      '<input class="feedback-modal__input" id="feedbackTopic" name="topic" type="text" maxlength="120" placeholder="e.g. PD25 calculator, hub navigation" />' +
+      '<label class="feedback-modal__label" for="feedbackName">Your name (optional)</label>' +
+      '<input class="feedback-modal__input" id="feedbackName" name="name" type="text" autocomplete="name" maxlength="80" />' +
+      '<label class="feedback-modal__label" for="feedbackEmail">Your email (optional)</label>' +
+      '<input class="feedback-modal__input" id="feedbackEmail" name="email" type="email" autocomplete="email" maxlength="120" />' +
+      '<label class="feedback-modal__label" for="feedbackMessage">Message</label>' +
+      '<textarea class="feedback-modal__input feedback-modal__textarea" id="feedbackMessage" name="message" rows="5" required placeholder="Describe what you would like improved, what happened, or what you need help with…"></textarea>' +
+      '<p class="feedback-modal__error" id="feedbackError" hidden role="alert"></p>' +
+      '<p class="feedback-modal__success" id="feedbackSuccess" hidden role="status"></p>' +
+      '<div class="feedback-modal__actions">' +
+      '<button type="button" class="btn-secondary" id="feedbackModalCancel">Cancel</button>' +
+      '<button type="submit" class="btn-primary" id="feedbackSubmit">Send feedback</button>' +
+      '</div>' +
+      '</form>' +
+      '<p class="feedback-modal__note note">Submissions include the current page URL to help with troubleshooting.</p>' +
+      '</div>' +
+      '</div>';
+    document.body.appendChild(wrap.firstChild);
+  }
+
+  function injectFooterLink() {
+    var footer = document.querySelector('.tc-footer');
+    if (!footer || footer.querySelector('[data-open-feedback]')) return;
+    if (document.getElementById('feedbackOpenBtn')) return;
+    var sep = document.createTextNode(' · ');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tc-footer__feedback';
+    btn.setAttribute('data-open-feedback', '');
+    btn.textContent = 'Send feedback';
+    footer.appendChild(sep);
+    footer.appendChild(btn);
   }
 
   function openModal() {
@@ -202,6 +256,10 @@
   }
 
   function bindModal() {
+    if (bound) return;
+    injectFeedbackModal();
+    injectFooterLink();
+
     modal = document.getElementById('feedbackModal');
     form = document.getElementById('feedbackForm');
     errorEl = document.getElementById('feedbackError');
@@ -209,7 +267,10 @@
     submitBtn = document.getElementById('feedbackSubmit');
     if (!modal || !form) return;
 
-    document.getElementById('feedbackOpenBtn')?.addEventListener('click', openModal);
+    bound = true;
+    document.querySelectorAll('[data-open-feedback], #feedbackOpenBtn').forEach(function (btn) {
+      btn.addEventListener('click', openModal);
+    });
     document.getElementById('feedbackModalClose')?.addEventListener('click', closeModal);
     document.getElementById('feedbackModalBackdrop')?.addEventListener('click', closeModal);
     document.getElementById('feedbackModalCancel')?.addEventListener('click', closeModal);
