@@ -267,7 +267,6 @@ function allStepsForPhase(phase) {
 }
 
 function isPhaseComplete(phase) {
-  if (phase.calculator) return isCalculatorUnlocked();
   var required = allStepsForPhase(phase);
   if (!required.length) return true;
   return required.every(function (s) {
@@ -322,23 +321,25 @@ function updatePhaseBadge(phaseId) {
 }
 
 function updateWorkflowProgress() {
-  var setupPhases = PD25_GUIDE.phases.filter(function (p) {
-    return !p.calculator && p.id !== 'phase-6';
-  });
+  var setupPhases = guidePhases();
   var doneCount = setupPhases.filter(function (p) {
     return isPhaseComplete(p);
   }).length;
   var el = document.getElementById('workflowProgress');
   if (!el) return;
 
-  if (isCalculatorUnlocked()) {
+  if (doneCount === setupPhases.length) {
     el.className = 'pd25-workflow-progress pd25-workflow-progress--done';
     el.textContent =
-      'All recommended setup phases complete (' +
+      'All workflow phases complete (' + doneCount + ' of ' + setupPhases.length + ').';
+  } else if (isCalculatorUnlocked()) {
+    el.className = 'pd25-workflow-progress pd25-workflow-progress--done';
+    el.textContent =
+      'Measure-up phases complete (' +
       doneCount +
       ' of ' +
       setupPhases.length +
-      ').';
+      '). Finish remaining steps when ready.';
   } else {
     el.className = 'pd25-workflow-progress';
     el.textContent =
@@ -346,7 +347,7 @@ function updateWorkflowProgress() {
       doneCount +
       ' of ' +
       setupPhases.length +
-      ' setup phases complete. Finish critical steps if you are new to PD25 or troubleshooting accuracy.';
+      ' phases complete. Finish critical steps if you are new to PD25 or troubleshooting accuracy.';
   }
 }
 

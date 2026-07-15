@@ -262,7 +262,6 @@ var PD25_GUIDE = {
       critical: false,
       summary:
         'Use the measure-up calculator after Phases 1–3. Enter G values and T5/T1 from survey, then finalize T2 and T3 on a plumb installed pile.',
-      calculator: true,
       steps: [
         {
           id: 'p45-gw-values',
