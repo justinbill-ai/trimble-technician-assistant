@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groundworks Wiring Reference — Trimble Technician Assistant</title>
+  <meta name="theme-color" content="#005f9e" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
+  <link rel="stylesheet" href="../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../../assets/feedback.css?v=1" />
+  <style>
+    .gw-intro { margin-bottom: 20px; }
+    .gw-doc-list { list-style: none; margin: 0; padding: 0; }
+    .gw-doc-list li { margin-bottom: 16px; }
+    .gw-doc-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--tc-grey-400);
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-surface);
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--tc-shadow);
+    }
+    .gw-doc-link:hover {
+      border-color: var(--tc-blue);
+      background: var(--tc-blue-soft);
+    }
+    .gw-doc-link__icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-blue);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gw-doc-link__name {
+      font-weight: 700;
+      color: var(--tc-blue);
+      display: block;
+    }
+    .gw-doc-link__meta {
+      font-size: 0.82rem;
+      color: var(--tc-grey-600);
+    }
+    .gw-doc-link__arrow {
+      margin-left: auto;
+      color: var(--tc-grey-500);
+      font-size: 1.1rem;
+    }
+    .gw-preview {
+      margin-top: 10px;
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+      overflow: hidden;
+      background: #fff;
+    }
+    .gw-preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .gw-preview__label {
+      margin: 0;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      color: var(--tc-grey-600);
+      background: var(--tc-grey-100);
+      border-top: 1px solid var(--tc-grey-300);
+    }
+  </style>
+</head>
+<body>
+  <header class="tc-app-header">
+    <a class="tc-back-link" href="../../index.html#category/groundworks">&larr; Trimble Groundworks</a>
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img class="tc-header__logo" src="../../assets/brand/trimble-logo-white.png" alt="Trimble" />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Groundworks wiring reference</h1>
+          <p class="tc-header__sub">Trimble Groundworks connection diagram &amp; schematic</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main">
+    <p class="intro gw-intro">
+      Trimble Groundworks wiring documents for field reference. Open the PDF in your browser — stored in this app for offline use.
+    </p>
+
+    <ul class="gw-doc-list">
+      <li>
+        <a
+          class="gw-doc-link"
+          href="assets/122111-SpSTD-connection-rev06.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          id="gwConnectionPdf"
+        >
+          <span class="gw-doc-link__icon">PDF</span>
+          <span>
+            <span class="gw-doc-link__name">Connection diagram</span>
+            <span class="gw-doc-link__meta">122111-SpSTD · Rev 06 · 2 pages</span>
+          </span>
+          <span class="gw-doc-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+        <div class="gw-preview">
+          <a href="assets/122111-SpSTD-connection-rev06.pdf" target="_blank" rel="noopener noreferrer">
+            <img src="assets/connection-page1.png" alt="Connection diagram page 1 preview" loading="lazy" />
+          </a>
+          <p class="gw-preview__label">Page 1 preview — tap to open full PDF (page 2 in same document)</p>
+        </div>
+      </li>
+      <li>
+        <a
+          class="gw-doc-link"
+          href="assets/122111-100-schematic-rev-a.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          id="gwSchematicPdf"
+        >
+          <span class="gw-doc-link__icon">PDF</span>
+          <span>
+            <span class="gw-doc-link__name">Wiring schematic</span>
+            <span class="gw-doc-link__meta">122111-100 · Rev A · pin-outs &amp; harness detail</span>
+          </span>
+          <span class="gw-doc-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+        <div class="gw-preview">
+          <a href="assets/122111-100-schematic-rev-a.pdf" target="_blank" rel="noopener noreferrer">
+            <img src="assets/schematic-page1.png" alt="Wiring schematic preview" loading="lazy" />
+          </a>
+          <p class="gw-preview__label">Schematic preview — tap to open full PDF</p>
+        </div>
+      </li>
+    </ul>
+  </main>
+
+  <footer class="tc-footer">Groundworks wiring · Trimble Technician Assistant</footer>
+
+  <script src="../../assets/workspace-config.js?v=1"></script>
+  <script src="../../assets/workspace-api.js?v=3"></script>
+  <script src="../../assets/header-home.js"></script>
+  <script>
+    (function () {
+      function logOpen(id) {
+        if (window.WorkspaceApi) {
+          window.WorkspaceApi.logEvent('wiring_pdf_open', { detail: id });
+        }
+      }
+      document.getElementById('gwConnectionPdf')?.addEventListener('click', function () {
+        logOpen('connection');
+      });
+      document.getElementById('gwSchematicPdf')?.addEventListener('click', function () {
+        logOpen('schematic');
+      });
+    })();
+  </script>
+  <script src="../../assets/feedback-config.js?v=3"></script>
+  <script src="../../assets/feedback.js?v=4"></script>
+</body>
+</html>

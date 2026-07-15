@@ -28,7 +28,8 @@
       path.indexOf('/install-deliverable/') !== -1 ||
       path.indexOf('/excavator/') !== -1 ||
       path.indexOf('/bench-crane/') !== -1 ||
-      path.indexOf('/commissioning-manuals/') !== -1
+      path.indexOf('/commissioning-manuals/') !== -1 ||
+      path.indexOf('/groundworks/wiring/') !== -1
     );
   }
 
@@ -37,6 +38,7 @@
     if (path.indexOf('/groundworks/pd25/calculator') !== -1) return 'pd25-calculator';
     if (path.indexOf('/groundworks/pd25/guide') !== -1) return 'pd25-guide';
     if (path.indexOf('/groundworks/pd25/') !== -1) return 'pd25-hub';
+    if (path.indexOf('/groundworks/wiring/') !== -1) return 'groundworks-wiring';
     if (path.indexOf('/measure-up/ctl/') !== -1) return 'ctl-calculator';
     if (path.indexOf('/measure-up/') !== -1) return 'measure-up-hub';
     if (path.indexOf('/pre-inspection/') !== -1) return 'pre-inspection';
