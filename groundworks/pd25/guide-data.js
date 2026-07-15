@@ -145,7 +145,7 @@ var PD25_GUIDE = {
         },
         {
           id: 'p1-mast-slide',
-          title: 'Mast slide calibration',
+          title: 'Mast slide adjustment',
           body:
             'Tighten mast slides to minimize left/right movement of the hammer on the mast without binding.',
           image: 'assets/images/pd25-mast-slide-calibration.png',
