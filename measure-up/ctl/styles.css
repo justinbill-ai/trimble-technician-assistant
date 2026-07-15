@@ -401,3 +401,69 @@ select.mu-select--pending {
 .export-hint-box strong {
   color: var(--tc-blue);
 }
+
+.mu-export-prompt {
+  margin-top: 16px;
+}
+
+.mu-export-trigger {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--tc-grey-400);
+  border-radius: var(--tc-radius-lg);
+  background: var(--tc-surface);
+  color: var(--tc-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mu-export-trigger:hover {
+  border-color: var(--tc-blue);
+  box-shadow: 0 2px 8px rgba(0, 95, 158, 0.08);
+}
+
+.mu-export-trigger:focus-visible {
+  outline: 2px solid var(--tc-blue);
+  outline-offset: 2px;
+}
+
+.mu-export-trigger__icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--tc-blue-soft);
+  color: var(--tc-blue);
+}
+
+.mu-export-trigger__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mu-export-trigger__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--tc-blue);
+}
+
+.mu-export-trigger__hint {
+  font-size: 0.8rem;
+  color: var(--tc-grey-600);
+  line-height: 1.35;
+}
+
+.mu-export-panel {
+  margin-top: 12px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--tc-grey-300);
+}

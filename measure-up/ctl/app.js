@@ -528,10 +528,10 @@ function runCalc() {
         document.getElementById('centerlineMethod').value,
         document.getElementById('manualCenterlineVal').value,
         document.getElementById('manualCenterlineOffset').value,
-        document.getElementById('machineModel').value,
-        document.getElementById('serialNumber').value,
-        document.getElementById('techName').value,
-        document.getElementById('dealerName').value
+        '',
+        '',
+        '',
+        ''
       );
 
       lastResponse = response;
@@ -551,8 +551,7 @@ function runCalc() {
         body.innerHTML += buildResultRowHtml(rk, data[rk]);
       }
       document.getElementById('results').hidden = false;
-      document.getElementById('exportSection').hidden = false;
-      if (window.ReportUpload) window.ReportUpload.injectCheckboxes();
+      showExportSection(true);
       calcBtn.textContent = 'Run calculations';
       if (window.WorkspaceApi) {
         window.WorkspaceApi.logEvent('csv_analyzed:ok', { detail: 'ctl' });
@@ -577,12 +576,46 @@ function showExportHints(message) {
   box.classList.toggle('hidden', !message);
 }
 
+function showExportSection(show) {
+  var prompt = document.getElementById('exportPrompt');
+  if (prompt) prompt.hidden = !show;
+  if (!show) hideExportPanel();
+  if (show && window.ReportUpload) window.ReportUpload.injectCheckboxes();
+}
+
+function hideExportPanel() {
+  var section = document.getElementById('exportSection');
+  var toggle = document.getElementById('exportReportToggle');
+  if (section) section.hidden = true;
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleExportPanel() {
+  var section = document.getElementById('exportSection');
+  var toggle = document.getElementById('exportReportToggle');
+  if (!section || !toggle) return;
+  var open = section.hidden;
+  section.hidden = !open;
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (window.ReportUpload) window.ReportUpload.injectCheckboxes();
+  }
+}
+
 function getExportPayload() {
   var reportName = document.getElementById('reportName').value.trim();
-  var meta = lastResponse.meta;
+  var meta = lastResponse.meta || {};
+  var machineModel = document.getElementById('machineModel').value.trim();
+  var serialNumber = document.getElementById('serialNumber').value.trim();
   return {
     calculations: lastResponse.calculations,
-    meta: meta,
+    meta: {
+      time: meta.time,
+      units: meta.units,
+      model: machineModel || meta.model || 'N/A',
+      serial: serialNumber || meta.serial || 'N/A',
+    },
     dealerName: document.getElementById('dealerName').value.trim(),
     techName: document.getElementById('techName').value.trim(),
     dealerLogo: dealerLogo,
@@ -605,7 +638,7 @@ function generateReport() {
         fileName: 'ctl-measure-up',
         dealerName: payload.dealerName,
         techName: payload.techName,
-        machineModel: payload.meta && payload.meta.machineModel,
+        machineModel: payload.meta && payload.meta.model,
         serialNumber: payload.meta && payload.meta.serial,
         reportName: payload.reportName,
       });
@@ -736,6 +769,8 @@ function bindMeasureUpUi() {
   document.getElementById('csvFormat').addEventListener('change', revalidateCSV);
   document.getElementById('calcBtn').addEventListener('click', runCalc);
   document.getElementById('generatePdfBtn').addEventListener('click', generateReport);
+  var exportToggle = document.getElementById('exportReportToggle');
+  if (exportToggle) exportToggle.addEventListener('click', toggleExportPanel);
   document.getElementById('uploadDealerLogoBtn').addEventListener('click', uploadDealerLogo);
   document.getElementById('clearDealerLogoBtn').addEventListener('click', clearDealerLogo);
   document.querySelector('.img-toggle-btn').addEventListener('click', toggleImage);

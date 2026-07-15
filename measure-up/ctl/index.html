@@ -16,7 +16,7 @@
 
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
   <link rel="stylesheet" href="../../assets/report-upload.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=1" />
+  <link rel="stylesheet" href="styles.css?v=2" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -42,49 +42,8 @@
   <main class="tc-main">
     <div class="card">
       <p class="mu-product-note">
-        <strong>Siteworks CTL</strong> — upload your survey CSV, choose total-station or manual tape methods, and get machine measure-up values with PDF export.
+        <strong>Siteworks CTL</strong> — upload your survey CSV, choose total-station or manual tape methods, and get machine measure-up values. Optional PDF export after results.
       </p>
-
-      <div class="mu-section">
-        <h2 class="mu-section__title">Machine &amp; job details</h2>
-
-        <div class="mu-row">
-          <div class="tc-field">
-            <label class="tc-label" for="techName">Technician name (optional)</label>
-            <input type="text" id="techName" class="tc-input" placeholder="e.g. John Doe" />
-          </div>
-          <div class="tc-field">
-            <label class="tc-label" for="dealerName">Dealer name (optional)</label>
-            <input type="text" id="dealerName" class="tc-input" placeholder="e.g. SITECH …" />
-          </div>
-        </div>
-
-        <div class="tc-field">
-          <label class="tc-label">Dealer logo (optional)</label>
-          <p class="note" style="margin: 0 0 10px;">
-            Upload your dealer logo for the PDF header — same optional branding as wear inspection and install deliverable. Stored <strong>on this device only</strong>.
-          </p>
-          <div class="dealer-logo-row">
-            <div id="dealerLogoPreview" class="dealer-logo-preview dealer-logo-preview--empty">No dealer logo</div>
-            <div class="dealer-logo-actions">
-              <button type="button" class="btn-sm" id="uploadDealerLogoBtn">Upload dealer logo</button>
-              <button type="button" class="btn-sm hidden" id="clearDealerLogoBtn">Remove saved logo</button>
-            </div>
-          </div>
-          <p id="dealerLogoSavedNote" class="dealer-logo-saved-note hidden">Saved on this device for future reports.</p>
-        </div>
-
-        <div class="mu-row">
-          <div class="tc-field">
-            <label class="tc-label" for="machineModel">Machine make / model</label>
-            <input type="text" id="machineModel" class="tc-input" placeholder="e.g. Cat 299D3" />
-          </div>
-          <div class="tc-field">
-            <label class="tc-label" for="serialNumber">Serial number</label>
-            <input type="text" id="serialNumber" class="tc-input" placeholder="e.g. CAT0299…123" />
-          </div>
-        </div>
-      </div>
 
       <div class="mu-section">
         <h2 class="mu-section__title">Measurements</h2>
@@ -206,19 +165,78 @@
             <tbody id="resBody"></tbody>
           </table>
         </div>
+      </div>
 
-        <div id="exportSection" class="mu-section" hidden data-report-upload="ctl-measure-up">
-          <h2 class="mu-section__title">Export report</h2>
-          <p class="note" style="margin-top: 0;">
-            Save a PDF copy to this device (USB, synced Google Drive / OneDrive, network share, etc.).
-          </p>
+      <div id="exportPrompt" class="mu-export-prompt" hidden>
+        <button
+          type="button"
+          class="mu-export-trigger"
+          id="exportReportToggle"
+          aria-expanded="false"
+          aria-controls="exportSection"
+        >
+          <span class="mu-export-trigger__icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+              <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="mu-export-trigger__text">
+            <span class="mu-export-trigger__title">Export measure-up report</span>
+            <span class="mu-export-trigger__hint">Optional — add job details and save a PDF to this device</span>
+          </span>
+        </button>
+      </div>
+
+      <div id="exportSection" class="mu-section mu-export-panel" hidden data-report-upload="ctl-measure-up">
+        <h2 class="mu-section__title">Optional report details</h2>
+        <p class="note" style="margin-top: 0;">
+          Fill in only what you want on the PDF header. Skip anything you do not need.
+        </p>
+
+        <div class="mu-row">
           <div class="tc-field">
-            <label class="tc-label" for="reportName">Report name (optional)</label>
-            <input type="text" id="reportName" class="tc-input" placeholder="e.g. Site 5 CTL measure-up" />
+            <label class="tc-label" for="techName">Technician name (optional)</label>
+            <input type="text" id="techName" class="tc-input" placeholder="e.g. John Doe" />
           </div>
-          <button type="button" class="btn btn-primary" id="generatePdfBtn">Generate PDF report</button>
-          <div id="exportHintBox" class="export-hint-box hidden" role="status"></div>
+          <div class="tc-field">
+            <label class="tc-label" for="dealerName">Dealer name (optional)</label>
+            <input type="text" id="dealerName" class="tc-input" placeholder="e.g. SITECH …" />
+          </div>
         </div>
+
+        <div class="tc-field">
+          <label class="tc-label">Dealer logo (optional)</label>
+          <p class="note" style="margin: 0 0 10px;">
+            Upload your dealer logo for the PDF header — same optional branding as wear inspection and install deliverable. Stored <strong>on this device only</strong>.
+          </p>
+          <div class="dealer-logo-row">
+            <div id="dealerLogoPreview" class="dealer-logo-preview dealer-logo-preview--empty">No dealer logo</div>
+            <div class="dealer-logo-actions">
+              <button type="button" class="btn-sm" id="uploadDealerLogoBtn">Upload dealer logo</button>
+              <button type="button" class="btn-sm hidden" id="clearDealerLogoBtn">Remove saved logo</button>
+            </div>
+          </div>
+          <p id="dealerLogoSavedNote" class="dealer-logo-saved-note hidden">Saved on this device for future reports.</p>
+        </div>
+
+        <div class="mu-row">
+          <div class="tc-field">
+            <label class="tc-label" for="machineModel">Machine make / model</label>
+            <input type="text" id="machineModel" class="tc-input" placeholder="e.g. Cat 299D3" />
+          </div>
+          <div class="tc-field">
+            <label class="tc-label" for="serialNumber">Serial number</label>
+            <input type="text" id="serialNumber" class="tc-input" placeholder="e.g. CAT0299…123" />
+          </div>
+        </div>
+
+        <div class="tc-field">
+          <label class="tc-label" for="reportName">Report name (optional)</label>
+          <input type="text" id="reportName" class="tc-input" placeholder="e.g. Site 5 CTL measure-up" />
+        </div>
+        <button type="button" class="btn btn-primary" id="generatePdfBtn">Generate PDF report</button>
+        <div id="exportHintBox" class="export-hint-box hidden" role="status"></div>
       </div>
 
       <div class="mu-help-box" id="helpLinks" hidden>
@@ -241,6 +259,6 @@
   <script src="calc.js?v=2"></script>
   <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script src="pdf.js?v=4"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
