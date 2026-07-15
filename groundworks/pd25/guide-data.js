@@ -21,6 +21,8 @@ var PD25_GUIDE = {
     'Tri-Max tripod',
     'Trimble data collector',
     'Minimum 5 acrylic targets',
+    'Calibrated smart level',
+    'Plumb bob',
   ],
 
   /** COGO constants from guide — metric primary (reverse-verified against ECM CSV). */
@@ -146,11 +148,11 @@ var PD25_GUIDE = {
           title: 'Mast slide calibration',
           body:
             'Tighten mast slides to minimize left/right movement of the hammer on the mast without binding.',
-          image: 'assets/images/pd25-mast-slide-carriage-calibration.png',
+          image: 'assets/images/pd25-mast-slide-calibration.png',
           imageAlt: 'Technician adjusting mast slide hardware on the PD25 mast',
         },
         {
-          id: 'p1-carriage-cal',
+          id: 'p1-xy-slide-cal',
           title: 'X & Y slide calibration',
           body:
             'Zero X slide and Y slide position sensors per Vermeer procedure using the Vermeer Operator Remote.',

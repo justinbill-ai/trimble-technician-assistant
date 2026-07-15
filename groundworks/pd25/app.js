@@ -252,6 +252,11 @@ function loadProgress() {
   } catch (e) {
     state.checked = {};
   }
+  if (state.checked['p1-carriage-cal'] && !state.checked['p1-xy-slide-cal']) {
+    state.checked['p1-xy-slide-cal'] = state.checked['p1-carriage-cal'];
+    delete state.checked['p1-carriage-cal'];
+    saveProgress();
+  }
 }
 
 function saveProgress() {
@@ -961,7 +966,7 @@ function bindRodUi() {
   syncRodUi();
 }
 
-function bindHfUi() {
+function bindHcUi() {
   var hcOffset = document.getElementById('hcFaceOffset');
   if (!hcOffset) return;
   hcOffset.addEventListener('input', function () {
@@ -1158,7 +1163,7 @@ function initCalculator() {
   mountGroundworksDimensions('groundworksDimensions');
   bindCsv();
   bindRodUi();
-  bindHfUi();
+  bindHcUi();
   bindPdfExport();
   loadSavedDealerBranding();
   updateHcOffsetHint();

@@ -509,8 +509,7 @@ var PD25Calc = (function () {
     var hcCorrection = null;
     var hcCenter = null;
     var hammerCenter = null;
-    var hcFaceOffset =
-      surveyOptions.hcFaceOffset != null ? surveyOptions.hcFaceOffset : surveyOptions.hfFaceOffset;
+    var hcFaceOffset = surveyOptions.hcFaceOffset;
     if (hcFaceOffset != null && hcFaceOffset !== '') {
       var faceParsed = parseFloat(hcFaceOffset);
       if (isNaN(faceParsed)) hcFaceOffset = 0;
@@ -651,7 +650,6 @@ var PD25Calc = (function () {
     apcOffsetZephyr3: apcOffsetZephyr3,
     applyApcCorrection: applyApcCorrection,
     correctHcToHammerCenter: correctHcToHammerCenter,
-    correctHfToHammerCenter: correctHcToHammerCenter,
     g7Vertical: g7Vertical,
     leftBackFromCenterRef: antennaOffsetsFromCenterRef,
     antennaOffsetsFromCenterRef: antennaOffsetsFromCenterRef,
