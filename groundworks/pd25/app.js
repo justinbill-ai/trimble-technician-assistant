@@ -55,8 +55,28 @@ function refreshViz(analysis) {
 }
 
 function showExportSection(show) {
+  var prompt = document.getElementById('exportPrompt');
+  if (prompt) prompt.hidden = !show;
+  if (!show) hideExportPanel();
+}
+
+function hideExportPanel() {
   var section = document.getElementById('exportSection');
-  if (section) section.hidden = !show;
+  var toggle = document.getElementById('exportReportToggle');
+  if (section) section.hidden = true;
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleExportPanel() {
+  var section = document.getElementById('exportSection');
+  var toggle = document.getElementById('exportReportToggle');
+  if (!section || !toggle) return;
+  var open = section.hidden;
+  section.hidden = !open;
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 function showExportHints(message) {
@@ -187,6 +207,9 @@ function handleDealerLogoFile(file) {
 function bindPdfExport() {
   var generateBtn = document.getElementById('generatePdfBtn');
   if (generateBtn) generateBtn.addEventListener('click', generateReport);
+
+  var exportToggle = document.getElementById('exportReportToggle');
+  if (exportToggle) exportToggle.addEventListener('click', toggleExportPanel);
 
   var uploadBtn = document.getElementById('uploadDealerLogoBtn');
   if (uploadBtn) uploadBtn.addEventListener('click', uploadDealerLogo);
@@ -385,9 +408,14 @@ function renderBodyCalibrationSigns() {
 
   return (
     '<div class="pd25-body-signs" role="note">' +
-    '<p class="pd25-body-signs__intro"><strong>Important — body calibration sign rules</strong><br>' +
+    '<p class="pd25-body-signs__intro"><strong>' +
+    esc(data.heading || 'Important — body calibration sign rules') +
+    '</strong><br>' +
     esc(data.intro) +
     '</p>' +
+    (data.signRulesLabel
+      ? '<p class="pd25-body-signs__signs-label">' + esc(data.signRulesLabel) + '</p>'
+      : '') +
     '<div class="pd25-body-signs__grid">' +
     block(data.pitch) +
     block(data.roll) +
@@ -469,14 +497,6 @@ function initBodySignExampleModal() {
         : 0,
     });
   });
-}
-
-function renderGroundworksTechTipHtml() {
-  var data = typeof PD25_GROUNDWORKS_DIMENSIONS !== 'undefined' ? PD25_GROUNDWORKS_DIMENSIONS : null;
-  if (!data || !data.techTip) return '';
-  return (
-    '<strong>Tech tip</strong><br>' + esc(data.techTip.replace(/^Tech tip:\s*/i, ''))
-  );
 }
 
 function renderGroundworksDimensions(options) {
@@ -610,13 +630,6 @@ function renderGroundworksDimensions(options) {
     html += '</div>';
   }
 
-  if (data.techTip && !options.omitTechTip) {
-    html +=
-      '<div class="pd25-dimensions__tech-tip" role="note">' +
-      renderGroundworksTechTipHtml() +
-      '</div>';
-  }
-
   data.sections.forEach(function (section) {
     html +=
       '<section class="pd25-dim-group" id="pd25-dim-' +
@@ -649,18 +662,6 @@ function mountGroundworksDimensions(targetId, options) {
   var el = document.getElementById(targetId);
   if (!el) return;
   el.innerHTML = renderGroundworksDimensions(options);
-}
-
-function mountCalculatorTechTip() {
-  var el = document.getElementById('pd25CalcTechTip');
-  if (!el) return;
-  var html = renderGroundworksTechTipHtml();
-  if (!html) {
-    el.hidden = true;
-    return;
-  }
-  el.innerHTML = html;
-  el.hidden = false;
 }
 
 function renderPhases() {
@@ -909,8 +910,8 @@ function syncRodUi() {
 
   if (rodSection) rodSection.hidden = !shotWithRod;
   if (rodField) rodField.hidden = !shotWithRod || !rodInSwNo;
-  var measureupBlock = document.getElementById('measureupToolBlock');
-  if (measureupBlock) measureupBlock.hidden = !shotWithRod;
+  var measureupFigure = document.getElementById('measureupToolFigure');
+  if (measureupFigure) measureupFigure.hidden = !shotWithRod;
   updateRodHeightDefault();
 }
 
@@ -1146,8 +1147,7 @@ function initGuide() {
 }
 
 function initCalculator() {
-  mountCalculatorTechTip();
-  mountGroundworksDimensions('groundworksDimensions', { omitTechTip: true });
+  mountGroundworksDimensions('groundworksDimensions');
   bindCsv();
   bindRodUi();
   bindHfUi();

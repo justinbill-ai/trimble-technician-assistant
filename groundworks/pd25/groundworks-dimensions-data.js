@@ -11,8 +11,6 @@ var PD25_GROUNDWORKS_DIMENSIONS = {
   b5ImageAlt:
     'B5 on PD25 — vertical offset from the center of the Y pivot pin to the X tilt pin',
   b5ImageCaption: 'B5 — center of Y pivot pin to X tilt pin',
-  techTip:
-    'Tech tip: Bookmark this app on your data collector. TeamViewer (or remote desktop) into Groundworks on the machine display, then use Copy on each value in the dimensions reference and paste directly into the matching Groundworks measure-up field — much faster than retyping OEM defaults.',
   sections: [
     {
       id: 'gnss',

@@ -13,7 +13,7 @@ var PD25_GUIDE = {
     'Moving Base (MB) must be the antenna closest to the mast.',
     'Heading (H) must be the rear antenna on the machine.',
     'Antenna brackets are assumed left of the mast (standard PD25 MB and H mounting).',
-    'Reference position: mast foot lowered, Y-carriage in, X-carriage fully left (engine side).',
+    'Reference position: mast foot lowered, Y slide in, X slide fully left (engine side).',
   ],
 
   requiredTooling: [
@@ -21,8 +21,6 @@ var PD25_GUIDE = {
     'Tri-Max tripod',
     'Trimble data collector',
     'Minimum 5 acrylic targets',
-    'Earthworks measure-up tool P/N 105568 (Zephyr 3 Rugged)',
-    'Calibrated smart level (inclinometer)',
   ],
 
   /** COGO constants from guide — metric primary (reverse-verified against ECM CSV). */
@@ -56,7 +54,7 @@ var PD25_GUIDE = {
     { id: 'MR', label: 'Mast Right — inside right pin flange, middle of X pin (MR)', required: true },
     { id: 'MB', label: 'Moving Base antenna APC (MB)', required: true },
     { id: 'H', label: 'Heading antenna APC (H)', required: true },
-    { id: 'MF', label: 'Mast foot (MF — T5)', required: false },
+    { id: 'MF', label: 'Mast foot (MF — optional T5)', required: false },
     { id: 'HC', label: 'Hammer center (HC — optional T1)', required: false },
   ],
 
@@ -67,8 +65,10 @@ var PD25_GUIDE = {
 
   /** Sign conventions for Groundworks Body Pitch/Roll Calibration */
   bodyCalibrationSigns: {
+    heading: 'Body pitch & roll calibration',
     intro:
-      'Enter smart-level readings in Groundworks using these sign rules. Wrong signs are a common cause of poor guidance on slope.',
+      'Preferred: calibrate pitch and roll offset values in Trimble Groundworks on a level pad. If that is not possible, use the sign rules below to determine whether you enter a positive (+) or negative (−) value so Groundworks generates the correct TS900 sensor offset.',
+    signRulesLabel: 'Sign rules',
     pitch: {
       title: 'Pitch calibration (front-to-back)',
       rules: [
@@ -139,12 +139,18 @@ var PD25_GUIDE = {
           imageAlt: 'Low-left depth proximity sensor on the mast — pickup face near the vertical beam',
         },
         {
-          id: 'p1-slides',
-          title: 'Mast slide & carriage calibration',
+          id: 'p1-mast-slide',
+          title: 'Mast slide calibration',
           body:
-            'Tighten mast slides to minimize left/right hammer movement without binding. Zero X & Y carriage position sensors per Vermeer procedure using the Vermeer Operator Remote.',
+            'Tighten mast slides to minimize left/right movement of the hammer on the mast without binding.',
           image: 'assets/images/pd25-mast-slide-carriage-calibration.png',
-          imageAlt: 'Technician adjusting mast slide hardware on the PD25 mast carriage',
+          imageAlt: 'Technician adjusting mast slide hardware on the PD25 mast',
+        },
+        {
+          id: 'p1-carriage-cal',
+          title: 'X & Y slide calibration',
+          body:
+            'Zero X slide and Y slide position sensors per Vermeer procedure using the Vermeer Operator Remote.',
           noteWarning: true,
           note:
             'X and Y slide calibration must be done with the Vermeer Operator Remote. Be careful and watch the mast throughout this procedure. If the mast is slid all the way toward the engine bay, it may hit the Zephyr antenna when the mast automatically lowers for calibration.',
@@ -161,7 +167,7 @@ var PD25_GUIDE = {
           id: 'p1-sick',
           title: 'Mast inclination (SICK sensor)',
           body:
-            'With the mast plumb, zero SICK inclination in the Vermeer UI. Confirm isolator kit is installed between SICK sensor and mast (dealer if missing).',
+            'With the mast plumb, zero SICK inclination in the Vermeer UI.',
           image: 'assets/images/pd25-mast-inclination-sick-sensor.png',
           imageAlt: 'SICK mast inclination sensor mounted under protective bracket on the PD25 mast',
         },
@@ -177,7 +183,9 @@ var PD25_GUIDE = {
           id: 'p2-ref',
           title: 'Reference position',
           body:
-            'Firm level ground · plumb mast · lower mast foot fully · Y-carriage retracted IN · X-carriage fully LEFT (engine side).',
+            'Firm level ground · plumb mast · lower mast foot fully · Y slide retracted IN (mast in) · X slide fully LEFT (engine side / mast left).',
+          image: 'assets/images/pd25-x-y-slide-reference.png',
+          imageAlt: 'PD25 reference position — X slide (mast left/right) and Y slide (mast in/out)',
         },
         {
           id: 'p2-ml',
@@ -193,8 +201,9 @@ var PD25_GUIDE = {
         },
         {
           id: 'p2-mf',
-          title: 'Target MF — mast foot / pile guide seam',
-          body: 'Mast must be completely lowered.',
+          title: 'Target MF — mast foot / pile guide seam (optional)',
+          body: 'Mast foot / pile guide seam for T5. Mast must be completely lowered. Optional if not using T5.',
+          optional: true,
         },
         {
           id: 'p2-mb',
@@ -229,7 +238,7 @@ var PD25_GUIDE = {
         {
           id: 'p3-project',
           title: 'Project & instrument',
-          body: 'Create Siteworks project (metric recommended). Connect and level SPS930.',
+          body: 'Create Siteworks project in US ft or meters. Connect and level SPS930.',
         },
         {
           id: 'p3-settings',
@@ -240,7 +249,7 @@ var PD25_GUIDE = {
         {
           id: 'p3-shoot',
           title: 'Measure & record',
-          body: 'Shoot ML, MR, MF, MB, H, and HC if used. Record all as control points. Export CSV for calculator below.',
+          body: 'Shoot ML, MR, MB, H, and MF or HC if used. Record all as control points. Export CSV for calculator below.',
         },
       ],
     },
@@ -281,8 +290,6 @@ var PD25_GUIDE = {
           body: 'Stable surface (not necessarily level). Place calibrated smart level on a frame member that represents the machine body plane.',
           image: 'assets/images/pd25-smart-level-body-frame.png',
           imageAlt: 'Sola GO smart level placed on the PD25 body frame for pitch and roll readings',
-          note:
-            'As long as your TS900 body sensor is mounted truly vertical on both the X and Y axes, the offset value generated in Groundworks will be small. If you enter pitch and roll with the incorrect sign (− vs +) and then calibrate the TS900, your offsets may be quite large (much larger than a degree). It is always recommended to calibrate the body TS900 on a level pad; if that is not possible, entering the correct sign (−/+) is critical for accurate readings on a non-level plane.',
         },
         {
           id: 'p6-read',
@@ -295,13 +302,13 @@ var PD25_GUIDE = {
           imageModalCaption:
             'Open Body tilt sensor diagnostics and compare computed pitch and roll to your smart level readings on the body frame.',
           note:
-            'Cross-check in Groundworks diagnostics (Body tilt sensor): the computed pitch and roll values should closely match what your smart level reads on the body frame. A large mismatch often means the wrong sign was entered or the TS900 is not mounted vertically.',
+            'Cross-check in Groundworks diagnostics (Body tilt sensor): computed pitch and roll should closely match your smart level readings.',
         },
         {
           id: 'p6-enter',
           title: 'Enter values in Groundworks & calibrate',
           body:
-            'Open Body Pitch/Roll Calibration in Trimble Groundworks. Enter pitch and roll using the sign rules in the callout above, then press Calibrate.',
+            'Open Body Pitch/Roll Calibration in Trimble Groundworks. Enter pitch and roll using the sign rules above, then press Calibrate.',
         },
       ],
     },

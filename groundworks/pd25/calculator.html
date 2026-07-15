@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#005f9e" />
   <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
   <link rel="stylesheet" href="../../assets/trimble-connect.css" />
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=32" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -32,8 +32,8 @@
         <ul class="pd25-survey-requirement__list">
           <li>All shots must use <strong>zero rod height</strong> in Siteworks and be recorded as <strong>control</strong> points.</li>
           <li><strong>Plumb the mast</strong> in X and Y before shooting.</li>
-          <li>Slide the mast <strong>all the way left</strong> (toward the engine bay).</li>
-          <li>Retract the Y-carriage <strong>all the way to the rear</strong> of the machine.</li>
+          <li>Move the X slide <strong>all the way left</strong> (toward the engine bay).</li>
+          <li>Retract the Y slide <strong>all the way in</strong> (toward the rear of the machine).</li>
           <li>Lower the <strong>mast foot as far down as possible</strong>.</li>
           <li>Place the machine on a <strong>firm, level surface</strong> for measure-up.</li>
         </ul>
@@ -53,8 +53,6 @@
         <a href="guide.html">guided pre measure-up workflow</a> first.
       </div>
 
-      <div id="pd25CalcTechTip" class="pd25-dimensions__tech-tip pd25-calc-tech-tip" role="note" hidden></div>
-
       <details class="pd25-dimensions-panel pd25-section" id="groundworksDimensionsSection">
         <summary class="pd25-dimensions-panel__summary">Groundworks dimensions reference</summary>
         <div class="pd25-dimensions-panel__body">
@@ -67,46 +65,7 @@
       </details>
 
       <div id="calcContent">
-        <div class="pd25-section">
-          <h2 class="pd25-section__title">Machine &amp; job details</h2>
-          <div class="pd25-row">
-            <div class="tc-field">
-              <label class="tc-label" for="techName">Technician name (optional)</label>
-              <input type="text" id="techName" class="tc-input" placeholder="e.g. John Doe" />
-            </div>
-            <div class="tc-field">
-              <label class="tc-label" for="dealerName">Dealer name (optional)</label>
-              <input type="text" id="dealerName" class="tc-input" placeholder="e.g. SITECH …" />
-            </div>
-          </div>
-          <div class="tc-field">
-            <label class="tc-label">Dealer logo (optional)</label>
-            <p class="note" style="margin: 0 0 10px;">
-              Upload your dealer logo for the PDF header — same optional branding as CTL measure-up and install deliverable. Stored <strong>on this device only</strong>.
-            </p>
-            <div class="dealer-logo-row">
-              <div id="dealerLogoPreview" class="dealer-logo-preview dealer-logo-preview--empty">No dealer logo</div>
-              <div class="dealer-logo-actions">
-                <button type="button" class="btn-sm" id="uploadDealerLogoBtn">Upload dealer logo</button>
-                <button type="button" class="btn-sm hidden" id="clearDealerLogoBtn">Remove saved logo</button>
-              </div>
-            </div>
-            <p id="dealerLogoSavedNote" class="dealer-logo-saved-note hidden">Saved on this device for future reports.</p>
-            <input type="file" id="dealerLogoInput" accept="image/*" hidden />
-          </div>
-          <div class="pd25-row">
-            <div class="tc-field">
-              <label class="tc-label" for="machineModel">Machine make / model</label>
-              <input type="text" id="machineModel" class="tc-input" placeholder="e.g. Vermeer PD25R" value="Vermeer PD25R" />
-            </div>
-            <div class="tc-field">
-              <label class="tc-label" for="serialNumber">Serial number</label>
-              <input type="text" id="serialNumber" class="tc-input" placeholder="e.g. PD25 …" />
-            </div>
-          </div>
-        </div>
-
-        <div class="pd25-section" id="targetPlacementSection">
+        <div id="targetPlacementSection">
           <div id="targetPlacementMap" aria-label="Survey target placement map"></div>
         </div>
 
@@ -224,11 +183,67 @@
 
         <div id="calcResults" class="pd25-results" hidden></div>
 
-        <div id="exportSection" class="pd25-section" hidden>
-          <h2 class="pd25-section__title">Export report</h2>
+        <div id="exportPrompt" class="pd25-export-prompt" hidden>
+          <button
+            type="button"
+            class="pd25-export-trigger"
+            id="exportReportToggle"
+            aria-expanded="false"
+            aria-controls="exportSection"
+          >
+            <span class="pd25-export-trigger__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+                <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="pd25-export-trigger__text">
+              <span class="pd25-export-trigger__title">Export measure-up value report</span>
+              <span class="pd25-export-trigger__hint">Optional — add job details and save a PDF to this device</span>
+            </span>
+          </button>
+        </div>
+
+        <div id="exportSection" class="pd25-section pd25-export-panel" hidden>
+          <h2 class="pd25-section__title">Optional report details</h2>
           <p class="note" style="margin-top: 0;">
-            Save a PDF copy to this device (USB, synced Google Drive / OneDrive, network share, etc.).
+            Fill in only what you want on the PDF header. Skip anything you do not need.
           </p>
+          <div class="pd25-row">
+            <div class="tc-field">
+              <label class="tc-label" for="techName">Technician name (optional)</label>
+              <input type="text" id="techName" class="tc-input" placeholder="e.g. John Doe" />
+            </div>
+            <div class="tc-field">
+              <label class="tc-label" for="dealerName">Dealer name (optional)</label>
+              <input type="text" id="dealerName" class="tc-input" placeholder="e.g. SITECH …" />
+            </div>
+          </div>
+          <div class="tc-field">
+            <label class="tc-label">Dealer logo (optional)</label>
+            <p class="note" style="margin: 0 0 10px;">
+              Upload your dealer logo for the PDF header — same optional branding as CTL measure-up and install deliverable. Stored <strong>on this device only</strong>.
+            </p>
+            <div class="dealer-logo-row">
+              <div id="dealerLogoPreview" class="dealer-logo-preview dealer-logo-preview--empty">No dealer logo</div>
+              <div class="dealer-logo-actions">
+                <button type="button" class="btn-sm" id="uploadDealerLogoBtn">Upload dealer logo</button>
+                <button type="button" class="btn-sm hidden" id="clearDealerLogoBtn">Remove saved logo</button>
+              </div>
+            </div>
+            <p id="dealerLogoSavedNote" class="dealer-logo-saved-note hidden">Saved on this device for future reports.</p>
+            <input type="file" id="dealerLogoInput" accept="image/*" hidden />
+          </div>
+          <div class="pd25-row">
+            <div class="tc-field">
+              <label class="tc-label" for="machineModel">Machine make / model</label>
+              <input type="text" id="machineModel" class="tc-input" placeholder="e.g. Vermeer PD25R" value="Vermeer PD25R" />
+            </div>
+            <div class="tc-field">
+              <label class="tc-label" for="serialNumber">Serial number</label>
+              <input type="text" id="serialNumber" class="tc-input" placeholder="e.g. PD25 …" />
+            </div>
+          </div>
           <div class="tc-field">
             <label class="tc-label" for="reportName">Report name (optional)</label>
             <input type="text" id="reportName" class="tc-input" placeholder="e.g. Site 5 PD25 measure-up" />
@@ -245,12 +260,12 @@
   <script src="../../assets/header-home.js"></script>
   <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script src="pdf.js?v=4"></script>
-  <script src="guide-data.js?v=27"></script>
-  <script src="groundworks-dimensions-data.js?v=6"></script>
-  <script src="target-placement-data.js?v=20"></script>
+  <script src="guide-data.js?v=35"></script>
+  <script src="groundworks-dimensions-data.js?v=7"></script>
+  <script src="target-placement-data.js?v=21"></script>
   <script src="target-placement.js?v=2"></script>
   <script src="viz.js?v=5"></script>
   <script src="calc.js?v=21"></script>
-  <script src="app.js?v=41"></script>
+  <script src="app.js?v=45"></script>
 </body>
 </html>

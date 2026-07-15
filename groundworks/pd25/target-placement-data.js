@@ -64,7 +64,7 @@ var PD25_TARGET_MAP = {
           detailCaption:
             'ML — mast left X-slide pin. ' +
             PD25_MAST_PIN_NOTE +
-            ' Use the left pin flange. Machine in reference position: mast foot down, Y-carriage in, X-carriage fully left (engine side). Shoot as control with zero rod height in Siteworks.',
+            ' Use the left pin flange. Machine in reference position: mast foot down, Y slide in, X slide fully left (engine side). Shoot as control with zero rod height in Siteworks.',
         },
       ],
     },
@@ -84,7 +84,7 @@ var PD25_TARGET_MAP = {
           detailCaption:
             'MR — mast right X-slide pin. ' +
             PD25_MAST_PIN_NOTE +
-            ' Use the right pin flange. Machine in reference position: mast foot down, Y-carriage in, X-carriage fully left (engine side). Shoot as control with zero rod height in Siteworks.',
+            ' Use the right pin flange. Machine in reference position: mast foot down, Y slide in, X slide fully left (engine side). Shoot as control with zero rod height in Siteworks.',
         },
       ],
     },
@@ -102,7 +102,7 @@ var PD25_TARGET_MAP = {
           y: 72.4,
           detailImage: 'assets/diagrams/panels/pd25-mf-detail.jpg',
           detailCaption:
-            'MF — mast foot / pile guide seam. Mast must be completely lowered. Machine in reference position: mast foot down, Y-carriage in, X-carriage fully left (engine side). Shoot as control with zero rod height in Siteworks. Enables T5 when present in your survey CSV.',
+            'MF — mast foot / pile guide seam. Mast must be completely lowered. Machine in reference position: mast foot down, Y slide in, X slide fully left (engine side). Shoot as control with zero rod height in Siteworks. Enables T5 when present in your survey CSV.',
         },
       ],
     },
