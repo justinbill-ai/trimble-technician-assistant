@@ -287,7 +287,7 @@ var PD25_GUIDE = {
         {
           id: 'p6-level',
           title: 'Smart level on body frame',
-          body: 'Stable surface (not necessarily level). Place calibrated smart level on a frame member that represents the machine body plane.',
+          body: 'Place calibrated smart level on a frame member that represents the machine body plane.',
           image: 'assets/images/pd25-smart-level-body-frame.png',
           imageAlt: 'Sola GO smart level placed on the PD25 body frame for pitch and roll readings',
         },
@@ -306,9 +306,9 @@ var PD25_GUIDE = {
         },
         {
           id: 'p6-enter',
-          title: 'Enter values in Groundworks & calibrate',
+          title: 'Enter values in Groundworks & save',
           body:
-            'Open Body Pitch/Roll Calibration in Trimble Groundworks. Enter pitch and roll using the sign rules above, then press Calibrate.',
+            'Open Body Pitch/Roll Calibration in Trimble Groundworks. Enter pitch and roll using the sign rules above, then press Save.',
         },
       ],
     },
