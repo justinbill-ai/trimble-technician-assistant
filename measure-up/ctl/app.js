@@ -1,8 +1,6 @@
 /* CTL Measure-Up — Technician Assistant (client-side port) */
 var MU_CONFIG = {
   guideImageId: '1v9okRH1qkhWalxhhuWqB9naR2U83U6f3',
-  legacyUrl:
-    'https://script.google.com/macros/s/AKfycbxjt5FugRY-Y3e57f1YKDDgd8tjuOlkcgeZ7rZanQXcHHEBuLcwi9e7xVVUSY4lWUQ_/exec',
   helpLinks: [],
 };
 
