@@ -69,6 +69,9 @@ var PD25_GUIDE = {
     intro:
       'Preferred: calibrate pitch and roll offset values in Trimble Groundworks on a level pad. If that is not possible, use the sign rules below to determine whether you enter a positive (+) or negative (−) value so Groundworks generates the correct TS900 sensor offset.',
     signRulesLabel: 'Sign rules',
+    offsetNoteLabel: 'After Save — sensor offsets',
+    offsetNote:
+      'When you press Save in Groundworks, you apply a sensor offset on the axis you are calibrating (pitch or roll). After both pitch and roll are complete, check each offset value — it should be small (under 1 degree) if the TS900 is mounted truly vertical on both the X and Y axes. An incorrect sign usually produces a false offset that is noticeably larger than the correct value. Always verify computed pitch and roll against your smart level, preferably with some slope on the machine body, as a final check.',
     pitch: {
       title: 'Pitch calibration (front-to-back)',
       rules: [

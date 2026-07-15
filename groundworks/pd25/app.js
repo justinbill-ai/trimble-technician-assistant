@@ -419,7 +419,14 @@ function renderBodyCalibrationSigns() {
     '<div class="pd25-body-signs__grid">' +
     block(data.pitch) +
     block(data.roll) +
-    '</div></div>'
+    '</div>' +
+    (data.offsetNote
+      ? '<p class="pd25-body-signs__offset-note">' +
+        (data.offsetNoteLabel ? '<strong>' + esc(data.offsetNoteLabel) + '</strong><br>' : '') +
+        esc(data.offsetNote) +
+        '</p>'
+      : '') +
+    '</div>'
   );
 }
 
