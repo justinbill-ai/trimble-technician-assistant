@@ -8,7 +8,7 @@ window.WORKSPACE_CONFIG = {
   /** Web app URL — update after deploying google-workspace/Code.gs (see DEPLOY.md). */
   endpoint:
     'https://script.google.com/macros/s/AKfycbxUWZgf2uvicFpMUvoLBNvWMdqi2rjgPILBGzTJmIzCxjmKOoOR_Ix3Uxj030tDuFo8AQ/exec',
-  appVersion: '2026.07.15b',
+  appVersion: '2026.07.16',
   appName: 'Trimble Technician Assistant',
   recipientEmail: 'justin_bill@trimble.com',
   /** Set false to disable all background posts (local app still works). */

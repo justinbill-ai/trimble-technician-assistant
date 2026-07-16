@@ -13,6 +13,7 @@ Static field-tools hub for Trimble technicians — Groundworks PD25, Siteworks C
 | `index.html` | Hub — category home and tool drill-in |
 | `assets/` | Shared chrome, workspace API, feedback, TMC gate |
 | `groundworks/pd25/` | PD25 guided workflow + measure-up calculator |
+| `groundworks/wiring/` | Groundworks connection diagram and wiring schematic PDFs |
 | `measure-up/ctl/` | Siteworks CTL measure-up calculator |
 | `pre-inspection/` | Machine wear / pre-install report |
 | `install-deliverable/` | Post-install photo deliverable |
@@ -45,6 +46,8 @@ npm test
 
 Runs smoke tests in `tests/run-smoke.js` against PD25 and CTL calculator logic (requires Node.js).
 
+CI runs the same smoke tests on every push and pull request to `main` (see `.github/workflows/smoke-test.yml`).
+
 ---
 
 ## Google Workspace backend
@@ -73,12 +76,19 @@ Telemetry, feedback, and optional Drive report archive are configured in `assets
 | `category_open` | Hub category opened |
 | `tool_open` | Tool page loaded (`ctl-calculator`, `pd25-calculator`, etc.) |
 | `calc_run` | User clicked Calculate / Run calculations (check `tool` column) |
-| `csv_uploaded` / `csv_analyzed:ok` | Survey CSV uploaded or processed |
+| `csv_uploaded` | Survey CSV file selected |
+| `csv_analyzed:ok` | Calculator processed CSV successfully |
+| `csv_analyzed:fail` | Calculator error (detail has message) |
+| `csv_analyzed:missing` | Required survey point missing from CSV |
+| `calc_warnings` | PD25 warnings after calculation |
+| `calc_options` | PD25 option snapshot (units, rod settings, etc.) |
 | `pdf_exported` | PDF generated |
+| `pdf_export_with_dealer` | PDF export with dealer name on optional Drive upload |
 | `guide_phase_complete` | PD25 workflow phase finished |
 | `guide_section_view` / `guide_section_complete` | Bench crane segment |
 | `prestart_complete` | Excavator checklist unlocked |
 | `symptom_analyzed` | Excavator symptom search |
 | `manual_open` | Commissioning PDF opened |
+| `wiring_pdf_open` | Groundworks wiring PDF opened |
 
 Full backend notes: `google-workspace/DEPLOY.md`.

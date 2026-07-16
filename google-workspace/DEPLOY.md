@@ -112,15 +112,21 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
 
 | Event | Typical source |
 |-------|----------------|
+| `hub_open` | Hub home |
 | `category_open` | Hub category picker |
 | `tool_open` | Any tool page load (`ctl-calculator`, `pd25-calculator`, …) |
 | `calc_run` | User ran CTL or PD25 calculator (Calculate / Run calculations) |
+| `csv_uploaded` | Survey CSV file selected |
 | `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculation outcome |
+| `csv_analyzed:missing` | Required survey point missing (PD25) |
+| `calc_warnings` / `calc_options` | PD25 post-run warnings and option snapshot |
 | `pdf_exported` | Report upload helper after PDF |
+| `pdf_export_with_dealer` | PDF export with dealer on optional Drive upload |
 | `guide_phase_complete` | PD25 guided workflow |
 | `guide_section_view` / `guide_section_complete` | Bench crane assembly |
 | `prestart_complete` / `symptom_analyzed` | Excavator tuning |
 | `manual_open` | Commissioning manuals |
+| `wiring_pdf_open` | Groundworks wiring reference PDFs |
 
 ---
 
