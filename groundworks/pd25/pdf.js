@@ -95,7 +95,7 @@ var PD25Pdf = (function () {
       "</title>" +
       "<link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'>" +
       "<style>" +
-      "body{font-family:'Open Sans','Segoe UI',Tahoma,sans-serif;color:#252a2e;margin:0;padding:0;}" +
+      "body{font-family:'Open Sans',sans-serif;color:#252a2e;margin:0;padding:0;}" +
       ".rpt-hdr{background:#fff;padding:20px 24px 16px;border-bottom:3px solid #005f9e;}" +
       ".rpt-hdr__brands{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:14px;}" +
       ".trimble-logo{height:32px;width:auto;display:block;background:#fff;}" +

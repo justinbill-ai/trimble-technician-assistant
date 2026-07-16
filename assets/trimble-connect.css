@@ -28,7 +28,7 @@
   --tc-radius-lg: 8px;
   --tc-shadow: 0 1px 2px rgba(37, 42, 46, 0.06);
   --tc-shadow-md: 0 2px 8px rgba(37, 42, 46, 0.08);
-  --tc-font: "Open Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --tc-font: "Open Sans", sans-serif;
   --trimble-blue: var(--tc-blue);
   --trimble-yellow: var(--tc-yellow);
   --bg: var(--tc-canvas);
@@ -43,6 +43,12 @@
 
 * { box-sizing: border-box; }
 
+html {
+  font-family: var(--tc-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
   font-family: var(--tc-font);
@@ -51,7 +57,32 @@ body {
   font-size: 14px;
   line-height: 1.45;
   min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
+}
+
+/* Form controls and tables do not inherit font-family in all browsers. */
+button,
+input,
+select,
+textarea,
+optgroup,
+option,
+label,
+legend,
+table,
+th,
+td,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+li,
+a,
+pre,
+code {
+  font-family: var(--tc-font);
 }
 
 /* App chrome — top bar only (not in-page section headers) */

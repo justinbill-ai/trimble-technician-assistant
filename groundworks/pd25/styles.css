@@ -586,8 +586,10 @@
 }
 
 .pd25-mono {
-  font-family: Consolas, "Courier New", monospace;
+  font-family: var(--tc-font);
   font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .pd25-muted {

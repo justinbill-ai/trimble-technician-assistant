@@ -76,6 +76,7 @@ function buildResultRowHtml(label, valueStr) {
 function updateSelectPendingClass() {
   var cl = document.getElementById('centerlineMethod');
   var wm = document.getElementById('widthMethod');
+  if (!cl || !wm) return;
   cl.classList.toggle('mu-select--pending', !cl.value);
   wm.classList.toggle('mu-select--pending', !wm.value);
 }
@@ -402,14 +403,14 @@ function makeTextSprite(message, threeRenderer) {
   var fontPx = Math.round(20 * dpr);
   var cvs = document.createElement('canvas');
   var ctx = cvs.getContext('2d');
-  ctx.font = '600 ' + fontPx + 'px "Open Sans", "Segoe UI", system-ui, sans-serif';
+  ctx.font = '600 ' + fontPx + 'px "Open Sans", sans-serif';
   var textW = ctx.measureText(message).width;
   var lineH = Math.round(fontPx * 1.25);
   var rw = Math.ceil(textW + padX * 2);
   var rh = Math.ceil(lineH + padY * 2);
   cvs.width = rw;
   cvs.height = rh;
-  ctx.font = '600 ' + fontPx + 'px "Open Sans", "Segoe UI", system-ui, sans-serif';
+  ctx.font = '600 ' + fontPx + 'px "Open Sans", sans-serif';
   ctx.textBaseline = 'middle';
   var radius = 4 * dpr;
   ctx.fillStyle = 'rgba(255,255,255,0.97)';
@@ -781,6 +782,7 @@ function bindMeasureUpUi() {
   });
 
   var resBody = document.getElementById('resBody');
+  if (!resBody) return;
   resBody.addEventListener('click', function (e) {
     var btn = e.target.closest('.copy-res-btn');
     if (!btn) return;
