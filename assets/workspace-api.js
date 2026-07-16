@@ -163,13 +163,16 @@
         fileName: options.fileName || 'report',
         mimeType: options.mimeType || 'text/html',
         fileBase64: options.fileBase64 || '',
-        technician: options.technician || '',
+        technician: options.technician || options.techName || '',
         machineModel: options.machineModel || '',
         serialNumber: options.serialNumber || '',
         reportName: options.reportName || '',
       },
       baseContext()
     );
+    if (options.dealer || options.dealerName) {
+      payload.dealer = options.dealer || options.dealerName;
+    }
     return postPayload(payload);
   }
 

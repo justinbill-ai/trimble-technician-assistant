@@ -196,8 +196,8 @@
     renderToolList(cat);
     document.title = cat.title + ' — Technician Assistant';
     if (pushHash) {
-      if (history.replaceState) {
-        history.replaceState({ category: id }, '', '#category/' + id);
+      if (history.pushState) {
+        history.pushState({ category: id }, '', '#category/' + id);
       } else {
         location.hash = 'category/' + id;
       }
