@@ -118,6 +118,14 @@ function ensureSheet(ss, name, headers) {
   return sheet;
 }
 
+function clearSheetBanding(sheet) {
+  var bandings = sheet.getBandings();
+  var i;
+  for (i = 0; i < bandings.length; i++) {
+    bandings[i].remove();
+  }
+}
+
 function formatDataSheet(sheet, colCount) {
   var header = sheet.getRange(1, 1, 1, colCount);
   header
@@ -151,8 +159,9 @@ function formatDataSheet(sheet, colCount) {
   }
 
   if (sheet.getLastRow() > 1) {
+    clearSheetBanding(sheet);
     sheet
-      .getRange(2, 1, sheet.getLastRow() - 1, colCount)
+      .getRange(2, 1, sheet.getLastRow(), colCount)
       .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   }
 }
@@ -214,6 +223,7 @@ function setupReadmeSheet(ss) {
     .setBackground('#005f9e')
     .setFontColor('#ffffff')
     .setFontWeight('bold');
+  clearSheetBanding(sheet);
   sheet.getRange('A6:D10').applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   sheet.setFrozenRows(5);
 }
