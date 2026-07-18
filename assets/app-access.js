@@ -190,21 +190,99 @@
       '<form id="appAccessForm" class="app-access-gate__form" novalidate>' +
       '<label class="app-access-gate__label" for="appAccessEmail">Work email</label>' +
       '<input class="app-access-gate__input" id="appAccessEmail" type="email" inputmode="email" autocomplete="email" placeholder="Work email" required />' +
-      '<label class="app-access-gate__remember"><input type="checkbox" id="appAccessRemember" checked /> Remember this device until access expires (' +
+      '<label class="app-access-gate__remember" id="appAccessRememberWrap"><input type="checkbox" id="appAccessRemember" checked /> Remember this device until access expires (' +
       grantDaysLabel() +
       ' days)</label>' +
+      '<div id="appAccessVerifySection" class="app-access-gate__verify" hidden>' +
+      '<label class="app-access-gate__label" for="appAccessCode">Sign-in code</label>' +
+      '<input class="app-access-gate__input app-access-gate__input--code" id="appAccessCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code" />' +
+      '</div>' +
       '<p id="appAccessError" class="app-access-gate__error" hidden role="alert"></p>' +
       '<div class="app-access-gate__actions">' +
       '<button type="submit" class="btn-primary app-access-gate__submit" id="appAccessSubmit">Continue</button>' +
-      '<button type="button" class="btn-secondary app-access-gate__secondary" id="appAccessCheckStatus" hidden>Check status</button>' +
+      '<button type="button" class="btn-secondary app-access-gate__secondary" id="appAccessResendCode" hidden>Resend code</button>' +
+      '<button type="button" class="btn-secondary app-access-gate__secondary" id="appAccessCheckStatus" hidden>Send sign-in code</button>' +
+      '<button type="button" class="app-access-gate__link" id="appAccessChangeEmail" hidden>Change email</button>' +
       '</div>' +
       '</form>' +
-      '<p class="app-access-gate__note" id="appAccessNote">After approval you will receive an email with a link to open the app. Return here with the same email address and tap <strong>Check status</strong>.</p>' +
+      '<p class="app-access-gate__note" id="appAccessNote">After admin approval, return here, enter your email, and we will send a one-time sign-in code to verify your inbox.</p>' +
       '</div>';
     document.body.appendChild(gate);
 
     document.getElementById('appAccessForm').addEventListener('submit', onSubmit);
     document.getElementById('appAccessCheckStatus').addEventListener('click', onCheckStatus);
+    document.getElementById('appAccessResendCode').addEventListener('click', onResendCode);
+    document.getElementById('appAccessChangeEmail').addEventListener('click', onChangeEmail);
+  }
+
+  function isVerifyStepActive() {
+    var section = document.getElementById('appAccessVerifySection');
+    return !!(section && !section.hidden);
+  }
+
+  function resetToEmailStep() {
+    var title = document.getElementById('appAccessTitle');
+    var lead = document.getElementById('appAccessLead');
+    var verifySection = document.getElementById('appAccessVerifySection');
+    var rememberWrap = document.getElementById('appAccessRememberWrap');
+    var emailInput = document.getElementById('appAccessEmail');
+    var codeInput = document.getElementById('appAccessCode');
+    var submitBtn = document.getElementById('appAccessSubmit');
+    var resendBtn = document.getElementById('appAccessResendCode');
+    var changeBtn = document.getElementById('appAccessChangeEmail');
+    var checkBtn = document.getElementById('appAccessCheckStatus');
+    var status = document.getElementById('appAccessStatus');
+    if (title) title.textContent = 'Request access';
+    if (lead) {
+      lead.textContent = 'Enter your work email to use the Technician Assistant.';
+      lead.hidden = false;
+    }
+    if (verifySection) verifySection.hidden = true;
+    if (rememberWrap) rememberWrap.hidden = false;
+    if (emailInput) emailInput.readOnly = false;
+    if (codeInput) codeInput.value = '';
+    if (submitBtn) submitBtn.textContent = 'Continue';
+    if (resendBtn) resendBtn.hidden = true;
+    if (changeBtn) changeBtn.hidden = true;
+    if (checkBtn) checkBtn.hidden = true;
+    if (status) status.hidden = true;
+  }
+
+  function showVerifyCodeState(email) {
+    var title = document.getElementById('appAccessTitle');
+    var lead = document.getElementById('appAccessLead');
+    var verifySection = document.getElementById('appAccessVerifySection');
+    var rememberWrap = document.getElementById('appAccessRememberWrap');
+    var emailInput = document.getElementById('appAccessEmail');
+    var codeInput = document.getElementById('appAccessCode');
+    var submitBtn = document.getElementById('appAccessSubmit');
+    var resendBtn = document.getElementById('appAccessResendCode');
+    var changeBtn = document.getElementById('appAccessChangeEmail');
+    var checkBtn = document.getElementById('appAccessCheckStatus');
+    var status = document.getElementById('appAccessStatus');
+    if (title) title.textContent = 'Check your email';
+    if (lead) {
+      lead.innerHTML =
+        'We sent a 6-digit sign-in code to <span class="app-access-gate__email">' +
+        escapeHtml(email) +
+        '</span>. Enter it below to verify your inbox.';
+    }
+    if (verifySection) verifySection.hidden = false;
+    if (rememberWrap) rememberWrap.hidden = false;
+    if (emailInput) {
+      emailInput.value = email;
+      emailInput.readOnly = true;
+    }
+    if (codeInput) {
+      codeInput.value = '';
+      codeInput.focus();
+    }
+    if (submitBtn) submitBtn.textContent = 'Verify code';
+    if (resendBtn) resendBtn.hidden = false;
+    if (changeBtn) changeBtn.hidden = false;
+    if (checkBtn) checkBtn.hidden = true;
+    if (status) status.hidden = true;
+    showError('');
   }
 
   function resolveAssetPath(relativePath) {
@@ -250,10 +328,11 @@
       status.innerHTML =
         'Request sent for <span class="app-access-gate__email">' +
         escapeHtml(email) +
-        '</span>. You will receive email when access is approved. Tap <strong>Check status</strong> after approval, or refresh this page.';
+        '</span>. You will receive email when access is approved. Tap <strong>Send sign-in code</strong> after approval, or refresh this page.';
     }
     if (checkBtn) checkBtn.hidden = false;
     if (submitBtn) submitBtn.textContent = 'Resubmit request';
+    if (checkBtn) checkBtn.textContent = 'Send sign-in code';
     if (form) {
       var emailInput = document.getElementById('appAccessEmail');
       if (emailInput && !emailInput.value) emailInput.value = email;
@@ -355,6 +434,10 @@
       unlockAccess(email, result.expiresAt, result.grantType, { persist: remember !== false });
       return;
     }
+    if (result.status === 'verify_code') {
+      showVerifyCodeState(email);
+      return;
+    }
     if (result.status === 'pending') {
       rememberPendingEmail(email);
       showPendingState(email);
@@ -385,14 +468,114 @@
       return;
     }
     showError('');
-    if (!global.WorkspaceApi || typeof global.WorkspaceApi.checkAccess !== 'function') {
+    if (!global.WorkspaceApi || typeof global.WorkspaceApi.startAccess !== 'function') {
       showError('Access service is not configured yet.');
       return;
     }
-    var remember = document.getElementById('appAccessRemember');
-    global.WorkspaceApi.checkAccess(email).then(function (result) {
-      applyCheckResult(result, email, !remember || remember.checked);
-    });
+    var checkBtn = document.getElementById('appAccessCheckStatus');
+    if (checkBtn) {
+      checkBtn.disabled = true;
+      checkBtn.textContent = 'Please wait…';
+    }
+    global.WorkspaceApi.startAccess(email)
+      .then(function (result) {
+        if (!result || !result.ok) {
+          showError((result && result.error) || 'Could not check access. Try again.');
+          return;
+        }
+        if (result.status === 'verify_code') {
+          showVerifyCodeState(email);
+          return;
+        }
+        if (result.status === 'pending') {
+          rememberPendingEmail(email);
+          showPendingState(email);
+          return;
+        }
+        if (result.status === 'denied') {
+          applyCheckResult(result, email, true);
+          return;
+        }
+        showError('Access is not approved yet. Try again after you receive the approval email.');
+      })
+      .finally(function () {
+        if (checkBtn) {
+          checkBtn.disabled = false;
+          checkBtn.textContent = 'Send sign-in code';
+        }
+      });
+  }
+
+  function onResendCode() {
+    var emailInput = document.getElementById('appAccessEmail');
+    var email = normalizeEmail(emailInput && emailInput.value);
+    if (!isValidEmail(email)) {
+      showError('Enter your work email first.');
+      return;
+    }
+    showError('');
+    if (!global.WorkspaceApi || typeof global.WorkspaceApi.resendAccessCode !== 'function') {
+      showError('Access service is not configured yet.');
+      return;
+    }
+    var resendBtn = document.getElementById('appAccessResendCode');
+    if (resendBtn) {
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending…';
+    }
+    global.WorkspaceApi.resendAccessCode(email)
+      .then(function (result) {
+        if (!result || !result.ok) {
+          showError((result && result.error) || 'Could not resend code. Try again.');
+          return;
+        }
+        if (result.throttled) {
+          showError('A code was sent recently. Check your inbox or wait a minute before resending.');
+          return;
+        }
+        showVerifyCodeState(email);
+      })
+      .finally(function () {
+        if (resendBtn) {
+          resendBtn.disabled = false;
+          resendBtn.textContent = 'Resend code';
+        }
+      });
+  }
+
+  function onChangeEmail(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    resetToEmailStep();
+    showError('');
+  }
+
+  function onVerifyCode(email) {
+    var rememberInput = document.getElementById('appAccessRemember');
+    var codeInput = document.getElementById('appAccessCode');
+    var code = String((codeInput && codeInput.value) || '').trim();
+    if (!/^\d{6}$/.test(code)) {
+      showError('Enter the 6-digit code from your email.');
+      return;
+    }
+    if (!global.WorkspaceApi || typeof global.WorkspaceApi.verifyAccessCode !== 'function') {
+      showError('Access service is not configured yet.');
+      return;
+    }
+    var submitBtn = document.getElementById('appAccessSubmit');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying…';
+    }
+    global.WorkspaceApi.verifyAccessCode(email, code)
+      .then(function (result) {
+        applyCheckResult(result, email, !rememberInput || rememberInput.checked);
+      })
+      .finally(function () {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Verify code';
+        }
+      });
   }
 
   function onSubmit(e) {
@@ -405,7 +588,11 @@
       showError('Enter a valid work email address.');
       return;
     }
-    if (!global.WorkspaceApi || typeof global.WorkspaceApi.requestAccess !== 'function') {
+    if (isVerifyStepActive()) {
+      onVerifyCode(email);
+      return;
+    }
+    if (!global.WorkspaceApi || typeof global.WorkspaceApi.startAccess !== 'function') {
       showError('Access service is not configured yet.');
       return;
     }
@@ -414,10 +601,14 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Please wait…';
     }
-    global.WorkspaceApi.requestAccess(email)
+    global.WorkspaceApi.startAccess(email)
       .then(function (result) {
         if (!result || !result.ok) {
           showError((result && result.error) || 'Could not submit your request. Try again.');
+          return;
+        }
+        if (result.status === 'verify_code') {
+          showVerifyCodeState(email);
           return;
         }
         if (result.status === 'approved' && result.expiresAt) {
@@ -433,7 +624,7 @@
       .finally(function () {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Continue';
+          submitBtn.textContent = isVerifyStepActive() ? 'Verify code' : 'Continue';
         }
       });
   }
@@ -458,7 +649,7 @@
       return;
     }
 
-    global.WorkspaceApi.checkAccess(email).then(function (result) {
+    global.WorkspaceApi.checkAccess(email, { revalidate: true }).then(function (result) {
       if (result && result.status === 'approved' && result.expiresAt) {
         if (allowLock) {
           unlockAccess(email, result.expiresAt, result.grantType, { persist: false });
@@ -597,6 +788,7 @@
     readyResolve = null;
     if (isEntryPage()) {
       lockAccess();
+      resetToEmailStep();
       var emailInput = document.getElementById('appAccessEmail');
       if (emailInput) emailInput.value = '';
       var status = document.getElementById('appAccessStatus');

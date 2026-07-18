@@ -19,6 +19,8 @@ var CONFIG = {
   ACCESS_GRANT_DAYS: 28,
   /** Comma-separated domains that auto-approve (no manual review) */
   AUTO_APPROVE_DOMAINS: 'trimble.com',
+  /** One-time sign-in code lifetime (minutes) */
+  ACCESS_CODE_MINUTES: 15,
 };
 
 function parsePayload(e) {
@@ -105,6 +107,7 @@ var SHEET_HEADERS = {
     'approvedBy',
     'lastCheckAt',
   ],
+  AccessCodes: ['email', 'code', 'expiresAt', 'createdAt'],
 };
 
 function ensureSheet(ss, name, headers) {
@@ -187,22 +190,24 @@ function setupReadmeSheet(ss) {
   sheet.getRange('A5:D5').setValues([
     ['Tab', 'Purpose', 'Key columns', 'Looker Studio tip'],
   ]);
-  sheet.getRange('A6:D10').setValues([
+  sheet.getRange('A6:D11').setValues([
     ['Events', 'Adoption & funnel', 'event, tool, deviceType', 'Chart event counts by week'],
     ['Feedback', 'Friction & bugs', 'type, topic, page, message', 'Filter by tool and type'],
     ['Uploads', 'Opt-in reports', 'reportType, dealer, driveFileUrl', 'Count exports by dealer'],
     ['AccessRequests', 'App access queue', 'email, status, token', 'Filter status = pending'],
     ['ApprovedUsers', 'Active access grants', 'email, expiresAt, grantType', 'Filter expiresAt > today'],
+    ['AccessCodes', 'Email sign-in codes', 'email, code, expiresAt', 'Short-lived verification'],
   ]);
 
-  sheet.getRange('A10').setValue('Common events').setFontWeight('bold').setFontColor('#005f9e');
-  sheet.getRange('A11:B30').setValues([
+  sheet.getRange('A13').setValue('Common events').setFontWeight('bold').setFontColor('#005f9e');
+  sheet.getRange('A14:B33').setValues([
     ['hub_open', 'User opened the hub'],
     ['category_open', 'User opened a hub category'],
     ['tool_open', 'User opened a tool page'],
     ['access_requested', 'User requested app access (non-Trimble email)'],
     ['access_granted', 'Access approved (auto @trimble.com or manual grant)'],
     ['access_denied', 'Access request denied'],
+    ['access_verified', 'User verified email with sign-in code'],
     ['calc_run', 'User ran CTL or PD25 measure-up calculator'],
     ['csv_uploaded', 'Survey CSV uploaded'],
     ['csv_analyzed:ok', 'Calculator succeeded'],
@@ -593,9 +598,9 @@ function sendAccessApprovedUserEmail(email, expiresAt) {
     'Open the app: ' +
     appUrl +
     '\n\n' +
-    'Use the same email address (' +
+    'Enter your email address (' +
     email +
-    ') on this device. If you already have the app open, tap "Check status" or refresh the page.\n\n' +
+    ') and we will send you a one-time sign-in code to verify your inbox.\n\n' +
     'Access expires: ' +
     expiresAt;
   var html =
@@ -605,9 +610,9 @@ function sendAccessApprovedUserEmail(email, expiresAt) {
     '<p style="margin:24px 0;"><a href="' +
     appUrl +
     '" style="display:inline-block;padding:12px 20px;background:#005f9e;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">Open Technician Assistant</a></p>' +
-    '<p>Use the same email address (<strong>' +
+    '<p>Enter your email address (<strong>' +
     email +
-    '</strong>) on this device. If the app is already open, tap <strong>Check status</strong> or refresh the page.</p>' +
+    '</strong>) and we will email you a <strong>one-time sign-in code</strong> to verify your inbox.</p>' +
     '<p style="color:#666;font-size:13px;">Access expires: ' +
     expiresAt +
     '</p>';
@@ -616,6 +621,7 @@ function sendAccessApprovedUserEmail(email, expiresAt) {
     subject: subject,
     body: plain,
     htmlBody: html,
+    name: 'Technician Assistant',
   });
 }
 
@@ -642,13 +648,164 @@ function logAccessEvent(event, email, detail, data) {
   });
 }
 
-function buildAccessCheckResult(email) {
+function getAccessCodeTtlMs() {
+  var minutes = Number(CONFIG.ACCESS_CODE_MINUTES);
+  if (!minutes || isNaN(minutes) || minutes < 5) minutes = 15;
+  return minutes * 60 * 1000;
+}
+
+function generateAccessCode() {
+  var code = '';
+  for (var i = 0; i < 6; i++) {
+    code += String(Math.floor(Math.random() * 10));
+  }
+  return code;
+}
+
+function findAccessCodeRows(sheet, email) {
+  var normalized = normalizeAccessEmail(email);
+  var lastRow = sheet.getLastRow();
+  var rows = [];
+  if (lastRow < 2) return rows;
+  var values = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+  for (var i = 0; i < values.length; i++) {
+    if (normalizeAccessEmail(values[i][0]) === normalized) {
+      rows.push({ row: i + 2, values: values[i] });
+    }
+  }
+  return rows;
+}
+
+function clearAccessCodesForEmail(email) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessCodes', SHEET_HEADERS.AccessCodes);
+  var rows = findAccessCodeRows(sheet, email);
+  for (var i = rows.length - 1; i >= 0; i--) {
+    sheet.deleteRow(rows[i].row);
+  }
+}
+
+function issueAccessCode(email) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessCodes', SHEET_HEADERS.AccessCodes);
+  var normalized = normalizeAccessEmail(email);
+  var rows = findAccessCodeRows(sheet, normalized);
+  if (rows.length) {
+    var createdAt = new Date(rows[rows.length - 1].values[3]).getTime();
+    if (createdAt && Date.now() - createdAt < 60000) {
+      return { sent: false, throttled: true };
+    }
+  }
+  clearAccessCodesForEmail(normalized);
+  var code = generateAccessCode();
+  var now = Date.now();
+  var expiresAt = accessIsoDate(now + getAccessCodeTtlMs());
+  sheet.appendRow([normalized, code, expiresAt, accessIsoDate(now)]);
+  sendAccessCodeEmail(normalized, code);
+  return { sent: true };
+}
+
+function sendAccessCodeEmail(email, code) {
+  var minutes = Math.round(getAccessCodeTtlMs() / 60000);
+  var subject = 'Technician Assistant — your sign-in code';
+  var plain =
+    'Your Technician Assistant sign-in code is: ' +
+    code +
+    '\n\nEnter this code in the app to verify your email address. The code expires in ' +
+    minutes +
+    ' minutes.\n\nIf you did not request this, you can ignore this email.';
+  var html =
+    '<p>Your <strong>Technician Assistant</strong> sign-in code is:</p>' +
+    '<p style="font-size:30px;font-weight:700;letter-spacing:6px;margin:18px 0;color:#005f9e;">' +
+    code +
+    '</p>' +
+    '<p>Enter this code in the app to verify your email address. It expires in <strong>' +
+    minutes +
+    ' minutes</strong>.</p>' +
+    '<p style="color:#666;font-size:13px;">If you did not request this, you can ignore this email.</p>';
+  MailApp.sendEmail({
+    to: email,
+    subject: subject,
+    body: plain,
+    htmlBody: html,
+    name: 'Technician Assistant',
+  });
+}
+
+function verifyAccessCode(email, code) {
+  var normalized = normalizeAccessEmail(email);
+  var submitted = String(code || '').trim();
+  if (!/^\d{6}$/.test(submitted)) return false;
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessCodes', SHEET_HEADERS.AccessCodes);
+  var rows = findAccessCodeRows(sheet, normalized);
+  if (!rows.length) return false;
+  var latest = rows[rows.length - 1];
+  var storedCode = String(latest.values[1] || '');
+  var expiresAt = new Date(latest.values[2]).getTime();
+  if (!expiresAt || Date.now() > expiresAt) {
+    clearAccessCodesForEmail(normalized);
+    return false;
+  }
+  if (storedCode !== submitted) return false;
+  clearAccessCodesForEmail(normalized);
+  return true;
+}
+
+function handleAccessVerify(params) {
+  var email = normalizeAccessEmail(params.email);
+  var code = String(params.code || '').trim();
+  if (!isValidAccessEmail(email)) {
+    return { ok: false, error: 'Invalid email address.' };
+  }
+  if (!verifyAccessCode(email, code)) {
+    return { ok: false, error: 'Invalid or expired code. Request a new code and try again.' };
+  }
+  var approved = readApprovedAccess(email);
+  if (!approved || approved.status !== 'approved') {
+    return { ok: false, error: 'Access is not active for this email.' };
+  }
+  logAccessEvent('access_verified', email, 'code', params);
+  return {
+    ok: true,
+    status: 'approved',
+    email: email,
+    expiresAt: approved.expiresAt,
+    grantType: approved.grantType,
+  };
+}
+
+function handleAccessResendCode(params) {
+  var email = normalizeAccessEmail(params.email);
+  if (!isValidAccessEmail(email)) {
+    return { ok: false, error: 'Invalid email address.' };
+  }
+  var approved = readApprovedAccess(email);
+  if (!approved || approved.status !== 'approved') {
+    return { ok: false, error: 'No active access grant for this email.' };
+  }
+  var issued = issueAccessCode(email);
+  return {
+    ok: true,
+    status: 'verify_code',
+    email: email,
+    resent: !!issued.sent,
+    throttled: !!issued.throttled,
+  };
+}
+
+function buildAccessCheckResult(email, options) {
+  options = options || {};
+  var revalidate = options.revalidate === true || String(options.revalidate || '') === '1';
   var normalized = normalizeAccessEmail(email);
   if (!isValidAccessEmail(normalized)) {
     return { ok: false, status: 'invalid', email: normalized };
   }
   var approved = readApprovedAccess(normalized);
   if (approved && approved.status === 'approved') {
+    if (!revalidate) {
+      return { ok: true, status: 'verify_code', email: normalized };
+    }
     return { ok: true, status: 'approved', email: normalized, expiresAt: approved.expiresAt, grantType: approved.grantType };
   }
   if (approved && approved.status === 'expired') {
@@ -676,24 +833,14 @@ function handleAccessRequest(data) {
   }
   var existing = readApprovedAccess(email);
   if (existing && existing.status === 'approved') {
-    return {
-      ok: true,
-      status: 'approved',
-      email: email,
-      expiresAt: existing.expiresAt,
-      grantType: existing.grantType,
-    };
+    issueAccessCode(email);
+    return { ok: true, status: 'verify_code', email: email };
   }
   if (isAutoApproveEmail(email)) {
     var granted = upsertApprovedUser(email, 'trimble_auto', 'auto');
     logAccessEvent('access_granted', email, 'trimble_auto', data);
-    return {
-      ok: true,
-      status: 'approved',
-      email: email,
-      expiresAt: granted.expiresAt,
-      grantType: granted.grantType,
-    };
+    issueAccessCode(email);
+    return { ok: true, status: 'verify_code', email: email };
   }
   var pending = createPendingAccessRequest(data);
   if (!pending.duplicate) {
@@ -810,7 +957,19 @@ function doGet(e) {
   var callback = params.callback || '';
 
   if (action === 'access_check') {
-    return respondJson(buildAccessCheckResult(params.email), callback);
+    return respondJson(buildAccessCheckResult(params.email, { revalidate: params.revalidate }), callback);
+  }
+
+  if (action === 'access_start') {
+    return respondJson(handleAccessRequest(params), callback);
+  }
+
+  if (action === 'access_verify') {
+    return respondJson(handleAccessVerify(params), callback);
+  }
+
+  if (action === 'access_resend_code') {
+    return respondJson(handleAccessResendCode(params), callback);
   }
 
   if (action === 'access_approve') {
@@ -845,6 +1004,6 @@ function setupSheets() {
 
   setupReadmeSheet(ss);
   removeDefaultSheet(ss);
-  reorderSheets(ss, ['README', 'Events', 'Feedback', 'Uploads', 'AccessRequests', 'ApprovedUsers']);
-  Logger.log('Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers');
+  reorderSheets(ss, ['README', 'Events', 'Feedback', 'Uploads', 'AccessRequests', 'ApprovedUsers', 'AccessCodes']);
+  Logger.log('Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers, AccessCodes');
 }

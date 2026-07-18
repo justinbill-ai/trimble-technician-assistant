@@ -78,6 +78,30 @@ body.app-access-modal-open {
   border-color: var(--tc-blue);
 }
 
+.app-access-gate__input--code {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-align: center;
+}
+
+.app-access-gate__verify {
+  display: grid;
+  gap: 10px;
+}
+
+.app-access-gate__link {
+  flex: 1 1 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tc-blue);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .app-access-gate__remember {
   display: flex;
   align-items: flex-start;

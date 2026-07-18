@@ -8,7 +8,7 @@ window.WORKSPACE_CONFIG = {
   /** Web app URL — update after deploying google-workspace/Code.gs (see DEPLOY.md). */
   endpoint:
     'https://script.google.com/macros/s/AKfycbxUWZgf2uvicFpMUvoLBNvWMdqi2rjgPILBGzTJmIzCxjmKOoOR_Ix3Uxj030tDuFo8AQ/exec',
-  appVersion: '2026.07.18',
+  appVersion: '2026.07.19',
   appName: 'Trimble Technician Assistant',
   recipientEmail: 'justin_bill@trimble.com',
   /** Public app URL — used in approval emails from Apps Script CONFIG.APP_URL */

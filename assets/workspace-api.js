@@ -175,22 +175,48 @@
   }
 
   function requestAccess(email) {
-    var payload = Object.assign({ action: 'access_request', email: email }, baseContext());
-    return postPayload(payload).then(function () {
-      return new Promise(function (resolve) {
-        setTimeout(function () {
-          jsonpGet({ action: 'access_check', email: email })
-            .then(resolve)
-            .catch(function () {
-              resolve({ ok: false, error: 'Could not verify access status.' });
-            });
-        }, 900);
-      });
+    return startAccess(email);
+  }
+
+  function startAccess(email) {
+    var ctx = baseContext();
+    return jsonpGet({
+      action: 'access_start',
+      email: email,
+      tool: ctx.tool,
+      page: ctx.page,
+      appVersion: ctx.appVersion,
+      userAgent: ctx.userAgent,
+      deviceType: ctx.deviceType,
+    }).catch(function () {
+      return { ok: false, error: 'Could not start access request.' };
     });
   }
 
-  function checkAccess(email) {
-    return jsonpGet({ action: 'access_check', email: email }).catch(function () {
+  function verifyAccessCode(email, code) {
+    return jsonpGet({
+      action: 'access_verify',
+      email: email,
+      code: code,
+    }).catch(function () {
+      return { ok: false, error: 'Could not verify sign-in code.' };
+    });
+  }
+
+  function resendAccessCode(email) {
+    return jsonpGet({
+      action: 'access_resend_code',
+      email: email,
+    }).catch(function () {
+      return { ok: false, error: 'Could not resend sign-in code.' };
+    });
+  }
+
+  function checkAccess(email, options) {
+    options = options || {};
+    var params = { action: 'access_check', email: email };
+    if (options.revalidate) params.revalidate = '1';
+    return jsonpGet(params).catch(function () {
       return { ok: false, error: 'Could not verify access status.' };
     });
   }
@@ -268,6 +294,9 @@
     isEnabled: isEnabled,
     initPageTelemetry: initPageTelemetry,
     requestAccess: requestAccess,
+    startAccess: startAccess,
+    verifyAccessCode: verifyAccessCode,
+    resendAccessCode: resendAccessCode,
     checkAccess: checkAccess,
   };
 
