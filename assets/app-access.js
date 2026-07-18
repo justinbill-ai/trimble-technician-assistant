@@ -208,23 +208,34 @@
       .replace(/"/g, '&quot;');
   }
 
-  function unlockAccess(email, expiresAt, grantType) {
-    authorized = true;
-    saveStoredAccess(email, expiresAt, grantType);
-    setGateVisible(false);
-    document.body.classList.remove('app-access-locked');
+  function hasValidStoredAccess() {
+    return Boolean(loadStoredAccess());
+  }
+
+  function dispatchAccessReady(detail) {
     if (global.WorkspaceApi && typeof global.WorkspaceApi.initPageTelemetry === 'function') {
       global.WorkspaceApi.initPageTelemetry();
     }
     if (readyResolve) {
-      readyResolve({ email: normalizeEmail(email), expiresAt: expiresAt, grantType: grantType });
+      readyResolve(detail);
       readyResolve = null;
     }
-    document.dispatchEvent(
-      new CustomEvent('tta:access-ready', {
-        detail: { email: normalizeEmail(email), expiresAt: expiresAt, grantType: grantType },
-      })
-    );
+    document.dispatchEvent(new CustomEvent('tta:access-ready', { detail: detail }));
+  }
+
+  function unlockAccess(email, expiresAt, grantType, options) {
+    options = options || {};
+    authorized = true;
+    if (options.persist !== false) {
+      saveStoredAccess(email, expiresAt, grantType);
+    }
+    setGateVisible(false);
+    document.body.classList.remove('app-access-locked');
+    dispatchAccessReady({
+      email: normalizeEmail(email),
+      expiresAt: expiresAt,
+      grantType: grantType || '',
+    });
   }
 
   function lockAccess() {
@@ -323,6 +334,48 @@
       });
   }
 
+  function revalidateAccess(email, options) {
+    options = options || {};
+    if (!global.WorkspaceApi || typeof global.WorkspaceApi.checkAccess !== 'function') {
+      if (!hasValidStoredAccess() && !options.allowPending) lockAccess();
+      return;
+    }
+
+    global.WorkspaceApi.checkAccess(email).then(function (result) {
+      if (result && result.status === 'approved' && result.expiresAt) {
+        unlockAccess(email, result.expiresAt, result.grantType);
+        return;
+      }
+      if (result && result.status === 'expired') {
+        authorized = false;
+        clearStoredAccess();
+        lockAccess();
+        showExpiredState(email);
+        return;
+      }
+      if (result && result.status === 'denied') {
+        authorized = false;
+        clearStoredAccess();
+        lockAccess();
+        showDeniedState(email);
+        return;
+      }
+      if (result && result.status === 'pending') {
+        authorized = false;
+        lockAccess();
+        showPendingState(email);
+        return;
+      }
+      if (!hasValidStoredAccess()) {
+        lockAccess();
+      }
+    }).catch(function () {
+      if (!hasValidStoredAccess()) {
+        lockAccess();
+      }
+    });
+  }
+
   function bootstrap() {
     ensureGate();
     if (!global.WorkspaceApi || !global.WorkSPACE_CONFIG || !global.WORKSPACE_CONFIG.endpoint) {
@@ -337,30 +390,30 @@
     if (stored && emailInput) emailInput.value = stored.email;
     else if (pendingEmail && emailInput) emailInput.value = pendingEmail;
 
-    var submitBtn = document.getElementById('appAccessSubmit');
-
-    var verifyEmail = stored ? stored.email : pendingEmail;
-    if (!verifyEmail) {
-      lockAccess();
+    if (stored) {
+      unlockAccess(stored.email, stored.expiresAt, stored.grantType, { persist: false });
+      revalidateAccess(stored.email);
       return;
     }
 
-    global.WorkspaceApi.checkAccess(verifyEmail).then(function (result) {
-      if (result && result.status === 'approved' && result.expiresAt) {
-        unlockAccess(verifyEmail, result.expiresAt, result.grantType);
-        return;
-      }
+    if (pendingEmail) {
       lockAccess();
-      if (result && result.status === 'expired') {
-        clearStoredAccess();
-        showExpiredState(verifyEmail);
-      } else if (result && result.status === 'pending') showPendingState(verifyEmail);
-      else if (result && result.status === 'denied') showDeniedState(verifyEmail);
-    });
+      revalidateAccess(pendingEmail, { allowPending: true });
+      return;
+    }
+
+    lockAccess();
   }
 
   function whenReady() {
-    if (authorized) return Promise.resolve({ email: getEmail() });
+    var stored = loadStoredAccess();
+    if (authorized || stored) {
+      return Promise.resolve({
+        email: stored ? stored.email : '',
+        expiresAt: stored ? stored.expiresAt : '',
+        grantType: stored ? stored.grantType : '',
+      });
+    }
     if (!readyPromise) {
       readyPromise = new Promise(function (resolve) {
         readyResolve = resolve;
@@ -370,7 +423,7 @@
   }
 
   function isAuthorized() {
-    return authorized;
+    return authorized || hasValidStoredAccess();
   }
 
   function getEmail() {

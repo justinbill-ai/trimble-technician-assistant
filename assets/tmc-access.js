@@ -76,6 +76,10 @@
   }
 
   function getStoredEmail() {
+    if (global.AppAccess && typeof global.AppAccess.getEmail === 'function') {
+      var appEmail = global.AppAccess.getEmail();
+      if (appEmail) return appEmail;
+    }
     var session = loadSession();
     if (session) return session.email;
     var stored = loadStored();
@@ -83,6 +87,9 @@
   }
 
   function isAuthorized() {
+    if (global.AppAccess && typeof global.AppAccess.isAuthorized === 'function' && global.AppAccess.isAuthorized()) {
+      return true;
+    }
     return Boolean(loadSession() || loadStored());
   }
 
