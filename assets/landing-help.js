@@ -22,7 +22,48 @@
   var demoRunning = false;
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  function cfg(key, fallback) {
+    var c = window.WORKSPACE_CONFIG || {};
+    return c[key] != null && c[key] !== '' ? c[key] : fallback;
+  }
+
+  function populateHelpGuide() {
+    var policy = document.getElementById('helpAccessPolicy');
+    var navList = document.getElementById('helpNavList');
+    if (policy) {
+      var codeMinutes = Number(cfg('accessCodeMinutes', 15)) || 15;
+      var grantDays = Number(cfg('accessGrantDays', 28)) || 28;
+      policy.textContent =
+        'Sign-in codes expire after ' +
+        codeMinutes +
+        ' minutes. If a code expires, submit your email again to receive a new one. Remembered devices stay signed in until authorization refresh is required (currently ' +
+        grantDays +
+        ' days).';
+    }
+    if (!navList) return;
+    navList.innerHTML = '';
+    var categories = (window.HubNav && window.HubNav.categories) || [];
+    categories.forEach(function (cat) {
+      if (cat.hubHidden) return;
+      var li = document.createElement('li');
+      li.className = 'help-guide__nav-cat';
+      var toolsHtml = (cat.tools || [])
+        .map(function (tool) {
+          return '<li class="help-guide__nav-tool">' + tool.name + '</li>';
+        })
+        .join('');
+      li.innerHTML =
+        '<span class="help-guide__nav-cat-title">' +
+        cat.title +
+        '</span><ul class="help-guide__nav-tools">' +
+        toolsHtml +
+        '</ul>';
+      navList.appendChild(li);
+    });
+  }
+
   function openHelp() {
+    populateHelpGuide();
     modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('help-modal-open');

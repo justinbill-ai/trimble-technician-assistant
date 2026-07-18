@@ -114,9 +114,11 @@ Before users can open hub categories or tools, the app checks access via Apps Sc
 | `@trimble.com` | Auto-approved for **28 days** on first submit (no email to admin) |
 | Everyone else | **Request access** → you receive email with **Grant permission** / **Deny** → user is emailed when approved |
 
-**Email verification:** When you approve a user, they receive one email with a **6-digit sign-in code** and a link to the app. They must enter their email and that code to sign in on a new device. Remembered devices skip the code until access expires.
+**Email verification:** When you approve a user, they receive one email with a **6-digit sign-in code** and a link to the app. They submit their email again in the app, enter the code, and tap **Verify code**. The code field only appears after approval.
 
-**After you approve someone:** they receive the approval email with the sign-in code. They open the app, enter the same email, enter the code, and tap **Verify code**. Access is stored on the device until `expiresAt`.
+**Timers (configure in `workspace-config.js` and `Code.gs`):**
+- `accessCodeMinutes` — sign-in code validity (default **15** minutes). Expired codes require the user to submit their email again for a new code.
+- `accessGrantDays` — how long remembered devices stay signed in before re-authorization (default **28** days). Shown in the help menu, not on the access gate.
 
 **Sheets:**
 - **AccessRequests** — pending / resolved requests (`email`, `status`, `token`)

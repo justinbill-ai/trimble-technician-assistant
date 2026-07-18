@@ -875,14 +875,24 @@ function handleAccessRequest(data) {
   }
   var existing = readApprovedAccess(email);
   if (existing && existing.status === 'approved') {
-    ensureAccessCode(email, { forceNew: false });
-    return { ok: true, status: 'verify_code', email: email };
+    var codeResult = ensureAccessCode(email, { forceNew: false });
+    return {
+      ok: true,
+      status: 'verify_code',
+      email: email,
+      codeSent: !!(codeResult.sent && !codeResult.reused),
+    };
   }
   if (isAutoApproveEmail(email)) {
-    var granted = upsertApprovedUser(email, 'trimble_auto', 'auto');
+    upsertApprovedUser(email, 'trimble_auto', 'auto');
     logAccessEvent('access_granted', email, 'trimble_auto', data);
-    ensureAccessCode(email, { forceNew: true });
-    return { ok: true, status: 'verify_code', email: email };
+    var trimbleCode = ensureAccessCode(email, { forceNew: true });
+    return {
+      ok: true,
+      status: 'verify_code',
+      email: email,
+      codeSent: !!trimbleCode.sent,
+    };
   }
   var pending = createPendingAccessRequest(data);
   if (!pending.duplicate) {

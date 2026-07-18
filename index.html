@@ -90,8 +90,25 @@
       </div>
       <p class="help-modal__intro">
         One home screen lists product categories. Tap a category to see its tools, then tap a tool to open it.
-        Each tool includes enhanced documentation, checklists, and guided workflows beyond a basic PDF.
+        Each tool includes guided workflows, checklists, calculators, and PDF export beyond a basic manual.
       </p>
+
+      <div class="help-guide" id="helpGuide">
+        <section class="help-guide__section">
+          <h3 class="help-guide__title">Getting access</h3>
+          <ol class="help-guide__list" id="helpAccessSteps">
+            <li>Submit your work email when the app opens.</li>
+            <li>An administrator reviews and approves or declines access.</li>
+            <li>After approval, you receive a sign-in code by email.</li>
+            <li>Submit the same email again, enter the code, and tap <strong>Verify code</strong>.</li>
+          </ol>
+          <p class="help-guide__note" id="helpAccessPolicy"></p>
+        </section>
+        <section class="help-guide__section">
+          <h3 class="help-guide__title">App navigation</h3>
+          <ul class="help-guide__nav" id="helpNavList"></ul>
+        </section>
+      </div>
 
       <div class="help-demo" aria-live="polite">
         <div class="help-demo__caption" id="helpDemoCaption">
@@ -109,7 +126,10 @@
                 <span class="help-demo__cat-title">Siteworks</span>
               </div>
               <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
-                <span class="help-demo__cat-title">Trimble Groundworks</span>
+                <span class="help-demo__cat-title">Installation</span>
+              </div>
+              <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
+                <span class="help-demo__cat-title">Groundworks</span>
               </div>
             </div>
           </div>
@@ -256,9 +276,9 @@
   </div>
 
   <script src="./assets/header-home.js"></script>
-  <script src="./assets/workspace-config.js?v=1"></script>
+  <script src="./assets/workspace-config.js?v=2"></script>
   <script src="./assets/workspace-api.js?v=6"></script>
-  <script src="./assets/app-access.js?v=6"></script>
+  <script src="./assets/app-access.js?v=7"></script>
   <script src="./assets/report-upload.js?v=1"></script>
   <script src="./assets/feedback-config.js?v=3"></script>
   <script src="./assets/feedback.js?v=4"></script>
