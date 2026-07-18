@@ -114,9 +114,9 @@ Before users can open hub categories or tools, the app checks access via Apps Sc
 | `@trimble.com` | Auto-approved for **28 days** on first submit (no email to admin) |
 | Everyone else | **Request access** → you receive email with **Grant permission** / **Deny** → user is emailed when approved |
 
-**Email verification:** After access is granted, the user enters their email and receives a **6-digit sign-in code** from **Technician Assistant** (valid 15 minutes). They must enter the code once per device to prove they control that inbox. Remembered devices skip the code until access expires.
+**Email verification:** When you approve a user, they receive one email with a **6-digit sign-in code** and a link to the app. They must enter their email and that code to sign in on a new device. Remembered devices skip the code until access expires.
 
-**After you approve someone:** they receive an approval email with a link to the app. They enter the same email, receive a sign-in code, and verify. Access is stored on the device until `expiresAt`.
+**After you approve someone:** they receive the approval email with the sign-in code. They open the app, enter the same email, enter the code, and tap **Verify code**. Access is stored on the device until `expiresAt`.
 
 **Sheets:**
 - **AccessRequests** — pending / resolved requests (`email`, `status`, `token`)

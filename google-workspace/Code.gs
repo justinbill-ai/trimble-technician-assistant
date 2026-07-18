@@ -588,8 +588,9 @@ function sendAccessAdminEmail(email, token) {
   });
 }
 
-function sendAccessApprovedUserEmail(email, expiresAt) {
+function sendAccessApprovedUserEmail(email, expiresAt, signInCode) {
   var appUrl = getAppUrl();
+  var minutes = Math.round(getAccessCodeTtlMs() / 60000);
   var subject = 'Technician Assistant — access approved';
   var plain =
     'Your access to the Trimble Technician Assistant has been approved for ' +
@@ -598,9 +599,14 @@ function sendAccessApprovedUserEmail(email, expiresAt) {
     'Open the app: ' +
     appUrl +
     '\n\n' +
+    'Your sign-in code is: ' +
+    signInCode +
+    '\n\n' +
     'Enter your email address (' +
     email +
-    ') and we will send you a one-time sign-in code to verify your inbox.\n\n' +
+    ') and this code in the app to verify your inbox. The code expires in ' +
+    minutes +
+    ' minutes.\n\n' +
     'Access expires: ' +
     expiresAt;
   var html =
@@ -610,9 +616,15 @@ function sendAccessApprovedUserEmail(email, expiresAt) {
     '<p style="margin:24px 0;"><a href="' +
     appUrl +
     '" style="display:inline-block;padding:12px 20px;background:#005f9e;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">Open Technician Assistant</a></p>' +
+    '<p>Your sign-in code is:</p>' +
+    '<p style="font-size:30px;font-weight:700;letter-spacing:6px;margin:18px 0;color:#005f9e;">' +
+    signInCode +
+    '</p>' +
     '<p>Enter your email address (<strong>' +
     email +
-    '</strong>) and we will email you a <strong>one-time sign-in code</strong> to verify your inbox.</p>' +
+    '</strong>) and this code in the app. It expires in <strong>' +
+    minutes +
+    ' minutes</strong>.</p>' +
     '<p style="color:#666;font-size:13px;">Access expires: ' +
     expiresAt +
     '</p>';
@@ -684,15 +696,32 @@ function clearAccessCodesForEmail(email) {
   }
 }
 
-function issueAccessCode(email) {
+function getValidAccessCode(email) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessCodes', SHEET_HEADERS.AccessCodes);
+  var rows = findAccessCodeRows(sheet, email);
+  if (!rows.length) return null;
+  var latest = rows[rows.length - 1];
+  var expiresAt = new Date(latest.values[2]).getTime();
+  if (!expiresAt || Date.now() > expiresAt) return null;
+  return { code: String(latest.values[1] || ''), expiresAt: latest.values[2] };
+}
+
+function issueAccessCode(email, options) {
+  options = options || {};
   var ss = getSpreadsheet();
   var sheet = ensureSheet(ss, 'AccessCodes', SHEET_HEADERS.AccessCodes);
   var normalized = normalizeAccessEmail(email);
   var rows = findAccessCodeRows(sheet, normalized);
-  if (rows.length) {
+  if (rows.length && !options.forceNew) {
     var createdAt = new Date(rows[rows.length - 1].values[3]).getTime();
     if (createdAt && Date.now() - createdAt < 60000) {
-      return { sent: false, throttled: true };
+      return {
+        sent: false,
+        code: String(rows[rows.length - 1].values[1] || ''),
+        throttled: true,
+        reused: true,
+      };
     }
   }
   clearAccessCodesForEmail(normalized);
@@ -700,8 +729,22 @@ function issueAccessCode(email) {
   var now = Date.now();
   var expiresAt = accessIsoDate(now + getAccessCodeTtlMs());
   sheet.appendRow([normalized, code, expiresAt, accessIsoDate(now)]);
-  sendAccessCodeEmail(normalized, code);
-  return { sent: true };
+  if (!options.skipEmail) {
+    sendAccessCodeEmail(normalized, code);
+  }
+  return { sent: !options.skipEmail, code: code, throttled: false, reused: false };
+}
+
+function ensureAccessCode(email, options) {
+  options = options || {};
+  var normalized = normalizeAccessEmail(email);
+  if (!options.forceNew) {
+    var active = getValidAccessCode(normalized);
+    if (active) {
+      return { sent: false, code: active.code, throttled: false, reused: true };
+    }
+  }
+  return issueAccessCode(normalized, options);
 }
 
 function sendAccessCodeEmail(email, code) {
@@ -783,7 +826,7 @@ function handleAccessResendCode(params) {
   if (!approved || approved.status !== 'approved') {
     return { ok: false, error: 'No active access grant for this email.' };
   }
-  var issued = issueAccessCode(email);
+  var issued = ensureAccessCode(email, { forceNew: true });
   return {
     ok: true,
     status: 'verify_code',
@@ -832,13 +875,13 @@ function handleAccessRequest(data) {
   }
   var existing = readApprovedAccess(email);
   if (existing && existing.status === 'approved') {
-    issueAccessCode(email);
+    ensureAccessCode(email, { forceNew: false });
     return { ok: true, status: 'verify_code', email: email };
   }
   if (isAutoApproveEmail(email)) {
     var granted = upsertApprovedUser(email, 'trimble_auto', 'auto');
     logAccessEvent('access_granted', email, 'trimble_auto', data);
-    issueAccessCode(email);
+    ensureAccessCode(email, { forceNew: true });
     return { ok: true, status: 'verify_code', email: email };
   }
   var pending = createPendingAccessRequest(data);
@@ -862,8 +905,9 @@ function handleAccessApprove(params) {
   }
   var granted = upsertApprovedUser(email, 'manual', CONFIG.RECIPIENT_EMAIL);
   logAccessEvent('access_granted', email, 'manual', { tool: 'hub', page: getAppUrl() });
+  var codeResult = ensureAccessCode(email, { forceNew: true, skipEmail: true });
   try {
-    sendAccessApprovedUserEmail(email, granted.expiresAt);
+    sendAccessApprovedUserEmail(email, granted.expiresAt, codeResult.code);
   } catch (err) {}
   return htmlAccessPage(
     'Access granted',
@@ -871,7 +915,7 @@ function handleAccessApprove(params) {
       email +
       '</strong> for <strong>' +
       getAccessGrantDays() +
-      ' days</strong>. The user has been emailed a link to open the app.',
+      ' days</strong>. The user has been emailed their sign-in code and a link to open the app.',
     true
   );
 }

@@ -206,7 +206,7 @@
       '<button type="button" class="app-access-gate__link" id="appAccessChangeEmail" hidden>Change email</button>' +
       '</div>' +
       '</form>' +
-      '<p class="app-access-gate__note" id="appAccessNote">After admin approval, return here, enter your email, and we will send a one-time sign-in code to verify your inbox.</p>' +
+      '<p class="app-access-gate__note" id="appAccessNote">After admin approval you will receive an email with your 6-digit sign-in code. Open the app, enter your email, then enter that code to verify your inbox.</p>' +
       '</div>';
     document.body.appendChild(gate);
 
@@ -266,7 +266,7 @@
       lead.innerHTML =
         'We sent a 6-digit sign-in code to <span class="app-access-gate__email">' +
         escapeHtml(email) +
-        '</span>. Enter it below to verify your inbox.';
+        '</span>. Check your approval email (or inbox) and enter the code below.';
     }
     if (verifySection) verifySection.hidden = false;
     if (rememberWrap) rememberWrap.hidden = false;
@@ -329,7 +329,7 @@
       status.innerHTML =
         'Request sent for <span class="app-access-gate__email">' +
         escapeHtml(email) +
-        '</span>. You will receive email when access is approved. Tap <strong>Send sign-in code</strong> after approval, or refresh this page.';
+        '</span>. You will receive an email with your sign-in code when access is approved. Open the app, enter your email, then enter the code from that email.';
     }
     if (checkBtn) checkBtn.hidden = false;
     if (submitBtn) submitBtn.textContent = 'Resubmit request';
