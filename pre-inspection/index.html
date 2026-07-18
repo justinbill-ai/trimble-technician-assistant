@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
   <link rel="manifest" href="../app.webmanifest" />
   <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/app-access.css" />
   <link rel="stylesheet" href="../assets/feedback.css?v=1" />
   <link rel="stylesheet" href="../assets/report-upload.css?v=1" />
 </head>
@@ -66,7 +67,7 @@
         <details class="glossary-panel" id="glossaryPanel">
           <summary class="glossary-panel__summary">Voice terminology — dealer glossary</summary>
           <p class="note glossary-panel__intro">
-            Teach the app how your shop talks. Built-in phrases from the <strong>commissioning manual</strong> (circle backlash, moldboard, RS400, etc.) normalize wear notes; dealer slang can auto-fill machine fields.
+            Teach the app how your shop talks. Built-in wear-inspection phrases (circle backlash, moldboard, RS400, etc.) normalize wear notes; dealer slang can auto-fill machine fields.
             Saved <strong>on this device only</strong> — export to share the same list with other tech phones.
           </p>
           <div class="glossary-examples note">
@@ -133,10 +134,6 @@
       <div id="workflowCard" class="card hidden">
         <h2>How do you want to document wear?</h2>
         <p class="note">Choose a workflow for <strong id="machineTypeLabel"></strong>. You can switch modes anytime before generating the report.</p>
-        <div id="commissioningHelpBar" class="commissioning-help-bar hidden">
-          <button type="button" class="btn btn-secondary" id="commissioningHelpBtn" onclick="openCommissioningHelp()">Commissioning manual — §3.2</button>
-          <p class="commissioning-help-bar__note">Inspection photos appear in guided mode as you work each step. This opens the commissioning manual wording and full PDF only.</p>
-        </div>
         <p id="workflowOtherNote" class="note hidden" style="background:var(--tc-blue-soft);border:1px solid var(--tc-grey-300);border-radius:8px;padding:10px 12px;">
           For machines not in the standard list, <strong>I know what I am doing</strong> is recommended — add as many custom wear line items and photos as you need. Guided mode offers generic prompts if helpful.
         </p>
@@ -147,7 +144,7 @@
           </div>
           <div class="mode-option" id="modeGuided" onclick="selectMode('guided')">
             <strong>Guided inspection</strong>
-            <span>Follow suggested wear areas for this machine type, reference the commissioning diagram, and add extra line items if needed.</span>
+            <span>Follow suggested wear areas for this machine type, reference diagrams where available, and add extra line items if needed.</span>
           </div>
         </div>
       </div>
@@ -166,9 +163,6 @@
 
       <div id="guidedPanel" class="card hidden">
         <h2>Guided inspection — <span id="guidedMachineLabel"></span></h2>
-        <div id="guidedHelpLinkRow" class="guided-help-link hidden">
-          <button type="button" class="btn-sm" onclick="openCommissioningHelp()">Commissioning manual (§3.2)</button>
-        </div>
         <div id="voiceUnsupportedGuided" class="voice-unsupported hidden">Voice dictation needs Chrome or Edge on this device. You can still type wear notes.</div>
         <div id="guidedVoiceBar" class="voice-bar hidden">
           <div class="voice-bar__info">
@@ -220,23 +214,6 @@
 
   <footer class="tc-footer">Pre-Inspection · Trimble Technician Assistant</footer>
 
-  <div id="commissioningHelpModal" class="help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="commissioningHelpTitle" aria-hidden="true">
-    <div class="help-modal__backdrop" onclick="closeCommissioningHelp()"></div>
-    <div class="help-modal__panel">
-      <header class="help-modal__header">
-        <div>
-          <p class="help-modal__eyebrow" id="commissioningHelpEyebrow"></p>
-          <h2 class="help-modal__title" id="commissioningHelpTitle">Wear check reference</h2>
-        </div>
-        <button type="button" class="help-modal__close" onclick="closeCommissioningHelp()" aria-label="Close">&times;</button>
-      </header>
-      <div class="help-modal__body" id="commissioningHelpBody"></div>
-      <footer class="help-modal__footer">
-        <a id="commissioningHelpPdfLink" class="btn btn-secondary help-modal__pdf" href="#" target="_blank" rel="noopener noreferrer">Open full commissioning manual (PDF)</a>
-        <button type="button" class="btn btn-primary" onclick="closeCommissioningHelp()">Close</button>
-      </footer>
-    </div>
-  </div>
 
   <input type="file" id="photoInput" accept="image/*" hidden />
   <input type="file" id="dealerLogoInput" accept="image/*" hidden />
@@ -698,167 +675,7 @@
       font-style: italic;
       padding: 8px 0;
     }
-    .commissioning-help-bar {
-      margin: 0 0 14px;
-      padding: 12px 14px;
-      background: var(--tc-blue-soft);
-      border: 1px solid var(--tc-grey-300);
-      border-left: 3px solid var(--tc-blue);
-      border-radius: var(--tc-radius-lg);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 14px;
-      align-items: center;
-    }
-    .commissioning-help-bar__note {
-      margin: 0;
-      flex: 1 1 220px;
-      font-size: 0.82rem;
-      color: var(--tc-grey-600);
-      line-height: 1.4;
-    }
-    .guided-tolerance {
-      margin: -2px 0 8px;
-      padding: 6px 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--tc-blue-dark);
-      background: var(--tc-blue-tint);
-      border-radius: var(--tc-radius);
-      line-height: 1.35;
-    }
-    .help-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .help-modal.hidden {
-      display: none;
-    }
-    .help-modal__backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(37, 42, 46, 0.55);
-    }
-    .help-modal__panel {
-      position: relative;
-      width: min(720px, 100%);
-      max-height: min(88vh, 900px);
-      background: var(--tc-surface);
-      border-radius: var(--tc-radius-lg);
-      border: 1px solid var(--tc-grey-400);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .help-modal__header {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--tc-grey-300);
-      background: var(--tc-grey-100);
-    }
-    .help-modal__eyebrow {
-      margin: 0 0 4px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--tc-grey-600);
-    }
-    .help-modal__title {
-      margin: 0;
-      font-size: 1.05rem;
-      color: var(--tc-blue);
-    }
-    .help-modal__close {
-      border: none;
-      background: transparent;
-      font-size: 1.6rem;
-      line-height: 1;
-      color: var(--tc-grey-600);
-      cursor: pointer;
-      padding: 0 4px;
-    }
-    .help-modal__body {
-      padding: 16px 18px;
-      overflow-y: auto;
-      font-size: 0.86rem;
-      line-height: 1.45;
-      color: var(--tc-text);
-    }
-    .help-modal__intro {
-      margin: 0 0 14px;
-      color: var(--tc-grey-600);
-    }
-    .help-check {
-      margin: 0 0 14px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--tc-grey-300);
-    }
-    .help-check:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-    .help-check h3 {
-      margin: 0 0 6px;
-      font-size: 0.92rem;
-      color: var(--tc-text);
-    }
-    .help-check__ref {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--tc-grey-600);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .help-check ul {
-      margin: 6px 0 0;
-      padding-left: 1.2rem;
-    }
-    .help-check li {
-      margin-bottom: 4px;
-    }
-    .help-check__spec {
-      margin-top: 8px;
-      padding: 8px 10px;
-      background: var(--tc-blue-tint);
-      border-radius: var(--tc-radius);
-      font-weight: 600;
-      font-size: 0.8rem;
-      color: var(--tc-blue-dark);
-    }
-    .help-check__photo {
-      display: block;
-      width: 100%;
-      max-width: 360px;
-      margin: 10px 0 4px;
-      border-radius: var(--tc-radius-lg);
-      border: 1px solid var(--tc-grey-300);
-    }
-    .help-modal__footer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: flex-end;
-      padding: 14px 18px;
-      border-top: 1px solid var(--tc-grey-300);
-      background: var(--tc-grey-100);
-    }
-    .help-modal__pdf {
-      margin-right: auto;
-      text-decoration: none;
-    }
-    .guided-help-link {
-      margin: -4px 0 12px;
-    }
+
     .guided-reference {
       margin: 10px 0 12px;
       border: 1px solid var(--tc-grey-300);
@@ -907,7 +724,8 @@
   </style>
 
   <script src="../assets/workspace-config.js?v=1"></script>
-  <script src="../assets/workspace-api.js?v=3"></script>
+  <script src="../assets/workspace-api.js?v=4"></script>
+  <script src="../assets/app-access.js?v=1"></script>
   <script src="../assets/report-upload.js?v=1"></script>
   <script src="../assets/header-home.js"></script>
   <script src="../assets/brand/trimble-pdf-logo.js?v=1"></script>
@@ -936,7 +754,7 @@
       { phrase: "hyundai", target: "make", value: "Hyundai" }
     ];
 
-    /** Commissioning manual §3.2 wear terms — common speech variants → standard wording */
+    /** Wear inspection terms — common speech variants → standard wording */
     var COMMISSIONING_VOICE_GLOSSARY = [
       { phrase: "mold board", target: "replace", value: "moldboard" },
       { phrase: "mold bored", target: "replace", value: "moldboard" },
@@ -1001,14 +819,14 @@
     var GLOSSARY_COMMISSIONING_MERGE_KEY = "tta_preinspection_glossary_commissioning_v1";
 
     /**
-     * Per machine type: label, optional commissioning diagram (Google Drive file ID),
+     * Per machine type: label, optional reference diagram (Google Drive file ID),
      * and predefined guided wear areas. Add diagramFileId when you have the manual image.
      */
     var MACHINE_CONFIG = {
       dozer: {
         label: "Dozer",
         diagramFileId: "",
-        diagramCaption: "Commissioning manual — dozer wear reference diagram",
+        diagramCaption: "Dozer wear reference diagram",
         guidedAreas: [
           { id: "dozer_trunnion", label: "Trunnion ball / equalizer bar", hint: "Check for excessive play, cracked welds, and worn bushings." },
           { id: "dozer_tilt", label: "Tilt cylinder bushings & pins", hint: "Inspect for slack, scoring, and leakage at pin connections." },
@@ -1021,78 +839,7 @@
       motor_grader: {
         label: "Motor grader",
         diagramFileId: "",
-        diagramCaption: "Trimble Earthworks Grader Commissioning Manual — wear reference (§3.2)",
-        commissioningReference: {
-          manualTitle: "Trimble Earthworks Grader Commissioning Manual",
-          manualVersion: "2.24",
-          manualSection: "3.2 Check machine wear",
-          pdfPath: "../commissioning-manuals/pdfs/trimble-earthworks-grader-commissioning-manual-v-2-24-x.pdf",
-          intro:
-            "Check and adjust these points so the grade control system can perform accurately. A loose machine cannot produce optimal results. Maintain working condition and component accuracy on an ongoing basis.",
-          checks: [
-            {
-              ref: "3.2.3",
-              title: "Check the cutting edge",
-              spec: "Straight within 0 ± 0.005 m (0.2 in) of a string line.",
-              points: [
-                "Define the edge at points 0.3 m / 12 in in from each end — uneven end wear is acceptable.",
-                "Inconsistent wear or a bent edge (forward/back) will make guidance and cut surfaces inaccurate."
-              ]
-            },
-            {
-              ref: "3.2.4",
-              title: "Check the circle play",
-              points: [
-                "Adjust the circle shims and/or circle wear strips to minimize play in the circle.",
-                "Follow the manufacturer's instructions and recommended tolerances.",
-                "Follow the machine manufacturer's instructions for adjusting the circle wear strips to minimize horizontal slop in the circle and to make sure the circle is centered."
-              ]
-            },
-            {
-              ref: "3.2.5",
-              title: "Check the circle backlash",
-              spec: "Backlash < 12 mm (0.5 in) measured on the outside of the circle.",
-              points: [
-                "Mark an indicator on the A-frame and on the circle to compare movement against RS400 rotation sensor readings.",
-                "Rotate the circle about 10° clockwise, then counterclockwise until the sensor reading changes — measure the distance between marks.",
-                "More than 12 mm will cause accuracy errors projected out to the blade corners.",
-                "Remove play between the hydraswivel and hose tray. Adjust circle shoes/shims and re-check if over tolerance."
-              ]
-            },
-            {
-              ref: "3.2.6",
-              title: "Check the lift cylinder backlash",
-              spec: "Maximum of 3 mm (0.1 in) play between the blade and the circle with the blade lifted off the ground.",
-              points: [
-                "Ensure that the distance between the blade and the circle has a maximum of 3 mm (0.1 in) of play when the blade is lifted off the ground."
-              ]
-            },
-            {
-              ref: "3.2.7",
-              title: "Check the lift cylinder ball joints",
-              spec: "Rod-to-circle height difference < 1 mm (0.04 in) between circle resting on blade vs blade hanging from circle.",
-              points: ["Measure cylinder rod to top of circle in both positions and compare."]
-            },
-            {
-              ref: "3.2.8",
-              title: "Check the blade rail shims",
-              spec: "Moldboard-to-wear-strip clearance ≤ 1 mm (0.04 in).",
-              points: [
-                "Inspect clearance between the moldboard and wear strips.",
-                "If wear is becoming excessive you may start to see brass on the wear bar of the moldboard — this indicates the shims are nearly worn out or are fully worn and require replacement."
-              ]
-            },
-            {
-              ref: "3.2.9",
-              title: "Check tires",
-              points: [
-                "Tandem tires: same make, model, size; even wear; tread aligned; equal inflation — maintain pressure for accurate grading.",
-                "Repeat for front tires.",
-                "On flat level ground, measure wheel rim height — confirm pairs match."
-              ]
-            }
-          ]
-        },
+        diagramCaption: "Motor grader wear reference diagram",
         guidedAreas: [
           {
             id: "mg_cutting_edge",
@@ -1186,7 +933,7 @@
       excavator: {
         label: "Excavator",
         diagramFileId: "",
-        diagramCaption: "Commissioning manual — excavator wear reference diagram",
+        diagramCaption: "Excavator wear reference diagram",
         guidedAreas: [
           { id: "exc_boom", label: "Boom & stick bushings / pins", hint: "Check pin play, bushing wear, and grease retention." },
           { id: "exc_bucket", label: "Bucket cutting edge & teeth", hint: "Document edge wear, adapter cracks, and missing teeth." },
@@ -1199,7 +946,7 @@
       pile_driver: {
         label: "Pile driver",
         diagramFileId: "",
-        diagramCaption: "Commissioning manual — pile driver wear reference diagram",
+        diagramCaption: "Pile driver wear reference diagram",
         guidedAreas: [
           { id: "pd_mast", label: "Mast / leader & rails", hint: "Alignment, rail wear, and structural cracks or looseness." },
           { id: "pd_hammer", label: "Hammer / driving head", hint: "Impact surfaces, mounting, and excessive wear or damage." },
@@ -1251,13 +998,6 @@
               if (area.hint.toLowerCase().indexOf(term) !== -1) addReplace(term, term);
             });
           }
-        });
-      }
-
-      if (cfg.commissioningReference && cfg.commissioningReference.checks) {
-        cfg.commissioningReference.checks.forEach(function (check) {
-          var title = check.title.replace(/^Check (the )?/i, "");
-          addReplace(title, title);
         });
       }
 
@@ -1648,7 +1388,7 @@
     function loadGlossaryStarterExamples() {
       if (
         speechGlossary.length &&
-        !confirm("Add starter and commissioning manual phrases to your glossary? Existing entries will be kept.")
+        !confirm("Add starter and wear-inspection phrases to your glossary? Existing entries will be kept.")
       ) {
         return;
       }
@@ -2277,77 +2017,6 @@
       }
     }
 
-    function updateCommissioningHelpBar() {
-      var cfg = getMachineConfig();
-      var ref = cfg && cfg.commissioningReference;
-      var bar = document.getElementById("commissioningHelpBar");
-      if (bar) bar.classList.toggle("hidden", !ref);
-      var btn = document.getElementById("commissioningHelpBtn");
-      if (btn && ref) {
-        var sectionRef = ref.manualSection ? ref.manualSection.split(" ")[0] : "";
-        btn.textContent = sectionRef ? "Commissioning manual (" + sectionRef + ")" : "Commissioning manual";
-      }
-    }
-
-    function getCommissioningPdfUrl(ref) {
-      if (!ref) return "";
-      if (ref.pdfPath) return ref.pdfPath;
-      if (ref.pdfDriveId) {
-        return "https://drive.google.com/file/d/" + ref.pdfDriveId + "/view";
-      }
-      return "";
-    }
-
-    function openCommissioningHelp() {
-      var cfg = getMachineConfig();
-      if (!cfg || !cfg.commissioningReference) return;
-      var ref = cfg.commissioningReference;
-
-      document.getElementById("commissioningHelpEyebrow").textContent =
-        ref.manualTitle + (ref.manualVersion ? " · v" + ref.manualVersion : "");
-      document.getElementById("commissioningHelpTitle").textContent = ref.manualSection || "Wear check reference";
-
-      var body = document.getElementById("commissioningHelpBody");
-      var html = '<p class="help-modal__intro">' + escapeHtml(ref.intro) + "</p>";
-      ref.checks.forEach(function (check) {
-        html += '<section class="help-check">';
-        html += '<div class="help-check__ref">' + escapeHtml(check.ref) + "</div>";
-        html += "<h3>" + escapeHtml(check.title) + "</h3>";
-        if (check.spec) {
-          html += '<div class="help-check__spec">Spec: ' + escapeHtml(check.spec) + "</div>";
-        }
-        html += "<ul>";
-        check.points.forEach(function (point) {
-          html += "<li>" + escapeHtml(point) + "</li>";
-        });
-        html += "</ul></section>";
-      });
-      body.innerHTML = html;
-
-      var pdfLink = document.getElementById("commissioningHelpPdfLink");
-      if (pdfLink) {
-        var pdfUrl = getCommissioningPdfUrl(ref);
-        if (pdfUrl) {
-          pdfLink.href = pdfUrl;
-          pdfLink.classList.remove("hidden");
-        } else {
-          pdfLink.classList.add("hidden");
-        }
-      }
-
-      var modal = document.getElementById("commissioningHelpModal");
-      modal.classList.remove("hidden");
-      modal.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeCommissioningHelp() {
-      var modal = document.getElementById("commissioningHelpModal");
-      if (!modal) return;
-      modal.classList.add("hidden");
-      modal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    }
 
     function onMachineTypeChange() {
       var cfg = getMachineConfig();
@@ -2386,7 +2055,6 @@
       if (workflowNote) {
         workflowNote.classList.toggle("hidden", !isOther);
       }
-      updateCommissioningHelpBar();
     }
 
     function selectMode(mode) {
@@ -2552,8 +2220,6 @@
       });
 
       document.getElementById("guidedExtraList").innerHTML = "";
-      var guidedHelp = document.getElementById("guidedHelpLinkRow");
-      if (guidedHelp) guidedHelp.classList.toggle("hidden", !cfg.commissioningReference);
       highlightGuidedSection();
       updateVoiceAvailabilityUi();
     }

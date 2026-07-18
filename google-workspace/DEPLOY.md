@@ -40,10 +40,13 @@ Share this folder only with people who should see opt-in report uploads. The App
 4. Edit `CONFIG` at the top:
    - `SPREADSHEET_ID` — your sheet ID (bound scripts can also use `SpreadsheetApp.getActiveSpreadsheet().getId()` but explicit ID is fine)
    - `DRIVE_FOLDER_ID` — your folder ID
-   - `RECIPIENT_EMAIL` — your inbox
+   - `RECIPIENT_EMAIL` — your inbox (access request notifications + feedback)
+   - `APP_URL` — public GitHub Pages URL (used in approval emails)
+   - `ACCESS_GRANT_DAYS` — default `28` (approved access duration)
+   - `AUTO_APPROVE_DOMAINS` — default `trimble.com` (comma-separated; no manual approval)
 
 5. Run **`setupSheets`** once from the editor (Run ▶). Approve permissions when prompted.
-   - Creates **README**, **Events**, **Feedback**, **Uploads** with Trimble-style headers (blue row, frozen, column widths)
+   - Creates **README**, **Events**, **Feedback**, **Uploads**, **AccessRequests**, **ApprovedUsers** with Trimble-style headers
    - Removes the default empty **Sheet1** tab
    - Safe to run again after updating `Code.gs` — refreshes headers and formatting without deleting data rows
 6. **Deploy** → **New deployment** → type **Web app**:
@@ -102,6 +105,27 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
 
 ---
 
+## App access control
+
+Before users can open hub categories or tools, the app checks access via Apps Script:
+
+| Domain / user | Flow |
+|---------------|------|
+| `@trimble.com` | Auto-approved for **28 days** on first submit (no email to admin) |
+| Everyone else | **Request access** → you receive email with **Grant permission** / **Deny** → user is emailed when approved |
+
+**After you approve someone:** they receive an email with a link to the app. They do **not** need a special magic link — they open the app, enter the **same email**, and tap **Check status** (or refresh). Access is stored on the device until `expiresAt`.
+
+**Sheets:**
+- **AccessRequests** — pending / resolved requests (`email`, `status`, `token`)
+- **ApprovedUsers** — active grants (`email`, `expiresAt`, `grantType`)
+
+**Telemetry events:** `access_requested`, `access_granted`, `access_denied` (logged from Apps Script and the client).
+
+**Redeploy required:** After updating `Code.gs`, deploy a **new version** of the web app so `doGet` handles `?action=access_check` (JSONP) and approve/deny links work.
+
+---
+
 ## Telemetry conventions (when adding features)
 
 1. Add a `detectTool()` branch in `assets/workspace-api.js` if the tool is new.
@@ -115,6 +139,9 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
 | `hub_open` | Hub home |
 | `category_open` | Hub category picker |
 | `tool_open` | Any tool page load (`ctl-calculator`, `pd25-calculator`, …) |
+| `access_requested` | Non-Trimble user requested app access |
+| `access_granted` | Access approved (`trimble_auto` or manual grant) |
+| `access_denied` | Access request denied |
 | `calc_run` | User ran CTL or PD25 calculator (Calculate / Run calculations) |
 | `csv_uploaded` | Survey CSV file selected |
 | `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculation outcome |
@@ -125,7 +152,6 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
 | `guide_phase_complete` | PD25 guided workflow |
 | `guide_section_view` / `guide_section_complete` | Bench crane assembly |
 | `prestart_complete` / `symptom_analyzed` | Excavator tuning |
-| `manual_open` | Commissioning manuals |
 | `wiring_pdf_open` | Groundworks wiring reference PDFs |
 
 ---
@@ -133,7 +159,7 @@ endpoint: 'https://script.google.com/a/macros/trimble.com/s/YOUR_DEPLOYMENT_ID/e
 ## Privacy notes
 
 - Telemetry does **not** send survey coordinates, serial numbers, or CSV contents unless you add them later.
-- `dealer` and `email` are included only when already on the device (dealer name field, TMC gate email).
+- `dealer` and `email` are included when on the device (dealer name field, approved app-access email).
 - Drive upload is **opt-in per export** and may contain customer data — checkbox copy warns techs.
 
 ---

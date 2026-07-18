@@ -1244,9 +1244,6 @@ function initCalculator() {
   bindPdfExport();
   loadSavedDealerBranding();
   updateHcOffsetHint();
-  if (typeof PD25TargetPlacement !== 'undefined') {
-    PD25TargetPlacement.render('targetPlacementMap');
-  }
 }
 
 function init() {

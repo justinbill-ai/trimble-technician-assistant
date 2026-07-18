@@ -1,6 +1,6 @@
 # Trimble Technician Assistant
 
-Static field-tools hub for Trimble technicians — Groundworks PD25, Siteworks CTL measure-up, pre-inspection, excavator tuning, commissioning manuals, and related workflows.
+Static field-tools hub for Trimble technicians — Groundworks PD25, Siteworks CTL measure-up, pre-inspection, excavator tuning, and related workflows.
 
 **Live site (GitHub Pages):** `https://justinbill-ai.github.io/trimble-technician-assistant/`
 
@@ -11,7 +11,7 @@ Static field-tools hub for Trimble technicians — Groundworks PD25, Siteworks C
 | Path | Purpose |
 |------|---------|
 | `index.html` | Hub — category home and tool drill-in |
-| `assets/` | Shared chrome, workspace API, feedback, TMC gate |
+| `assets/` | Shared chrome, workspace API, app access gate, feedback |
 | `groundworks/pd25/` | PD25 guided workflow + measure-up calculator |
 | `groundworks/wiring/` | Groundworks connection diagram and wiring schematic PDFs |
 | `measure-up/ctl/` | Siteworks CTL measure-up calculator |
@@ -19,7 +19,6 @@ Static field-tools hub for Trimble technicians — Groundworks PD25, Siteworks C
 | `install-deliverable/` | Post-install photo deliverable |
 | `excavator/` | Earthworks excavator tuning assistant |
 | `bench-crane/` | TMC bench crane assembly guide (gated) |
-| `commissioning-manuals/` | Earthworks v2.24 PDF library |
 | `google-workspace/` | Apps Script backend (`Code.gs`) + deploy guide |
 
 ---
@@ -56,10 +55,18 @@ Telemetry, feedback, and optional Drive report archive are configured in `assets
 
 ---
 
+## App access
+
+- **`@trimble.com`** — auto-approved for 28 days
+- **Other emails** — request access; admin approves via email link; user checks status in the app
+- See [google-workspace/DEPLOY.md](google-workspace/DEPLOY.md) for Apps Script setup (`AccessRequests`, `ApprovedUsers` sheets)
+
+---
+
 ## Adding a new tool
 
 1. Create a folder with `index.html` using shared styles from `assets/trimble-connect.css`.
-2. Include workspace scripts: `workspace-config.js`, `workspace-api.js` (and `report-upload.js` if PDF opt-in upload applies).
+2. Include workspace scripts: `workspace-config.js`, `workspace-api.js`, `app-access.js` (and `report-upload.js` if PDF opt-in upload applies).
 3. Add `detectTool()` entry in `assets/workspace-api.js`.
 4. Wire hub category in `assets/hub-nav.js`.
 5. Log at least `tool_open` (automatic on load) and one domain event via `WorkspaceApi.logEvent()`.
@@ -75,6 +82,9 @@ Telemetry, feedback, and optional Drive report archive are configured in `assets
 | `hub_open` | Hub home loaded |
 | `category_open` | Hub category opened |
 | `tool_open` | Tool page loaded (`ctl-calculator`, `pd25-calculator`, etc.) |
+| `access_requested` | User requested app access (non-Trimble email) |
+| `access_granted` | Access approved (auto or manual) |
+| `access_denied` | Access request denied |
 | `calc_run` | User clicked Calculate / Run calculations (check `tool` column) |
 | `csv_uploaded` | Survey CSV file selected |
 | `csv_analyzed:ok` | Calculator processed CSV successfully |
@@ -88,7 +98,6 @@ Telemetry, feedback, and optional Drive report archive are configured in `assets
 | `guide_section_view` / `guide_section_complete` | Bench crane segment |
 | `prestart_complete` | Excavator checklist unlocked |
 | `symptom_analyzed` | Excavator symptom search |
-| `manual_open` | Commissioning PDF opened |
 | `wiring_pdf_open` | Groundworks wiring PDF opened |
 
 Full backend notes: `google-workspace/DEPLOY.md`.

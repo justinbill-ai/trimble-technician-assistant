@@ -1,0 +1,171 @@
+/* App-wide access gate — hub and tool entry points */
+
+body.app-access-locked .tc-main,
+body.app-access-locked .tc-footer,
+body.app-access-locked .hub-view {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.app-access-modal-open {
+  overflow: hidden;
+}
+
+.app-access-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: linear-gradient(160deg, var(--tc-blue-dark) 0%, var(--tc-blue-darker) 55%, #002a45 100%);
+}
+
+.app-access-gate[hidden] {
+  display: none;
+}
+
+.app-access-gate__panel {
+  width: min(100%, 460px);
+  padding: 28px 24px 22px;
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius-lg);
+  background: var(--tc-surface);
+  box-shadow: var(--tc-shadow-md);
+}
+
+.app-access-gate__logo {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.app-access-gate__title {
+  margin: 0 0 8px;
+  font-size: 1.28rem;
+  line-height: 1.3;
+  color: var(--tc-text);
+}
+
+.app-access-gate__lead {
+  margin: 0 0 18px;
+  color: var(--tc-grey-600);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.app-access-gate__form {
+  display: grid;
+  gap: 10px;
+}
+
+.app-access-gate__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tc-text);
+}
+
+.app-access-gate__input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--tc-grey-400);
+  border-radius: var(--tc-radius);
+  font: inherit;
+}
+
+.app-access-gate__input:focus {
+  outline: 2px solid var(--tc-blue);
+  outline-offset: 1px;
+  border-color: var(--tc-blue);
+}
+
+.app-access-gate__remember {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--tc-grey-600);
+}
+
+.app-access-gate__remember input {
+  margin-top: 2px;
+}
+
+.app-access-gate__error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--tc-radius);
+  background: var(--tc-error-bg);
+  color: var(--tc-error);
+  font-size: 0.85rem;
+}
+
+.app-access-gate__status {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--tc-radius);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.app-access-gate__status--pending {
+  color: var(--tc-blue-dark);
+  background: var(--tc-blue-tint);
+  border: 1px solid #9ec5e8;
+}
+
+.app-access-gate__status--denied,
+.app-access-gate__status--expired {
+  color: var(--tc-error);
+  background: var(--tc-error-bg);
+  border: 1px solid #f2b8b5;
+}
+
+.app-access-gate__status--approved {
+  color: var(--tc-success);
+  background: var(--tc-success-bg);
+  border: 1px solid #9fd4bc;
+}
+
+.app-access-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.app-access-gate__submit,
+.app-access-gate__secondary {
+  flex: 1 1 160px;
+}
+
+.app-access-gate__note {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  color: var(--tc-grey-600);
+  line-height: 1.4;
+}
+
+.app-access-gate__email {
+  font-weight: 700;
+  color: var(--tc-text);
+}
+
+.app-access-user-badge {
+  font-size: 0.7rem;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.app-access-signout {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tc-blue);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+}

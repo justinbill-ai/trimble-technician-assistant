@@ -13,6 +13,12 @@ var CONFIG = {
   /** Technician Assistant — Report Archive */
   DRIVE_FOLDER_ID: '1oZK53RQj23uuQ9naORlZiCiwTBiL63Fw',
   RECIPIENT_EMAIL: 'justin_bill@trimble.com',
+  /** Public app URL — used in approval emails */
+  APP_URL: 'https://justinbill-ai.github.io/trimble-technician-assistant/',
+  /** Days before approved users must request access again */
+  ACCESS_GRANT_DAYS: 28,
+  /** Comma-separated domains that auto-approve (no manual review) */
+  AUTO_APPROVE_DOMAINS: 'trimble.com',
 };
 
 function parsePayload(e) {
@@ -78,6 +84,26 @@ var SHEET_HEADERS = {
     'appVersion',
     'driveFileId',
     'driveFileUrl',
+  ],
+  AccessRequests: [
+    'timestamp',
+    'email',
+    'status',
+    'token',
+    'requestedAt',
+    'resolvedAt',
+    'resolvedBy',
+    'userAgent',
+    'deviceType',
+    'page',
+  ],
+  ApprovedUsers: [
+    'email',
+    'grantedAt',
+    'expiresAt',
+    'grantType',
+    'approvedBy',
+    'lastCheckAt',
   ],
 };
 
@@ -146,17 +172,22 @@ function setupReadmeSheet(ss) {
   sheet.getRange('A5:D5').setValues([
     ['Tab', 'Purpose', 'Key columns', 'Looker Studio tip'],
   ]);
-  sheet.getRange('A6:D8').setValues([
+  sheet.getRange('A6:D10').setValues([
     ['Events', 'Adoption & funnel', 'event, tool, deviceType', 'Chart event counts by week'],
     ['Feedback', 'Friction & bugs', 'type, topic, page, message', 'Filter by tool and type'],
     ['Uploads', 'Opt-in reports', 'reportType, dealer, driveFileUrl', 'Count exports by dealer'],
+    ['AccessRequests', 'App access queue', 'email, status, token', 'Filter status = pending'],
+    ['ApprovedUsers', 'Active access grants', 'email, expiresAt, grantType', 'Filter expiresAt > today'],
   ]);
 
   sheet.getRange('A10').setValue('Common events').setFontWeight('bold').setFontColor('#005f9e');
-  sheet.getRange('A11:B29').setValues([
+  sheet.getRange('A11:B31').setValues([
     ['hub_open', 'User opened the hub'],
     ['category_open', 'User opened a hub category'],
     ['tool_open', 'User opened a tool page'],
+    ['access_requested', 'User requested app access (non-Trimble email)'],
+    ['access_granted', 'Access approved (auto @trimble.com or manual grant)'],
+    ['access_denied', 'Access request denied'],
     ['calc_run', 'User ran CTL or PD25 measure-up calculator'],
     ['csv_uploaded', 'Survey CSV uploaded'],
     ['csv_analyzed:ok', 'Calculator succeeded'],
@@ -171,11 +202,10 @@ function setupReadmeSheet(ss) {
     ['guide_section_complete', 'Bench crane segment marked complete'],
     ['prestart_complete', 'Excavator prestart checklist finished'],
     ['symptom_analyzed', 'Excavator symptom search run'],
-    ['manual_open', 'Commissioning PDF opened'],
     ['wiring_pdf_open', 'Groundworks wiring reference PDF opened'],
   ]);
 
-  sheet.getRange('A1:D29').setWrap(true).setVerticalAlignment('top');
+  sheet.getRange('A1:D31').setWrap(true).setVerticalAlignment('top');
   sheet.setColumnWidth(1, 160);
   sheet.setColumnWidth(2, 200);
   sheet.setColumnWidth(3, 220);
@@ -184,7 +214,7 @@ function setupReadmeSheet(ss) {
     .setBackground('#005f9e')
     .setFontColor('#ffffff')
     .setFontWeight('bold');
-  sheet.getRange('A6:D8').applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+  sheet.getRange('A6:D10').applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   sheet.setFrozenRows(5);
 }
 
@@ -311,6 +341,422 @@ function saveReportToDrive(data) {
   return { id: file.getId(), url: file.getUrl() };
 }
 
+function normalizeAccessEmail(raw) {
+  return String(raw || '').trim().toLowerCase();
+}
+
+function isValidAccessEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function getAccessEmailDomain(email) {
+  var parts = normalizeAccessEmail(email).split('@');
+  return parts.length === 2 ? parts[1] : '';
+}
+
+function getAutoApproveDomains() {
+  return String(CONFIG.AUTO_APPROVE_DOMAINS || 'trimble.com')
+    .split(',')
+    .map(function (part) {
+      return part.trim().toLowerCase();
+    })
+    .filter(Boolean);
+}
+
+function isAutoApproveEmail(email) {
+  var domain = getAccessEmailDomain(email);
+  return getAutoApproveDomains().indexOf(domain) !== -1;
+}
+
+function getAccessGrantDays() {
+  var days = Number(CONFIG.ACCESS_GRANT_DAYS);
+  return days > 0 ? days : 28;
+}
+
+function getAccessGrantMs() {
+  return getAccessGrantDays() * 24 * 60 * 60 * 1000;
+}
+
+function getWebAppUrl() {
+  try {
+    return ScriptApp.getService().getUrl();
+  } catch (err) {
+    return '';
+  }
+}
+
+function getAppUrl() {
+  var url = String(CONFIG.APP_URL || '').trim();
+  if (!url) return getWebAppUrl();
+  return url.charAt(url.length - 1) === '/' ? url : url + '/';
+}
+
+function accessIsoDate(ms) {
+  return new Date(ms).toISOString();
+}
+
+function findApprovedUserRow(sheet, email) {
+  var normalized = normalizeAccessEmail(email);
+  var values = sheet.getDataRange().getValues();
+  var i;
+  for (i = 1; i < values.length; i++) {
+    if (normalizeAccessEmail(values[i][0]) === normalized) {
+      return { row: i + 1, values: values[i] };
+    }
+  }
+  return null;
+}
+
+function findLatestAccessRequestRow(sheet, email) {
+  var normalized = normalizeAccessEmail(email);
+  var values = sheet.getDataRange().getValues();
+  var i;
+  var latest = null;
+  for (i = 1; i < values.length; i++) {
+    if (normalizeAccessEmail(values[i][1]) === normalized) {
+      latest = { row: i + 1, values: values[i] };
+    }
+  }
+  return latest;
+}
+
+function upsertApprovedUser(email, grantType, approvedBy) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'ApprovedUsers', SHEET_HEADERS.ApprovedUsers);
+  var now = Date.now();
+  var expiresAt = now + getAccessGrantMs();
+  var existing = findApprovedUserRow(sheet, email);
+  var rowValues = [
+    normalizeAccessEmail(email),
+    accessIsoDate(now),
+    accessIsoDate(expiresAt),
+    grantType || 'manual',
+    approvedBy || '',
+    accessIsoDate(now),
+  ];
+  if (existing) {
+    sheet.getRange(existing.row, 1, 1, rowValues.length).setValues([rowValues]);
+  } else {
+    sheet.appendRow(rowValues);
+  }
+  return {
+    email: normalizeAccessEmail(email),
+    status: 'approved',
+    grantType: grantType || 'manual',
+    grantedAt: accessIsoDate(now),
+    expiresAt: accessIsoDate(expiresAt),
+  };
+}
+
+function readApprovedAccess(email) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'ApprovedUsers', SHEET_HEADERS.ApprovedUsers);
+  var existing = findApprovedUserRow(sheet, email);
+  if (!existing) return null;
+  var expiresAt = new Date(existing.values[2]).getTime();
+  if (!expiresAt || isNaN(expiresAt)) return null;
+  if (Date.now() > expiresAt) {
+    return {
+      email: normalizeAccessEmail(email),
+      status: 'expired',
+      expiresAt: accessIsoDate(expiresAt),
+      grantType: existing.values[3] || '',
+    };
+  }
+  sheet.getRange(existing.row, 6).setValue(accessIsoDate(Date.now()));
+  return {
+    email: normalizeAccessEmail(email),
+    status: 'approved',
+    expiresAt: accessIsoDate(expiresAt),
+    grantedAt: existing.values[1] || '',
+    grantType: existing.values[3] || '',
+  };
+}
+
+function createPendingAccessRequest(data) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessRequests', SHEET_HEADERS.AccessRequests);
+  var email = normalizeAccessEmail(data.email);
+  var latest = findLatestAccessRequestRow(sheet, email);
+  if (latest && String(latest.values[2] || '').toLowerCase() === 'pending') {
+    return {
+      email: email,
+      status: 'pending',
+      token: latest.values[3] || '',
+      duplicate: true,
+    };
+  }
+  var token = Utilities.getUuid();
+  var nowIso = accessIsoDate(Date.now());
+  sheet.appendRow([
+    nowIso,
+    email,
+    'pending',
+    token,
+    nowIso,
+    '',
+    '',
+    data.userAgent || '',
+    data.deviceType || '',
+    data.page || '',
+  ]);
+  return {
+    email: email,
+    status: 'pending',
+    token: token,
+    duplicate: false,
+  };
+}
+
+function resolveAccessRequest(email, status, resolvedBy, token) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessRequests', SHEET_HEADERS.AccessRequests);
+  var latest = findLatestAccessRequestRow(sheet, email);
+  if (!latest) return false;
+  if (token && String(latest.values[3]) !== String(token)) return false;
+  if (String(latest.values[2] || '').toLowerCase() !== 'pending') return false;
+  sheet.getRange(latest.row, 3).setValue(status);
+  sheet.getRange(latest.row, 6).setValue(accessIsoDate(Date.now()));
+  sheet.getRange(latest.row, 7).setValue(resolvedBy || '');
+  return true;
+}
+
+function sendAccessAdminEmail(email, token) {
+  var recipient = CONFIG.RECIPIENT_EMAIL;
+  var webAppUrl = getWebAppUrl();
+  var approveUrl =
+    webAppUrl +
+    '?action=access_approve&email=' +
+    encodeURIComponent(email) +
+    '&token=' +
+    encodeURIComponent(token);
+  var denyUrl =
+    webAppUrl +
+    '?action=access_deny&email=' +
+    encodeURIComponent(email) +
+    '&token=' +
+    encodeURIComponent(token);
+  var subject = '[Tech Assistant] Access request — ' + email;
+  var plain =
+    email +
+    ' is requesting access to the Technician Assistant.\n\n' +
+    'Grant: ' +
+    approveUrl +
+    '\nDeny: ' +
+    denyUrl;
+  var html =
+    '<p><strong>' +
+    email +
+    '</strong> is requesting access to the Technician Assistant.</p>' +
+    '<p style="margin:24px 0;">' +
+    '<a href="' +
+    approveUrl +
+    '" style="display:inline-block;padding:12px 20px;margin-right:12px;background:#005f9e;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">Grant permission</a>' +
+    '<a href="' +
+    denyUrl +
+    '" style="display:inline-block;padding:12px 20px;background:#fff;color:#b42318;text-decoration:none;border-radius:6px;border:1px solid #d0d5dd;font-weight:700;">Deny</a>' +
+    '</p>' +
+    '<p style="color:#666;font-size:13px;">Approved users receive app access for ' +
+    getAccessGrantDays() +
+    ' days.</p>';
+  MailApp.sendEmail({
+    to: recipient,
+    subject: subject,
+    body: plain,
+    htmlBody: html,
+    replyTo: email,
+  });
+}
+
+function sendAccessApprovedUserEmail(email, expiresAt) {
+  var appUrl = getAppUrl();
+  var subject = 'Technician Assistant — access approved';
+  var plain =
+    'Your access to the Trimble Technician Assistant has been approved for ' +
+    getAccessGrantDays() +
+    ' days.\n\n' +
+    'Open the app: ' +
+    appUrl +
+    '\n\n' +
+    'Use the same email address (' +
+    email +
+    ') on this device. If you already have the app open, tap "Check status" or refresh the page.\n\n' +
+    'Access expires: ' +
+    expiresAt;
+  var html =
+    '<p>Your access to the <strong>Trimble Technician Assistant</strong> has been approved for <strong>' +
+    getAccessGrantDays() +
+    ' days</strong>.</p>' +
+    '<p style="margin:24px 0;"><a href="' +
+    appUrl +
+    '" style="display:inline-block;padding:12px 20px;background:#005f9e;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">Open Technician Assistant</a></p>' +
+    '<p>Use the same email address (<strong>' +
+    email +
+    '</strong>) on this device. If the app is already open, tap <strong>Check status</strong> or refresh the page.</p>' +
+    '<p style="color:#666;font-size:13px;">Access expires: ' +
+    expiresAt +
+    '</p>';
+  MailApp.sendEmail({
+    to: email,
+    subject: subject,
+    body: plain,
+    htmlBody: html,
+  });
+}
+
+function sendAccessDeniedUserEmail(email) {
+  var subject = 'Technician Assistant — access request update';
+  var body =
+    'Your request to use the Trimble Technician Assistant was not approved at this time.\n\n' +
+    'If you believe this is an error, contact your Trimble representative.';
+  MailApp.sendEmail(email, subject, body);
+}
+
+function logAccessEvent(event, email, detail, data) {
+  appendEvent({
+    timestamp: new Date().toISOString(),
+    event: event,
+    tool: (data && data.tool) || 'hub',
+    page: (data && data.page) || '',
+    appVersion: (data && data.appVersion) || '',
+    dealer: (data && data.dealer) || '',
+    email: email || '',
+    detail: detail || '',
+    userAgent: (data && data.userAgent) || '',
+    deviceType: (data && data.deviceType) || '',
+  });
+}
+
+function buildAccessCheckResult(email) {
+  var normalized = normalizeAccessEmail(email);
+  if (!isValidAccessEmail(normalized)) {
+    return { ok: false, status: 'invalid', email: normalized };
+  }
+  var approved = readApprovedAccess(normalized);
+  if (approved && approved.status === 'approved') {
+    return { ok: true, status: 'approved', email: normalized, expiresAt: approved.expiresAt, grantType: approved.grantType };
+  }
+  if (approved && approved.status === 'expired') {
+    return { ok: true, status: 'expired', email: normalized, expiresAt: approved.expiresAt };
+  }
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'AccessRequests', SHEET_HEADERS.AccessRequests);
+  var latest = findLatestAccessRequestRow(sheet, normalized);
+  if (latest) {
+    var requestStatus = String(latest.values[2] || '').toLowerCase();
+    if (requestStatus === 'pending') {
+      return { ok: true, status: 'pending', email: normalized };
+    }
+    if (requestStatus === 'denied') {
+      return { ok: true, status: 'denied', email: normalized };
+    }
+  }
+  return { ok: true, status: 'none', email: normalized };
+}
+
+function handleAccessRequest(data) {
+  var email = normalizeAccessEmail(data.email);
+  if (!isValidAccessEmail(email)) {
+    return { ok: false, error: 'Invalid email address.' };
+  }
+  var existing = readApprovedAccess(email);
+  if (existing && existing.status === 'approved') {
+    return {
+      ok: true,
+      status: 'approved',
+      email: email,
+      expiresAt: existing.expiresAt,
+      grantType: existing.grantType,
+    };
+  }
+  if (isAutoApproveEmail(email)) {
+    var granted = upsertApprovedUser(email, 'trimble_auto', 'auto');
+    logAccessEvent('access_granted', email, 'trimble_auto', data);
+    return {
+      ok: true,
+      status: 'approved',
+      email: email,
+      expiresAt: granted.expiresAt,
+      grantType: granted.grantType,
+    };
+  }
+  var pending = createPendingAccessRequest(data);
+  if (!pending.duplicate) {
+    sendAccessAdminEmail(email, pending.token);
+    logAccessEvent('access_requested', email, 'pending', data);
+  } else {
+    logAccessEvent('access_requested', email, 'pending_duplicate', data);
+  }
+  return { ok: true, status: 'pending', email: email };
+}
+
+function handleAccessApprove(params) {
+  var email = normalizeAccessEmail(params.email);
+  var token = String(params.token || '');
+  if (!isValidAccessEmail(email) || !token) {
+    return htmlAccessPage('Access approval failed', 'Missing email or token.', false);
+  }
+  if (!resolveAccessRequest(email, 'approved', CONFIG.RECIPIENT_EMAIL, token)) {
+    return htmlAccessPage('Access approval failed', 'This request is invalid or already resolved.', false);
+  }
+  var granted = upsertApprovedUser(email, 'manual', CONFIG.RECIPIENT_EMAIL);
+  logAccessEvent('access_granted', email, 'manual', { tool: 'hub', page: getAppUrl() });
+  try {
+    sendAccessApprovedUserEmail(email, granted.expiresAt);
+  } catch (err) {}
+  return htmlAccessPage(
+    'Access granted',
+    'Approved <strong>' +
+      email +
+      '</strong> for <strong>' +
+      getAccessGrantDays() +
+      ' days</strong>. The user has been emailed a link to open the app.',
+    true
+  );
+}
+
+function handleAccessDeny(params) {
+  var email = normalizeAccessEmail(params.email);
+  var token = String(params.token || '');
+  if (!isValidAccessEmail(email) || !token) {
+    return htmlAccessPage('Access denial failed', 'Missing email or token.', false);
+  }
+  if (!resolveAccessRequest(email, 'denied', CONFIG.RECIPIENT_EMAIL, token)) {
+    return htmlAccessPage('Access denial failed', 'This request is invalid or already resolved.', false);
+  }
+  logAccessEvent('access_denied', email, 'manual', { tool: 'hub', page: getAppUrl() });
+  try {
+    sendAccessDeniedUserEmail(email);
+  } catch (err) {}
+  return htmlAccessPage('Access denied', 'Denied access for <strong>' + email + '</strong>.', true);
+}
+
+function htmlAccessPage(title, message, success) {
+  var color = success ? '#005f9e' : '#b42318';
+  var html =
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' +
+    title +
+    '</title></head><body style="font-family:Segoe UI,Arial,sans-serif;padding:32px;color:#252a2e;">' +
+    '<h1 style="color:' +
+    color +
+    ';">' +
+    title +
+    '</h1><p style="font-size:16px;line-height:1.5;">' +
+    message +
+    '</p></body></html>';
+  return HtmlService.createHtmlOutput(html).setTitle(title);
+}
+
+function respondJson(obj, callback) {
+  var text = JSON.stringify(obj || {});
+  if (callback) {
+    return ContentService.createTextOutput(callback + '(' + text + ')').setMimeType(
+      ContentService.MimeType.JAVASCRIPT
+    );
+  }
+  return jsonResponse(obj);
+}
+
 function doPost(e) {
   try {
     var data = parsePayload(e);
@@ -333,15 +779,39 @@ function doPost(e) {
       return jsonResponse({ ok: true, fileId: saved.id, fileUrl: saved.url });
     }
 
+    if (action === 'access_request') {
+      return jsonResponse(handleAccessRequest(data));
+    }
+
     return jsonResponse({ ok: false, error: 'Unknown action: ' + action });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err) });
   }
 }
 
-function doGet() {
+function doGet(e) {
+  var params = e && e.parameter ? e.parameter : {};
+  var action = String(params.action || '').toLowerCase();
+  var callback = params.callback || '';
+
+  if (action === 'access_check') {
+    return respondJson(buildAccessCheckResult(params.email), callback);
+  }
+
+  if (action === 'access_approve') {
+    return handleAccessApprove(params);
+  }
+
+  if (action === 'access_deny') {
+    return handleAccessDeny(params);
+  }
+
+  if (callback) {
+    return respondJson({ ok: false, error: 'Unknown action' }, callback);
+  }
+
   return ContentService.createTextOutput(
-    'Trimble Technician Assistant workspace API — POST only.'
+    'Trimble Technician Assistant workspace API — POST for writes, GET ?action=access_check for access status.'
   ).setMimeType(ContentService.MimeType.TEXT);
 }
 
@@ -360,6 +830,6 @@ function setupSheets() {
 
   setupReadmeSheet(ss);
   removeDefaultSheet(ss);
-  reorderSheets(ss, ['README', 'Events', 'Feedback', 'Uploads']);
-  Logger.log('Sheets ready: README, Events, Feedback, Uploads');
+  reorderSheets(ss, ['README', 'Events', 'Feedback', 'Uploads', 'AccessRequests', 'ApprovedUsers']);
+  Logger.log('Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers');
 }

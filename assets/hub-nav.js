@@ -4,6 +4,8 @@
 (function () {
   'use strict';
 
+  var HUB_HIDDEN_CATEGORY_IDS = { tmc: true };
+
   var CATEGORIES = [
     {
       id: 'earthworks',
@@ -32,22 +34,9 @@
       ],
     },
     {
-      id: 'commissioning',
-      title: 'Commissioning and Installation Manuals',
-      desc: 'Trimble Earthworks v2.24 commissioning and installation PDFs — stored in the app for field access.',
-      tools: [
-        {
-          href: './commissioning-manuals/index.html',
-          icon: 'CM',
-          name: 'Earthworks v2.24 Manuals',
-          summary: 'Excavator, grader, dozer, loader, compactor, and scraper — commissioning & installation PDFs',
-        },
-      ],
-    },
-    {
       id: 'installation',
       title: 'Machine wear / Installation deliverables',
-      desc: 'Pre-install machine wear reports and post-install photo deliverables — not commissioning PDFs.',
+      desc: 'Pre-install machine wear reports and post-install photo deliverables.',
       howto:
         'Start with <strong>Pre-Inspection</strong> before the install. After install, open <strong>Install Deliverable</strong> for photos, voice notes, and PDF export.',
       tools: [
@@ -69,6 +58,7 @@
       id: 'tmc',
       title: 'TMC',
       desc: 'In-house TMC tools — assembly guides, manufacturing workflows, and build documentation.',
+      hubHidden: true,
       tmc: true,
       tools: [
         {
@@ -110,6 +100,10 @@
   var toolListEl = document.getElementById('hubToolList');
   var backBtn = document.getElementById('hubBack');
 
+  function isHubHiddenCategory(cat) {
+    return !!(cat && (cat.hubHidden || HUB_HIDDEN_CATEGORY_IDS[cat.id]));
+  }
+
   function findCategory(id) {
     for (var i = 0; i < CATEGORIES.length; i++) {
       if (CATEGORIES[i].id === id) return CATEGORIES[i];
@@ -121,6 +115,7 @@
     if (!pickerEl) return;
     pickerEl.innerHTML = '';
     CATEGORIES.forEach(function (cat) {
+      if (isHubHiddenCategory(cat)) return;
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'category-pick category-pick--' + cat.id;
@@ -167,8 +162,14 @@
   }
 
   function openCategory(id, pushHash) {
+    if (window.AppAccess && !window.AppAccess.isAuthorized()) {
+      return;
+    }
     var cat = findCategory(id);
-    if (!cat || !homeView || !categoryView) return;
+    if (!cat || isHubHiddenCategory(cat) || !homeView || !categoryView) {
+      if (isHubHiddenCategory(cat)) openHome(pushHash);
+      return;
+    }
 
     if (cat.tmc && window.TmcAccess && !window.TmcAccess.isAuthorized()) {
       window.TmcAccess.promptForAccess({
@@ -237,8 +238,16 @@
   window.addEventListener('hashchange', parseHash);
   window.addEventListener('popstate', parseHash);
 
-  renderPicker();
-  parseHash();
+  function bootHub() {
+    renderPicker();
+    parseHash();
+  }
+
+  if (window.AppAccess && typeof window.AppAccess.whenReady === 'function') {
+    window.AppAccess.whenReady().then(bootHub);
+  } else {
+    bootHub();
+  }
 
   window.HubNav = {
     categories: CATEGORIES,

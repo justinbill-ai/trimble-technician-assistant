@@ -28,7 +28,6 @@
       path.indexOf('/install-deliverable/') !== -1 ||
       path.indexOf('/excavator/') !== -1 ||
       path.indexOf('/bench-crane/') !== -1 ||
-      path.indexOf('/commissioning-manuals/') !== -1 ||
       path.indexOf('/groundworks/wiring/') !== -1
     );
   }
@@ -45,7 +44,6 @@
     if (path.indexOf('/install-deliverable/') !== -1) return 'install-deliverable';
     if (path.indexOf('/excavator/') !== -1) return 'excavator';
     if (path.indexOf('/bench-crane/') !== -1) return 'bench-crane';
-    if (path.indexOf('/commissioning-manuals/') !== -1) return 'commissioning-manuals';
 
     if (!isSubAppPath(path)) {
       if (/\/index\.html$/i.test(path)) return 'hub';
@@ -83,6 +81,10 @@
   }
 
   function getOptionalEmail() {
+    if (window.AppAccess && typeof window.AppAccess.getEmail === 'function') {
+      var appEmail = window.AppAccess.getEmail();
+      if (appEmail) return appEmail;
+    }
     if (window.TmcAccess && typeof window.TmcAccess.getStoredEmail === 'function') {
       return window.TmcAccess.getStoredEmail() || '';
     }
@@ -140,6 +142,61 @@
     });
   }
 
+  function jsonpGet(params) {
+    if (!isEnabled()) return Promise.resolve({ ok: false, skipped: true });
+    return new Promise(function (resolve, reject) {
+      var callbackName =
+        'ttaJsonp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+      var query = Object.keys(params || {}).map(function (key) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+      });
+      query.push('callback=' + encodeURIComponent(callbackName));
+      var script = document.createElement('script');
+      var timeout = setTimeout(function () {
+        cleanup();
+        reject(new Error('Access check timed out'));
+      }, 15000);
+
+      function cleanup() {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[callbackName] = function (data) {
+        cleanup();
+        resolve(data || { ok: false });
+      };
+      script.onerror = function () {
+        cleanup();
+        reject(new Error('Access check failed'));
+      };
+      script.src = cfg('endpoint', '') + '?' + query.join('&');
+      document.head.appendChild(script);
+    });
+  }
+
+  function requestAccess(email) {
+    var payload = Object.assign({ action: 'access_request', email: email }, baseContext());
+    return postPayload(payload).then(function () {
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          jsonpGet({ action: 'access_check', email: email })
+            .then(resolve)
+            .catch(function () {
+              resolve({ ok: false, error: 'Could not verify access status.' });
+            });
+        }, 900);
+      });
+    });
+  }
+
+  function checkAccess(email) {
+    return jsonpGet({ action: 'access_check', email: email }).catch(function () {
+      return { ok: false, error: 'Could not verify access status.' };
+    });
+  }
+
   function logEvent(event, props) {
     props = props || {};
     var payload = Object.assign({ action: 'event', event: event }, baseContext(), props);
@@ -191,6 +248,9 @@
   }
 
   function initPageTelemetry() {
+    if (window.AppAccess && typeof window.AppAccess.isAuthorized === 'function' && !window.AppAccess.isAuthorized()) {
+      return;
+    }
     var tool = detectTool();
     if (tool === 'hub') {
       logEvent('hub_open');
@@ -209,11 +269,15 @@
     baseContext: baseContext,
     isEnabled: isEnabled,
     initPageTelemetry: initPageTelemetry,
+    requestAccess: requestAccess,
+    checkAccess: checkAccess,
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPageTelemetry);
-  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.AppAccess) initPageTelemetry();
+    });
+  } else if (!window.AppAccess) {
     initPageTelemetry();
   }
 })();
