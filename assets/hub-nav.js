@@ -156,9 +156,6 @@
   }
 
   function openCategory(id, pushHash) {
-    if (window.AppAccess && !window.AppAccess.isAuthorized()) {
-      return;
-    }
     var cat = findCategory(id);
     if (!cat || isHubHiddenCategory(cat) || !homeView || !categoryView) {
       if (isHubHiddenCategory(cat)) openHome(pushHash);

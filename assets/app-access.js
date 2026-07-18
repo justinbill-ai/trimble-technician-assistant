@@ -1,11 +1,13 @@
 /**
  * Technician Assistant — app-wide access gate.
- * @trimble.com auto-grants for 28 days; other emails require admin approval.
+ * Full gate UI only on the hub entry page (data-app-access-entry).
+ * Tool pages trust stored/session access and redirect to the hub if missing.
  */
 (function (global) {
   'use strict';
 
   var STORAGE_KEY = 'tta-app-access-v1';
+  var SESSION_KEY = 'tta-app-access-session-v1';
   var PENDING_EMAIL_KEY = 'tta-app-access-pending-email-v1';
   var readyPromise;
   var readyResolve;
@@ -14,6 +16,10 @@
   function cfg(key, fallback) {
     var c = global.WORKSPACE_CONFIG || {};
     return c[key] != null && c[key] !== '' ? c[key] : fallback;
+  }
+
+  function isEntryPage() {
+    return !!(document.body && document.body.hasAttribute('data-app-access-entry'));
   }
 
   function normalizeEmail(raw) {
@@ -28,45 +34,76 @@
     return normalizeEmail(email).split('@')[1] === 'trimble.com';
   }
 
-  function readJson(key) {
+  function readJson(storage, key) {
     try {
-      return JSON.parse(localStorage.getItem(key) || 'null');
+      return JSON.parse(storage.getItem(key) || 'null');
     } catch (err) {
       return null;
     }
   }
 
-  function writeJson(key, value) {
+  function writeJson(storage, key, value) {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      storage.setItem(key, JSON.stringify(value));
     } catch (err) {}
   }
 
+  function isAccessDataValid(data) {
+    if (!data || !data.email || !data.expiresAt) return false;
+    if (Date.now() > new Date(data.expiresAt).getTime()) return false;
+    return true;
+  }
+
   function loadStoredAccess() {
-    var data = readJson(STORAGE_KEY);
-    if (!data || !data.email || !data.expiresAt) return null;
-    if (Date.now() > new Date(data.expiresAt).getTime()) {
-      clearStoredAccess();
+    var data = readJson(localStorage, STORAGE_KEY);
+    if (!data) return null;
+    if (!isAccessDataValid(data)) {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (err) {}
       return null;
     }
     return data;
   }
 
-  function saveStoredAccess(email, expiresAt, grantType) {
-    writeJson(STORAGE_KEY, {
+  function loadSessionAccess() {
+    var data = readJson(sessionStorage, SESSION_KEY);
+    if (!data) return null;
+    if (!isAccessDataValid(data)) {
+      try {
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch (err) {}
+      return null;
+    }
+    return data;
+  }
+
+  function loadAnyAccess() {
+    return loadStoredAccess() || loadSessionAccess();
+  }
+
+  function persistAccess(email, expiresAt, grantType) {
+    var record = {
       email: normalizeEmail(email),
       expiresAt: expiresAt,
       grantType: grantType || '',
       savedAt: new Date().toISOString(),
-    });
+    };
+    writeJson(localStorage, STORAGE_KEY, record);
+    writeJson(sessionStorage, SESSION_KEY, record);
     try {
       localStorage.removeItem(PENDING_EMAIL_KEY);
     } catch (err) {}
   }
 
+  function saveStoredAccess(email, expiresAt, grantType) {
+    persistAccess(email, expiresAt, grantType);
+  }
+
   function clearStoredAccess() {
     try {
       localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
     } catch (err) {}
   }
 
@@ -87,6 +124,49 @@
   function grantDaysLabel() {
     var days = Number(cfg('accessGrantDays', 28));
     return days > 0 ? days : 28;
+  }
+
+  function hubEntryUrl() {
+    var configured = cfg('appUrl', '');
+    if (configured) {
+      return configured.replace(/\/?$/, '/') + 'index.html';
+    }
+    var script = document.querySelector('script[src*="app-access"]');
+    if (script) {
+      var src = script.getAttribute('src') || '';
+      var depth = (src.match(/\.\.\//g) || []).length;
+      var parts = location.pathname.split('/').filter(Boolean);
+      var rootParts = parts.slice(0, Math.max(0, parts.length - depth));
+      return location.origin + '/' + rootParts.join('/') + '/index.html';
+    }
+    return './index.html';
+  }
+
+  function redirectToHub() {
+    var returnPath = location.pathname + location.search + location.hash;
+    var hub = hubEntryUrl();
+    if (returnPath && !/\/index\.html$/i.test(returnPath) && returnPath !== '/') {
+      var join = hub.indexOf('?') === -1 ? '?' : '&';
+      hub += join + 'return=' + encodeURIComponent(returnPath);
+    }
+    location.replace(hub);
+  }
+
+  function maybeFollowReturnUrl() {
+    if (!isEntryPage()) return;
+    try {
+      var params = new URLSearchParams(location.search);
+      var target = params.get('return');
+      if (!target || target.indexOf('//') !== -1) return;
+      if (!target.startsWith('/')) return;
+      params.delete('return');
+      var clean =
+        location.pathname +
+        (params.toString() ? '?' + params.toString() : '') +
+        location.hash;
+      history.replaceState({}, '', clean);
+      location.assign(target);
+    } catch (err) {}
   }
 
   function ensureGate() {
@@ -209,7 +289,7 @@
   }
 
   function hasValidStoredAccess() {
-    return Boolean(loadStoredAccess());
+    return Boolean(loadAnyAccess());
   }
 
   function dispatchAccessReady(detail) {
@@ -227,18 +307,31 @@
     options = options || {};
     authorized = true;
     if (options.persist !== false) {
-      saveStoredAccess(email, expiresAt, grantType);
+      persistAccess(email, expiresAt, grantType);
+    } else {
+      writeJson(sessionStorage, SESSION_KEY, {
+        email: normalizeEmail(email),
+        expiresAt: expiresAt,
+        grantType: grantType || '',
+        savedAt: new Date().toISOString(),
+      });
     }
-    setGateVisible(false);
+    if (isEntryPage()) {
+      setGateVisible(false);
+    }
     document.body.classList.remove('app-access-locked');
     dispatchAccessReady({
       email: normalizeEmail(email),
       expiresAt: expiresAt,
       grantType: grantType || '',
     });
+    if (isEntryPage()) {
+      maybeFollowReturnUrl();
+    }
   }
 
   function lockAccess() {
+    if (!isEntryPage()) return;
     authorized = false;
     setGateVisible(true);
     document.body.classList.add('app-access-locked');
@@ -251,7 +344,15 @@
     }
     if (result.status === 'approved' && result.expiresAt) {
       if (remember !== false) saveStoredAccess(email, result.expiresAt, result.grantType);
-      unlockAccess(email, result.expiresAt, result.grantType);
+      else {
+        writeJson(sessionStorage, SESSION_KEY, {
+          email: normalizeEmail(email),
+          expiresAt: result.expiresAt,
+          grantType: result.grantType || '',
+          savedAt: new Date().toISOString(),
+        });
+      }
+      unlockAccess(email, result.expiresAt, result.grantType, { persist: remember !== false });
       return;
     }
     if (result.status === 'pending') {
@@ -261,6 +362,9 @@
       return;
     }
     if (result.status === 'denied') {
+      authorized = false;
+      clearStoredAccess();
+      lockAccess();
       showDeniedState(email);
       return;
     }
@@ -334,57 +438,92 @@
       });
   }
 
+  function handleRevokedAccess(email) {
+    authorized = false;
+    clearStoredAccess();
+    if (isEntryPage()) {
+      lockAccess();
+      showDeniedState(email);
+      return;
+    }
+    redirectToHub();
+  }
+
   function revalidateAccess(email, options) {
     options = options || {};
+    var allowLock = options.allowLock !== false && isEntryPage();
+
     if (!global.WorkspaceApi || typeof global.WorkspaceApi.checkAccess !== 'function') {
-      if (!hasValidStoredAccess() && !options.allowPending) lockAccess();
+      if (allowLock && !hasValidStoredAccess() && !options.allowPending) lockAccess();
       return;
     }
 
     global.WorkspaceApi.checkAccess(email).then(function (result) {
       if (result && result.status === 'approved' && result.expiresAt) {
-        unlockAccess(email, result.expiresAt, result.grantType);
+        if (allowLock) {
+          unlockAccess(email, result.expiresAt, result.grantType, { persist: false });
+        } else {
+          persistAccess(email, result.expiresAt, result.grantType);
+        }
         return;
       }
       if (result && result.status === 'expired') {
         authorized = false;
         clearStoredAccess();
-        lockAccess();
-        showExpiredState(email);
+        if (allowLock) {
+          lockAccess();
+          showExpiredState(email);
+        } else {
+          redirectToHub();
+        }
         return;
       }
       if (result && result.status === 'denied') {
-        authorized = false;
-        clearStoredAccess();
-        lockAccess();
-        showDeniedState(email);
+        handleRevokedAccess(email);
         return;
       }
       if (result && result.status === 'pending') {
-        authorized = false;
-        lockAccess();
-        showPendingState(email);
+        if (allowLock) {
+          authorized = false;
+          lockAccess();
+          showPendingState(email);
+        }
         return;
       }
-      if (!hasValidStoredAccess()) {
+      if (result && result.status === 'none') {
+        handleRevokedAccess(email);
+        return;
+      }
+      if (allowLock && !hasValidStoredAccess()) {
         lockAccess();
       }
     }).catch(function () {
-      if (!hasValidStoredAccess()) {
+      if (allowLock && !hasValidStoredAccess()) {
         lockAccess();
       }
     });
   }
 
-  function bootstrap() {
+  function authorizeFromStorage(stored) {
+    authorized = true;
+    document.body.classList.remove('app-access-locked');
+    dispatchAccessReady({
+      email: stored.email,
+      expiresAt: stored.expiresAt,
+      grantType: stored.grantType || '',
+    });
+    revalidateAccess(stored.email, { allowLock: false });
+  }
+
+  function bootstrapEntry() {
     ensureGate();
-    if (!global.WorkspaceApi || !global.WorkSPACE_CONFIG || !global.WORKSPACE_CONFIG.endpoint) {
+    if (!global.WorkspaceApi || !global.WORKSPACE_CONFIG || !global.WORKSPACE_CONFIG.endpoint) {
       lockAccess();
       showError('Access service is not configured. Contact the app developer.');
       return;
     }
 
-    var stored = loadStoredAccess();
+    var stored = loadAnyAccess();
     var pendingEmail = getPendingEmail();
     var emailInput = document.getElementById('appAccessEmail');
     if (stored && emailInput) emailInput.value = stored.email;
@@ -405,8 +544,25 @@
     lockAccess();
   }
 
+  function bootstrapVisitor() {
+    var stored = loadAnyAccess();
+    if (stored) {
+      authorizeFromStorage(stored);
+      return;
+    }
+    redirectToHub();
+  }
+
+  function bootstrap() {
+    if (isEntryPage()) {
+      bootstrapEntry();
+    } else {
+      bootstrapVisitor();
+    }
+  }
+
   function whenReady() {
-    var stored = loadStoredAccess();
+    var stored = loadAnyAccess();
     if (authorized || stored) {
       return Promise.resolve({
         email: stored ? stored.email : '',
@@ -427,7 +583,7 @@
   }
 
   function getEmail() {
-    var stored = loadStoredAccess();
+    var stored = loadAnyAccess();
     return stored ? stored.email : '';
   }
 
@@ -439,13 +595,17 @@
     } catch (err) {}
     readyPromise = null;
     readyResolve = null;
-    lockAccess();
-    var emailInput = document.getElementById('appAccessEmail');
-    if (emailInput) emailInput.value = '';
-    var status = document.getElementById('appAccessStatus');
-    if (status) status.hidden = true;
-    var title = document.getElementById('appAccessTitle');
-    if (title) title.textContent = 'Request access';
+    if (isEntryPage()) {
+      lockAccess();
+      var emailInput = document.getElementById('appAccessEmail');
+      if (emailInput) emailInput.value = '';
+      var status = document.getElementById('appAccessStatus');
+      if (status) status.hidden = true;
+      var title = document.getElementById('appAccessTitle');
+      if (title) title.textContent = 'Request access';
+      return;
+    }
+    redirectToHub();
   }
 
   global.AppAccess = {
@@ -454,6 +614,7 @@
     getEmail: getEmail,
     signOut: signOut,
     bootstrap: bootstrap,
+    isEntryPage: isEntryPage,
   };
 
   if (document.readyState === 'loading') {

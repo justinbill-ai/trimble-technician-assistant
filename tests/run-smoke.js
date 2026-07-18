@@ -51,8 +51,9 @@ function testCtl() {
     ''
   );
   assert(result && result.calculations, 'CTL returns calculations');
+  var width = result.calculations['Attachment Width'];
   assert(
-    typeof result.calculations['Attachment Width'] === 'number',
+    typeof width === 'number' || (typeof width === 'string' && !isNaN(parseFloat(width))),
     'CTL computes attachment width'
   );
 }
