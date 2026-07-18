@@ -136,7 +136,8 @@
       var src = script.getAttribute('src') || '';
       var depth = (src.match(/\.\.\//g) || []).length;
       var parts = location.pathname.split('/').filter(Boolean);
-      var rootParts = parts.slice(0, Math.max(0, parts.length - depth));
+      var drop = depth + (parts.length && /\.[a-z0-9]+$/i.test(parts[parts.length - 1]) ? 1 : 0);
+      var rootParts = parts.slice(0, Math.max(0, parts.length - drop));
       return location.origin + '/' + rootParts.join('/') + '/index.html';
     }
     return './index.html';
@@ -452,7 +453,9 @@
       return;
     }
     if (result.status === 'expired') {
+      authorized = false;
       clearStoredAccess();
+      lockAccess();
       showExpiredState(email);
       return;
     }
@@ -616,7 +619,7 @@
           return;
         }
         rememberPendingEmail(email);
-        if (global.WorkspaceApi.logEvent) {
+        if (!result.duplicate && global.WorkspaceApi.logEvent) {
           global.WorkspaceApi.logEvent('access_requested', { email: email, detail: isTrimbleEmail(email) ? 'trimble' : 'external' });
         }
         showPendingState(email);
@@ -634,7 +637,8 @@
     clearStoredAccess();
     if (isEntryPage()) {
       lockAccess();
-      showDeniedState(email);
+      resetToEmailStep();
+      showError('Access is no longer active for this email. Sign in again or contact the app administrator.');
       return;
     }
     redirectToHub();

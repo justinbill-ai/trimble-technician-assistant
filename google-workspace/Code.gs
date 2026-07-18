@@ -664,13 +664,12 @@ function generateAccessCode() {
 
 function findAccessCodeRows(sheet, email) {
   var normalized = normalizeAccessEmail(email);
-  var lastRow = sheet.getLastRow();
+  var values = sheet.getDataRange().getValues();
   var rows = [];
-  if (lastRow < 2) return rows;
-  var values = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
-  for (var i = 0; i < values.length; i++) {
+  var i;
+  for (i = 1; i < values.length; i++) {
     if (normalizeAccessEmail(values[i][0]) === normalized) {
-      rows.push({ row: i + 2, values: values[i] });
+      rows.push({ row: i + 1, values: values[i] });
     }
   }
   return rows;
@@ -849,7 +848,7 @@ function handleAccessRequest(data) {
   } else {
     logAccessEvent('access_requested', email, 'pending_duplicate', data);
   }
-  return { ok: true, status: 'pending', email: email };
+  return { ok: true, status: 'pending', email: email, duplicate: !!pending.duplicate };
 }
 
 function handleAccessApprove(params) {
