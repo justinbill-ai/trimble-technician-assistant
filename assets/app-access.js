@@ -105,11 +105,11 @@
       logoPath +
       '" alt="Trimble" width="120" height="32" />' +
       '<h2 id="appAccessTitle" class="app-access-gate__title">Request access</h2>' +
-      '<p id="appAccessLead" class="app-access-gate__lead">Enter your work email to use the Technician Assistant. <strong>@trimble.com</strong> addresses are approved immediately. All other addresses require developer approval.</p>' +
+      '<p id="appAccessLead" class="app-access-gate__lead">Enter your work email to use the Technician Assistant.</p>' +
       '<div id="appAccessStatus" class="app-access-gate__status app-access-gate__status--pending" hidden></div>' +
       '<form id="appAccessForm" class="app-access-gate__form" novalidate>' +
       '<label class="app-access-gate__label" for="appAccessEmail">Work email</label>' +
-      '<input class="app-access-gate__input" id="appAccessEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@trimble.com" required />' +
+      '<input class="app-access-gate__input" id="appAccessEmail" type="email" inputmode="email" autocomplete="email" placeholder="Work email" required />' +
       '<label class="app-access-gate__remember"><input type="checkbox" id="appAccessRemember" checked /> Remember this device until access expires (' +
       grantDaysLabel() +
       ' days)</label>' +
@@ -128,16 +128,13 @@
   }
 
   function resolveAssetPath(relativePath) {
-    var path = (global.location.pathname || '').replace(/\\/g, '/');
-    var depth = 0;
-    if (/\/index\.html$/i.test(path)) depth = path.split('/').length - 2;
-    else depth = path.split('/').filter(Boolean).length - 1;
-    var prefix = '';
-    while (depth > 0) {
-      prefix += '../';
-      depth -= 1;
+    var configScript = document.querySelector('script[src*="workspace-config"]');
+    if (configScript) {
+      var src = configScript.getAttribute('src') || '';
+      var assetsBase = src.replace(/workspace-config\.js.*$/, '');
+      return assetsBase + String(relativePath).replace(/^assets\//, '');
     }
-    return prefix + relativePath;
+    return './' + relativePath;
   }
 
   function showError(message) {
@@ -189,7 +186,7 @@
       status.hidden = false;
       status.className = 'app-access-gate__status app-access-gate__status--denied';
       status.textContent =
-        'Access was not approved for ' + email + '. Contact your Trimble representative if you need help.';
+        'Access was not approved for ' + email + '. Contact the app administrator if you need help.';
     }
   }
 
@@ -321,7 +318,7 @@
       .finally(function () {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = isTrimbleEmail(email) ? 'Continue' : 'Request access';
+          submitBtn.textContent = 'Continue';
         }
       });
   }
@@ -341,10 +338,6 @@
     else if (pendingEmail && emailInput) emailInput.value = pendingEmail;
 
     var submitBtn = document.getElementById('appAccessSubmit');
-    var emailForLabel = stored && stored.email ? stored.email : pendingEmail;
-    if (submitBtn && isTrimbleEmail(emailForLabel || (emailInput && emailInput.value))) {
-      submitBtn.textContent = 'Continue';
-    }
 
     var verifyEmail = stored ? stored.email : pendingEmail;
     if (!verifyEmail) {

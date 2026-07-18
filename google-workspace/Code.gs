@@ -127,6 +127,12 @@ function clearSheetBanding(sheet) {
 }
 
 function formatDataSheet(sheet, colCount) {
+  if (!sheet) {
+    throw new Error('formatDataSheet requires a sheet. Run setupSheets instead of formatDataSheet.');
+  }
+  if (!colCount || colCount < 1) {
+    throw new Error('formatDataSheet requires a column count.');
+  }
   var header = sheet.getRange(1, 1, 1, colCount);
   header
     .setBackground('#005f9e')
