@@ -196,7 +196,7 @@ function setupReadmeSheet(ss) {
   ]);
 
   sheet.getRange('A10').setValue('Common events').setFontWeight('bold').setFontColor('#005f9e');
-  sheet.getRange('A11:B31').setValues([
+  sheet.getRange('A11:B30').setValues([
     ['hub_open', 'User opened the hub'],
     ['category_open', 'User opened a hub category'],
     ['tool_open', 'User opened a tool page'],
@@ -217,10 +217,9 @@ function setupReadmeSheet(ss) {
     ['guide_section_complete', 'Bench crane segment marked complete'],
     ['prestart_complete', 'Excavator prestart checklist finished'],
     ['symptom_analyzed', 'Excavator symptom search run'],
-    ['wiring_pdf_open', 'Groundworks wiring reference PDF opened'],
   ]);
 
-  sheet.getRange('A1:D31').setWrap(true).setVerticalAlignment('top');
+  sheet.getRange('A1:D30').setWrap(true).setVerticalAlignment('top');
   sheet.setColumnWidth(1, 160);
   sheet.setColumnWidth(2, 200);
   sheet.setColumnWidth(3, 220);

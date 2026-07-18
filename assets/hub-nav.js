@@ -81,12 +81,6 @@
           name: 'Vermeer PD25',
           summary: 'Guided pre measure-up workflow and COGO measure-up calculator',
         },
-        {
-          href: './groundworks/wiring/index.html',
-          icon: 'WR',
-          name: 'Wiring reference',
-          summary: 'Groundworks connection diagram and wiring schematic PDFs',
-        },
       ],
     },
   ];

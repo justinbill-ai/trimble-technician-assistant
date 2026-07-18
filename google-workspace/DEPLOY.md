@@ -152,7 +152,6 @@ Before users can open hub categories or tools, the app checks access via Apps Sc
 | `guide_phase_complete` | PD25 guided workflow |
 | `guide_section_view` / `guide_section_complete` | Bench crane assembly |
 | `prestart_complete` / `symptom_analyzed` | Excavator tuning |
-| `wiring_pdf_open` | Groundworks wiring reference PDFs |
 
 ---
 

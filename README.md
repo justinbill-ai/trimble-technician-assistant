@@ -13,7 +13,6 @@ Static field-tools hub for Trimble technicians — Groundworks PD25, Siteworks C
 | `index.html` | Hub — category home and tool drill-in |
 | `assets/` | Shared chrome, workspace API, app access gate, feedback |
 | `groundworks/pd25/` | PD25 guided workflow + measure-up calculator |
-| `groundworks/wiring/` | Groundworks connection diagram and wiring schematic PDFs |
 | `measure-up/ctl/` | Siteworks CTL measure-up calculator |
 | `pre-inspection/` | Machine wear / pre-install report |
 | `install-deliverable/` | Post-install photo deliverable |
@@ -98,6 +97,5 @@ Telemetry, feedback, and optional Drive report archive are configured in `assets
 | `guide_section_view` / `guide_section_complete` | Bench crane segment |
 | `prestart_complete` | Excavator checklist unlocked |
 | `symptom_analyzed` | Excavator symptom search |
-| `wiring_pdf_open` | Groundworks wiring PDF opened |
 
 Full backend notes: `google-workspace/DEPLOY.md`.
