@@ -106,6 +106,8 @@ var SHEET_HEADERS = {
     'grantType',
     'approvedBy',
     'lastCheckAt',
+    'revokeToken',
+    'Revoke',
   ],
   AccessCodes: ['email', 'code', 'expiresAt', 'createdAt'],
 };
@@ -208,6 +210,7 @@ function setupReadmeSheet(ss) {
     ['access_granted', 'Access approved (auto @trimble.com or manual grant)'],
     ['access_denied', 'Access request denied'],
     ['access_verified', 'User verified email with sign-in code'],
+    ['access_revoked', 'Admin revoked an active access grant'],
     ['calc_run', 'User ran CTL or PD25 measure-up calculator'],
     ['csv_uploaded', 'Survey CSV uploaded'],
     ['csv_analyzed:ok', 'Calculator succeeded'],
@@ -405,6 +408,113 @@ function getWebAppUrl() {
   }
 }
 
+function buildAccessRevokeUrl(email, token) {
+  return (
+    getWebAppUrl() +
+    '?action=access_revoke&email=' +
+    encodeURIComponent(email) +
+    '&token=' +
+    encodeURIComponent(token)
+  );
+}
+
+function setRevokeLinkForRow(sheet, row, email, token) {
+  if (!sheet || !row || row < 2) return;
+  var url = buildAccessRevokeUrl(email, token);
+  sheet.getRange(row, 8).setFormula('=HYPERLINK("' + url + '","Revoke access")');
+}
+
+function refreshApprovedUserRevokeLinks() {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'ApprovedUsers', SHEET_HEADERS.ApprovedUsers);
+  var values = sheet.getDataRange().getValues();
+  var i;
+  var updated = 0;
+  for (i = 1; i < values.length; i++) {
+    var email = normalizeAccessEmail(values[i][0]);
+    if (!email) continue;
+    var token = String(values[i][6] || '');
+    if (!token) {
+      token = Utilities.getUuid();
+      sheet.getRange(i + 1, 7).setValue(token);
+    }
+    setRevokeLinkForRow(sheet, i + 1, email, token);
+    updated++;
+  }
+  return updated;
+}
+
+function revokeApprovedAccess(email, revokedBy) {
+  var normalized = normalizeAccessEmail(email);
+  if (!isValidAccessEmail(normalized)) return false;
+  clearAccessCodesForEmail(normalized);
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'ApprovedUsers', SHEET_HEADERS.ApprovedUsers);
+  var existing = findApprovedUserRow(sheet, normalized);
+  if (!existing) return false;
+  sheet.deleteRow(existing.row);
+  logAccessEvent('access_revoked', normalized, revokedBy || 'admin', { tool: 'hub', page: getAppUrl() });
+  return true;
+}
+
+function handleAccessRevoke(params) {
+  var email = normalizeAccessEmail(params.email);
+  var token = String(params.token || '');
+  if (!isValidAccessEmail(email) || !token) {
+    return htmlAccessPage('Revoke failed', 'Missing email or token.', false);
+  }
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'ApprovedUsers', SHEET_HEADERS.ApprovedUsers);
+  var existing = findApprovedUserRow(sheet, email);
+  if (!existing || String(existing.values[6] || '') !== token) {
+    return htmlAccessPage('Revoke failed', 'This revoke link is invalid or already used.', false);
+  }
+  revokeApprovedAccess(email, CONFIG.RECIPIENT_EMAIL);
+  return htmlAccessPage(
+    'Access revoked',
+    'Removed app access for <strong>' + email + '</strong>. They will need approval again to sign in.',
+    true
+  );
+}
+
+function revokeSelectedApprovedUser() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  if (!sheet || sheet.getName() !== 'ApprovedUsers') {
+    ui.alert('Open the ApprovedUsers tab and select the user row to revoke.');
+    return;
+  }
+  var row = sheet.getActiveRange() ? sheet.getActiveRange().getRow() : 0;
+  if (row < 2) {
+    ui.alert('Select a user row on ApprovedUsers (not the header).');
+    return;
+  }
+  var email = normalizeAccessEmail(sheet.getRange(row, 1).getValue());
+  if (!isValidAccessEmail(email)) {
+    ui.alert('Could not read an email address from the selected row.');
+    return;
+  }
+  var response = ui.alert(
+    'Revoke access for ' + email + '?',
+    'They will be locked out on their next app check and must request access again.',
+    ui.ButtonSet.YES_NO
+  );
+  if (response !== ui.Button.YES) return;
+  if (!revokeApprovedAccess(email, Session.getActiveUser().getEmail())) {
+    ui.alert('No active grant found for ' + email + '.');
+    return;
+  }
+  ui.alert('Revoked access for ' + email + '.');
+}
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Tech Assistant')
+    .addItem('Revoke selected user', 'revokeSelectedApprovedUser')
+    .addItem('Refresh revoke links', 'refreshApprovedUserRevokeLinks')
+    .addToUi();
+}
+
 function getAppUrl() {
   var url = String(CONFIG.APP_URL || '').trim();
   if (!url) return getWebAppUrl();
@@ -446,6 +556,7 @@ function upsertApprovedUser(email, grantType, approvedBy) {
   var now = Date.now();
   var expiresAt = now + getAccessGrantMs();
   var existing = findApprovedUserRow(sheet, email);
+  var revokeToken = existing && existing.values[6] ? String(existing.values[6]) : Utilities.getUuid();
   var rowValues = [
     normalizeAccessEmail(email),
     accessIsoDate(now),
@@ -453,12 +564,18 @@ function upsertApprovedUser(email, grantType, approvedBy) {
     grantType || 'manual',
     approvedBy || '',
     accessIsoDate(now),
+    revokeToken,
+    '',
   ];
+  var targetRow;
   if (existing) {
-    sheet.getRange(existing.row, 1, 1, rowValues.length).setValues([rowValues]);
+    targetRow = existing.row;
+    sheet.getRange(existing.row, 1, existing.row, rowValues.length).setValues([rowValues]);
   } else {
     sheet.appendRow(rowValues);
+    targetRow = sheet.getLastRow();
   }
+  setRevokeLinkForRow(sheet, targetRow, normalizeAccessEmail(email), revokeToken);
   return {
     email: normalizeAccessEmail(email),
     status: 'approved',
@@ -1033,6 +1150,10 @@ function doGet(e) {
     return handleAccessDeny(params);
   }
 
+  if (action === 'access_revoke') {
+    return handleAccessRevoke(params);
+  }
+
   if (callback) {
     return respondJson({ ok: false, error: 'Unknown action' }, callback);
   }
@@ -1058,5 +1179,6 @@ function setupSheets() {
   setupReadmeSheet(ss);
   removeDefaultSheet(ss);
   reorderSheets(ss, ['README', 'Events', 'Feedback', 'Uploads', 'AccessRequests', 'ApprovedUsers', 'AccessCodes']);
+  refreshApprovedUserRevokeLinks();
   Logger.log('Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers, AccessCodes');
 }

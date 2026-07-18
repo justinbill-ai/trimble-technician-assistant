@@ -127,7 +127,19 @@ Before users can open hub categories or tools, the app checks access via Apps Sc
 
 **Telemetry events:** `access_requested`, `access_granted`, `access_denied`, `access_verified` (logged from Apps Script and the client).
 
-**Redeploy required:** After updating `Code.gs`, run **`setupSheets`** (adds **AccessCodes** tab) and deploy a **new version** of the web app so `access_start`, `access_verify`, and `access_resend_code` work.
+**Redeploy required:** After updating `Code.gs`, run **`setupSheets`** (adds **AccessCodes** tab and **Revoke** column) and deploy a **new version** of the web app so `access_start`, `access_verify`, `access_resend_code`, and `access_revoke` work.
+
+### Revoking a user
+
+| Method | How |
+|--------|-----|
+| **One-click link** | Open **ApprovedUsers** → click **Revoke access** in the last column |
+| **Sheet menu** | Select the user row → **Tech Assistant** → **Revoke selected user** |
+| **Manual** | Delete the row from **ApprovedUsers** (also delete **AccessCodes** rows for that email) |
+
+Revoking removes their grant, clears active sign-in codes, and logs `access_revoked`. Remembered devices are locked out on the next background check.
+
+After deploying a new web app URL/version, run **Tech Assistant → Refresh revoke links** once so the **Revoke** column hyperlinks stay valid.
 
 ---
 
