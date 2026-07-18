@@ -200,7 +200,7 @@ function setupReadmeSheet(ss) {
   ]);
 
   sheet.getRange('A13').setValue('Common events').setFontWeight('bold').setFontColor('#005f9e');
-  sheet.getRange('A14:B33').setValues([
+  sheet.getRange('A14:B34').setValues([
     ['hub_open', 'User opened the hub'],
     ['category_open', 'User opened a hub category'],
     ['tool_open', 'User opened a tool page'],
@@ -224,7 +224,7 @@ function setupReadmeSheet(ss) {
     ['symptom_analyzed', 'Excavator symptom search run'],
   ]);
 
-  sheet.getRange('A1:D30').setWrap(true).setVerticalAlignment('top');
+  sheet.getRange('A1:D34').setWrap(true).setVerticalAlignment('top');
   sheet.setColumnWidth(1, 160);
   sheet.setColumnWidth(2, 200);
   sheet.setColumnWidth(3, 220);
