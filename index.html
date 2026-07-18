@@ -95,89 +95,13 @@
 
       <div class="help-guide" id="helpGuide">
         <section class="help-guide__section">
-          <h3 class="help-guide__title">Getting access</h3>
-          <ol class="help-guide__list" id="helpAccessSteps">
-            <li>Submit your work email when the app opens.</li>
-            <li>An administrator reviews and approves or declines access.</li>
-            <li>After approval, you receive a sign-in code by email.</li>
-            <li>Submit the same email again, enter the code, and tap <strong>Verify code</strong>.</li>
-          </ol>
-          <p class="help-guide__note" id="helpAccessPolicy"></p>
-        </section>
-        <section class="help-guide__section">
-          <h3 class="help-guide__title">App navigation</h3>
+          <h3 class="help-guide__title">Categories &amp; tools</h3>
           <ul class="help-guide__nav" id="helpNavList"></ul>
         </section>
       </div>
 
-      <div class="help-demo" aria-live="polite">
-        <div class="help-demo__caption" id="helpDemoCaption">
-          Starting walkthrough…
-        </div>
-        <div class="help-demo__stage" id="helpDemoStage">
-          <div class="help-demo__view help-demo__view--home is-active" id="helpDemoHome">
-            <div class="help-demo__mini-header">Technician Assistant</div>
-            <p class="help-demo__section-label">Categories</p>
-            <div class="help-demo__grid help-demo__grid--picker">
-              <div class="help-demo__cat help-demo__cat--pick" id="helpDemoCat">
-                <span class="help-demo__cat-title">Earthworks Excavator</span>
-              </div>
-              <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
-                <span class="help-demo__cat-title">Siteworks</span>
-              </div>
-              <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
-                <span class="help-demo__cat-title">Installation</span>
-              </div>
-              <div class="help-demo__cat help-demo__cat--pick help-demo__cat--dim">
-                <span class="help-demo__cat-title">Groundworks</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="help-demo__view help-demo__view--category" id="helpDemoCategory">
-            <div class="help-demo__mini-header">Earthworks Excavator</div>
-            <p class="help-demo__section-label">Tools</p>
-            <div class="help-demo__tool" id="helpDemoToolRow">
-              <span class="help-demo__tool-icon">ET</span>
-              <span>
-                <span class="help-demo__tool-name">Excavator Tuning Assistant</span><br />
-                Prestart checklist, symptom assistant, tuning map
-              </span>
-            </div>
-          </div>
-
-          <div class="help-demo__view help-demo__view--tool" id="helpDemoTool">
-            <div class="help-demo__mini-header">Excavator Tuning Assistant</div>
-            <div class="help-demo__scroll-wrap">
-              <div class="help-demo__scroll" id="helpDemoScroll">
-                <div class="help-demo__block">
-                  <strong>Prestart checklist</strong>
-                  Confirm prestart checklist items before tuning access unlocks.
-                </div>
-                <div class="help-demo__block">
-                  <strong>Symptom assistant</strong>
-                  Describe pass behavior — ranked slider recommendations.
-                </div>
-                <div class="help-demo__block">
-                  <strong>Tuning map</strong>
-                  Zone and movement highlight where each slider applies.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="help-demo__cursor" id="helpDemoCursor" aria-hidden="true">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-              <path fill="#fff" stroke="#252a2e" stroke-width="1.2" d="M8 4l2.2 18.5 3.5-4.2 4.8 9.2 2.8-1.5-4.8-9.2h6.2z"/>
-            </svg>
-          </div>
-          <div class="help-demo__halo" id="helpDemoHalo" aria-hidden="true"></div>
-        </div>
-      </div>
-
       <div class="help-modal__foot">
-        <span class="note">Demo loops automatically · Esc to close</span>
-        <button type="button" class="btn-secondary" id="helpDemoReplay">Replay</button>
+        <span class="note">Esc to close</span>
         <button type="button" class="btn-primary" id="helpModalCloseBottom">Got it</button>
       </div>
     </div>
@@ -283,12 +207,7 @@
   <script src="./assets/feedback-config.js?v=3"></script>
   <script src="./assets/feedback.js?v=4"></script>
   <script src="./assets/hub-nav.js"></script>
-  <script src="./assets/landing-help.js"></script>
+  <script src="./assets/landing-help.js?v=2"></script>
   <script src="./assets/tmc-access.js"></script>
-  <script>
-    document.getElementById('helpModalCloseBottom')?.addEventListener('click', function () {
-      document.getElementById('helpModalClose')?.click();
-    });
-  </script>
 </body>
 </html>
