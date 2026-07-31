@@ -267,82 +267,6 @@
     return postPayload(payload);
   }
 
-  function sleep(ms) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  var CSV_EMAIL_CHUNK_CHARS = 90000;
-  var CSV_EMAIL_SINGLE_POST_LIMIT = 200000;
-
-  function sendCsvEmailInChunks(meta, fileBase64) {
-    var uploadId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-    var chunks = [];
-    var offset;
-    for (offset = 0; offset < fileBase64.length; offset += CSV_EMAIL_CHUNK_CHARS) {
-      chunks.push(fileBase64.slice(offset, offset + CSV_EMAIL_CHUNK_CHARS));
-    }
-    var chain = Promise.resolve();
-    chunks.forEach(function (chunk, index) {
-      chain = chain
-        .then(function () {
-          return postPayload({
-            action: 'csv_email_part',
-            uploadId: uploadId,
-            index: index,
-            totalParts: chunks.length,
-            chunk: chunk,
-          });
-        })
-        .then(function () {
-          return sleep(250);
-        });
-    });
-    return chain.then(function () {
-      return postPayload(
-        Object.assign(
-          {
-            action: 'csv_email_finish',
-            uploadId: uploadId,
-            totalParts: chunks.length,
-          },
-          meta
-        )
-      );
-    });
-  }
-
-  function sendCsvEmail(options) {
-    options = options || {};
-    var meta = Object.assign(
-      {
-        to: options.to || '',
-        subject: options.subject || 'Groundworks pile CSV',
-        message: options.message || '',
-        fileName: options.fileName || 'groundworks.csv',
-        mimeType: options.mimeType || 'text/csv',
-      },
-      baseContext()
-    );
-    var fileBase64 = options.fileBase64 || '';
-    if (!fileBase64) {
-      return Promise.reject(new Error('Missing CSV data.'));
-    }
-    if (fileBase64.length > CSV_EMAIL_SINGLE_POST_LIMIT) {
-      return sendCsvEmailInChunks(meta, fileBase64);
-    }
-    return postPayload(
-      Object.assign(
-        {
-          action: 'csv_email',
-          fileBase64: fileBase64,
-        },
-        meta
-      )
-    );
-  }
-
   function uploadReport(options) {
     options = options || {};
     var payload = Object.assign(
@@ -403,7 +327,6 @@
     logCalcRun: logCalcRun,
     submitFeedback: submitFeedback,
     uploadReport: uploadReport,
-    sendCsvEmail: sendCsvEmail,
     utf8ToBase64: utf8ToBase64,
     detectTool: detectTool,
     baseContext: baseContext,

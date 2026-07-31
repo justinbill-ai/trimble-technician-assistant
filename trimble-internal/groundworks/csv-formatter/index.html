@@ -29,7 +29,7 @@
   <main class="tc-main gw-csv-main">
     <p class="intro gw-csv-intro">
       <strong>BETA tool in development.</strong> Upload a drill/pile CSV from <strong>TBC</strong>, <strong>Siteworks</strong>, or a data collector.
-      Map your columns to the Groundworks import layout, preview the result, then download or email a semicolon-separated file for Project Setup (Groundworks v2.0+).
+      Map your columns to the Groundworks import layout, preview the result, then save a semicolon-separated file locally for Groundworks import (v2.0+).
     </p>
 
     <div class="gw-format-note" role="note">
@@ -135,37 +135,17 @@
     </section>
 
     <section class="gw-card hidden" id="gwExportCard" aria-labelledby="gwExportHeading">
-      <h2 id="gwExportHeading" class="gw-card__title">4. Export &amp; deliver</h2>
+      <h2 id="gwExportHeading" class="gw-card__title">4. Export</h2>
       <p class="gw-hint">
-        Save the converted CSV locally for USB transfer or Groundworks upload, or email it directly to the end user.
-        Confirm coordinates and pile IDs in the preview above before exporting — you are responsible for verifying the output matches your project.
+        Save the converted CSV on this device only — nothing is uploaded or emailed. Confirm coordinates and pile IDs in the preview above before exporting.
+        You are responsible for verifying the output matches your project.
       </p>
 
       <div class="gw-actions gw-actions--wrap">
         <button type="button" class="gw-btn gw-btn--primary" id="gwDownloadBtn">Download CSV</button>
+        <button type="button" class="gw-btn gw-btn--secondary" id="gwSaveAsBtn">Save to folder or USB…</button>
       </div>
-
-      <div class="gw-email-panel">
-        <h3 class="gw-email-panel__title">Email formatted CSV</h3>
-        <div class="gw-form-grid">
-          <div class="gw-field gw-field--full">
-            <label class="gw-label" for="gwEmailTo">Recipient email</label>
-            <input class="gw-input" id="gwEmailTo" type="email" inputmode="email" autocomplete="email" placeholder="customer@example.com" />
-          </div>
-          <div class="gw-field gw-field--full">
-            <label class="gw-label" for="gwEmailSubject">Subject</label>
-            <input class="gw-input" id="gwEmailSubject" type="text" value="Groundworks pile CSV" />
-          </div>
-          <div class="gw-field gw-field--full">
-            <label class="gw-label" for="gwEmailMessage">Message</label>
-            <textarea class="gw-input gw-textarea" id="gwEmailMessage" rows="3" placeholder="Attached is the formatted pile CSV for Groundworks import."></textarea>
-          </div>
-        </div>
-        <div class="gw-actions">
-          <button type="button" class="gw-btn gw-btn--secondary" id="gwEmailBtn">Send email</button>
-        </div>
-        <p class="gw-hint" id="gwEmailHint"></p>
-      </div>
+      <p class="gw-hint" id="gwExportHint"></p>
     </section>
   </main>
 
@@ -179,13 +159,13 @@
   </div>
 
   <script src="../../assets/workspace-config.js?v=5"></script>
-  <script src="../../assets/workspace-api.js?v=10"></script>
+  <script src="../../assets/workspace-api.js?v=11"></script>
   <script src="../../assets/app-access.js?v=10"></script>
   <script src="../../assets/beta-access.js?v=3"></script>
   <script src="../../assets/header-home.js"></script>
   <script src="../../assets/feedback-config.js?v=3"></script>
   <script src="../../assets/feedback.js?v=4"></script>
   <script src="formatter.js?v=11"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>

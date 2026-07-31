@@ -116,11 +116,8 @@
     els.outputBody = $('gwOutputBody');
     els.exportCard = $('gwExportCard');
     els.downloadBtn = $('gwDownloadBtn');
-    els.emailTo = $('gwEmailTo');
-    els.emailSubject = $('gwEmailSubject');
-    els.emailMessage = $('gwEmailMessage');
-    els.emailBtn = $('gwEmailBtn');
-    els.emailHint = $('gwEmailHint');
+    els.saveAsBtn = $('gwSaveAsBtn');
+    els.exportHint = $('gwExportHint');
     els.busyOverlay = $('gwBusyOverlay');
     els.busyText = $('gwBusyText');
   }
@@ -623,11 +620,29 @@
     if (allowed) {
       els.exportCard.classList.remove('hidden');
       els.downloadBtn.disabled = false;
-      els.emailBtn.disabled = false;
+      if (els.saveAsBtn) els.saveAsBtn.disabled = false;
     } else {
       els.exportCard.classList.add('hidden');
       els.downloadBtn.disabled = true;
-      els.emailBtn.disabled = true;
+      if (els.saveAsBtn) els.saveAsBtn.disabled = true;
+    }
+  }
+
+  function supportsSaveFilePicker() {
+    return typeof window.showSaveFilePicker === 'function';
+  }
+
+  function initExportHint() {
+    if (!els.exportHint) return;
+    if (supportsSaveFilePicker()) {
+      els.exportHint.textContent =
+        'Download CSV saves to your browser’s default folder. Save to folder or USB lets you pick a location (including removable drives on Windows).';
+    } else {
+      els.exportHint.textContent =
+        'Download CSV saves to your device. To pick a USB folder directly, use Chrome or Edge on a desktop computer.';
+      if (els.saveAsBtn) {
+        els.saveAsBtn.textContent = 'Save to folder… (limited)';
+      }
     }
   }
 
@@ -802,102 +817,66 @@
     setTimeout(function () {
       URL.revokeObjectURL(url);
     }, 1000);
+    if (els.exportHint) {
+      els.exportHint.textContent = 'Downloaded ' + (state.outputFileName || 'groundworks.csv') + ' to your default downloads folder.';
+    }
     if (window.WorkspaceApi) {
       window.WorkspaceApi.logEvent('csv_download', { detail: state.outputFileName });
     }
   }
 
-  function isValidEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
-  }
-
-  function sendEmail() {
+  function saveCsvAs() {
     if (!canExport(state.result)) return;
-    var to = els.emailTo.value.trim();
-    if (!isValidEmail(to)) {
-      alert('Enter a valid recipient email address.');
-      els.emailTo.focus();
-      return;
-    }
-
-    var subject = els.emailSubject.value.trim() || 'Groundworks pile CSV';
-    var message = els.emailMessage.value.trim();
     var fileName = state.outputFileName || 'groundworks.csv';
-    var fileBase64 =
-      window.WorkspaceApi && typeof window.WorkspaceApi.utf8ToBase64 === 'function'
-        ? window.WorkspaceApi.utf8ToBase64(state.result.outputCsv)
-        : btoa(unescape(encodeURIComponent(state.result.outputCsv)));
+    var blob = new Blob([state.result.outputCsv], { type: 'text/csv;charset=utf-8' });
 
-    els.emailBtn.disabled = true;
-    els.emailHint.textContent = 'Sending…';
-
-    function finish(ok, text) {
-      els.emailBtn.disabled = false;
-      els.emailHint.textContent = text;
-    }
-
-    var csvSize = state.result.outputCsv ? state.result.outputCsv.length : 0;
-    var isLargeEmail = csvSize > 150000;
-
-    if (window.WorkspaceApi && typeof window.WorkspaceApi.sendCsvEmail === 'function' && window.WorkspaceApi.isEnabled()) {
-      els.emailHint.textContent = isLargeEmail
-        ? 'Sending large file to server (may take a minute)…'
-        : 'Sending…';
-      window.WorkspaceApi
-        .sendCsvEmail({
-          to: to,
-          subject: subject,
-          message: message,
-          fileName: fileName,
-          fileBase64: fileBase64,
-        })
-        .then(function () {
-          finish(
-            true,
-            'Email request submitted for ' +
-              to +
-              '. Check your inbox and spam folder in a few minutes. Large files may arrive as a download link instead of an attachment. If nothing arrives, use Download CSV or check the Events sheet for csv_email_sent.'
-          );
-        })
-        .catch(function () {
-          fallbackMailto(to, subject, message, fileName);
-        });
+    if (!supportsSaveFilePicker()) {
+      downloadCsv();
       return;
     }
 
-    fallbackMailto(to, subject, message, fileName);
-  }
+    if (els.saveAsBtn) els.saveAsBtn.disabled = true;
+    if (els.exportHint) els.exportHint.textContent = 'Choose where to save the file…';
 
-  function fallbackMailto(to, subject, message, fileName) {
-    downloadCsv();
-    var body =
-      (message ? message + '\n\n' : '') +
-      'The formatted CSV (' +
-      fileName +
-      ') was downloaded to this device. Attach it to this email before sending.\n\n' +
-      '— Trimble Technician Assistant';
-    var mailto =
-      'mailto:' +
-      encodeURIComponent(to) +
-      '?subject=' +
-      encodeURIComponent(subject) +
-      '&body=' +
-      encodeURIComponent(body);
-    window.location.href = mailto;
-    els.emailBtn.disabled = false;
-    els.emailHint.textContent =
-      'Workspace email is not configured — your email app will open and the CSV was downloaded. Attach ' +
-      fileName +
-      ' before sending.';
-  }
-
-  function initEmailHint() {
-    if (window.AppAccess && typeof window.AppAccess.getEmail === 'function') {
-      var signedInEmail = window.AppAccess.getEmail();
-      if (signedInEmail && !els.emailTo.value) {
-        els.emailHint.textContent = 'Signed in as ' + signedInEmail + '. Recipient can be any address.';
-      }
-    }
+    window
+      .showSaveFilePicker({
+        suggestedName: fileName,
+        types: [
+          {
+            description: 'CSV file',
+            accept: { 'text/csv': ['.csv'] },
+          },
+        ],
+      })
+      .then(function (handle) {
+        return handle.createWritable();
+      })
+      .then(function (writable) {
+        return writable.write(blob).then(function () {
+          return writable.close();
+        });
+      })
+      .then(function () {
+        if (els.exportHint) {
+          els.exportHint.textContent = 'Saved ' + fileName + ' to the location you selected.';
+        }
+        if (window.WorkspaceApi) {
+          window.WorkspaceApi.logEvent('csv_save_as', { detail: fileName });
+        }
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') {
+          if (els.exportHint) els.exportHint.textContent = 'Save cancelled.';
+          return;
+        }
+        alert((err && err.message) || 'Could not save file. Try Download CSV instead.');
+        if (els.exportHint) {
+          els.exportHint.textContent = 'Save failed — try Download CSV instead.';
+        }
+      })
+      .finally(function () {
+        if (els.saveAsBtn && canExport(state.result)) els.saveAsBtn.disabled = false;
+      });
   }
 
   function init() {
@@ -930,7 +909,8 @@
 
     els.processBtn.addEventListener('click', processCurrent);
     els.downloadBtn.addEventListener('click', downloadCsv);
-    els.emailBtn.addEventListener('click', sendEmail);
+    if (els.saveAsBtn) els.saveAsBtn.addEventListener('click', saveCsvAs);
+    initExportHint();
 
     els.hasHeader.addEventListener('change', function () {
       if (!state.inputText) return;
@@ -964,8 +944,6 @@
         }, 0);
       }, 450);
     });
-
-    initEmailHint();
   }
 
   function startWhenBetaReady() {

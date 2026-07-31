@@ -5,6 +5,7 @@
  * (Extensions → Apps Script), or a standalone script with SPREADSHEET_ID set below.
  *
  * See DEPLOY.md for setup steps.
+ * Groundworks CSV export is local-only in the app — no csv_email server handlers.
  */
 
 var CONFIG = {
@@ -238,6 +239,8 @@ function setupReadmeSheet(ss) {
     ['access_verified', 'User verified email with sign-in code'],
     ['access_revoked', 'Admin revoked an active access grant'],
     ['calc_run', 'User ran CTL or PD25 measure-up calculator'],
+    ['csv_download', 'GW CSV formatter downloaded export locally'],
+    ['csv_save_as', 'GW CSV formatter saved export to chosen folder'],
     ['csv_uploaded', 'Survey CSV uploaded'],
     ['csv_analyzed:ok', 'Calculator succeeded'],
     ['csv_analyzed:fail', 'Calculator failed (see detail column)'],
@@ -346,121 +349,6 @@ function appendUpload(data, fileId, fileUrl) {
     fileId || '',
     fileUrl || '',
   ]);
-}
-
-function logCsvEmailEvent(eventName, data, detail) {
-  appendEvent({
-    timestamp: data.timestamp || new Date().toISOString(),
-    event: eventName,
-    tool: data.tool || '',
-    page: data.page || '',
-    appVersion: data.appVersion || '',
-    dealer: data.dealer || '',
-    email: data.email || '',
-    detail: detail || data.to || '',
-    userAgent: data.userAgent || '',
-    deviceType: data.deviceType || '',
-  });
-}
-
-function csvPartCacheKey(uploadId, index) {
-  return 'csvpart_' + uploadId + '_' + index;
-}
-
-function cacheCsvEmailPart(data) {
-  var uploadId = String(data.uploadId || '').trim();
-  var index = parseInt(data.index, 10);
-  var totalParts = parseInt(data.totalParts, 10);
-  var chunk = String(data.chunk || '');
-  if (!uploadId || isNaN(index) || isNaN(totalParts) || !chunk) {
-    throw new Error('Invalid CSV upload part.');
-  }
-  if (chunk.length > 95000) {
-    throw new Error('CSV upload part too large.');
-  }
-  CacheService.getScriptCache().put(csvPartCacheKey(uploadId, index), chunk, 600);
-}
-
-function clearCsvEmailParts(uploadId, totalParts) {
-  var cache = CacheService.getScriptCache();
-  var i;
-  for (i = 0; i < totalParts; i++) {
-    cache.remove(csvPartCacheKey(uploadId, i));
-  }
-}
-
-function assembleCsvEmailBase64(uploadId, totalParts) {
-  var cache = CacheService.getScriptCache();
-  var parts = [];
-  var i;
-  for (i = 0; i < totalParts; i++) {
-    var chunk = cache.get(csvPartCacheKey(uploadId, i));
-    if (!chunk) {
-      throw new Error('CSV upload incomplete or expired. Try again or use Download CSV.');
-    }
-    parts.push(chunk);
-  }
-  return parts.join('');
-}
-
-function saveCsvBlobToDrive(blob, name) {
-  if (!CONFIG.DRIVE_FOLDER_ID || CONFIG.DRIVE_FOLDER_ID.indexOf('PASTE_') === 0) {
-    throw new Error('Set CONFIG.DRIVE_FOLDER_ID in Apps Script.');
-  }
-  var folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
-  var file = folder.createFile(blob);
-  try {
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (shareErr) {
-    // Folder policy may block public links — link still works for script account.
-  }
-  return { id: file.getId(), url: file.getUrl() };
-}
-
-function sendCsvEmail(data) {
-  var to = String(data.to || '').trim();
-  if (!isValidAccessEmail(to)) {
-    throw new Error('Invalid recipient email.');
-  }
-  if (!data.fileBase64) {
-    throw new Error('Missing CSV attachment.');
-  }
-  var bytes = Utilities.base64Decode(data.fileBase64);
-  var name = String(data.fileName || 'groundworks.csv').replace(/[\\/:*?"<>|]+/g, '_');
-  if (name.indexOf('.') === -1) name += '.csv';
-  var blob = Utilities.newBlob(bytes, data.mimeType || 'text/csv', name);
-  var subject = String(data.subject || 'Groundworks pile CSV');
-  var body =
-    String(data.message || '').trim() +
-    '\n\nSent from Trimble Technician Assistant.' +
-    '\nTool: ' +
-    (data.tool || '') +
-    '\nPage: ' +
-    (data.page || '');
-  var options = {};
-  if (data.email) options.replyTo = data.email;
-
-  // Gmail attachment limit — large exports get a Drive download link instead.
-  var maxAttachBytes = 1500000;
-  if (bytes.length > maxAttachBytes) {
-    var saved = saveCsvBlobToDrive(blob, name);
-    body +=
-      '\n\nThe CSV was too large to attach directly (' +
-      Math.round(bytes.length / 1024) +
-      ' KB). Download it here:\n' +
-      saved.url;
-    MailApp.sendEmail(to, subject, body, options);
-    return 'drive_link';
-  }
-
-  options.attachments = [blob];
-  MailApp.sendEmail(to, subject, body, options);
-  return 'attachment';
-}
-
-function handleCsvEmailSend(data) {
-  var mode = sendCsvEmail(data);
-  logCsvEmailEvent('csv_email_sent', data, (data.to || '') + ' | ' + mode);
 }
 
 function sendFeedbackEmail(data) {
@@ -1619,33 +1507,6 @@ function doPost(e) {
       var saved = saveReportToDrive(data);
       appendUpload(data, saved.id, saved.url);
       return jsonResponse({ ok: true, fileId: saved.id, fileUrl: saved.url });
-    }
-
-    if (action === 'csv_email_part') {
-      cacheCsvEmailPart(data);
-      return jsonResponse({ ok: true });
-    }
-
-    if (action === 'csv_email_finish') {
-      data.fileBase64 = assembleCsvEmailBase64(data.uploadId, parseInt(data.totalParts, 10));
-      try {
-        handleCsvEmailSend(data);
-      } catch (emailErr) {
-        logCsvEmailEvent('csv_email_failed', data, String(emailErr).slice(0, 240));
-        throw emailErr;
-      }
-      clearCsvEmailParts(data.uploadId, parseInt(data.totalParts, 10));
-      return jsonResponse({ ok: true });
-    }
-
-    if (action === 'csv_email') {
-      try {
-        handleCsvEmailSend(data);
-      } catch (emailErr) {
-        logCsvEmailEvent('csv_email_failed', data, String(emailErr).slice(0, 240));
-        throw emailErr;
-      }
-      return jsonResponse({ ok: true });
     }
 
     if (action === 'access_request') {
