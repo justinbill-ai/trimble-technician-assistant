@@ -2,6 +2,8 @@
   'use strict';
 
   var REQUIRED_FIELDS = ['ID', 'X', 'Y', 'Z', 'Length'];
+  var LINEAR_FIELDS = ['X', 'Y', 'Z', 'Length'];
+  var ANGLE_FIELDS = ['Orientation', 'Inclination', 'Rotation'];
   var FIELD_CONSTANT_PLACEHOLDERS = {
     Length: 'e.g. 15',
     Z: 'e.g. 100.5',
@@ -23,6 +25,30 @@
 
   function inputUnitsLabel() {
     return getInputUnits() === 'METRIC' ? 'm' : 'US survey ft';
+  }
+
+  function linearUnitSuffix() {
+    return getInputUnits() === 'METRIC' ? 'm' : 'ft';
+  }
+
+  function fieldDisplayLabel(field) {
+    if (LINEAR_FIELDS.indexOf(field) !== -1) {
+      return field + ' (' + linearUnitSuffix() + ')';
+    }
+    if (ANGLE_FIELDS.indexOf(field) !== -1) {
+      return field + ' (°)';
+    }
+    return field;
+  }
+
+  function fixedValueLabel(field) {
+    if (LINEAR_FIELDS.indexOf(field) !== -1) {
+      return 'Fixed value (' + linearUnitSuffix() + ')';
+    }
+    if (ANGLE_FIELDS.indexOf(field) !== -1) {
+      return 'Fixed value (°)';
+    }
+    return 'Fixed value';
   }
   var dragColumnIndex = null;
 
@@ -165,7 +191,7 @@
 
       var label = document.createElement('div');
       label.className = 'gw-map-slot__label';
-      label.textContent = field;
+      label.textContent = fieldDisplayLabel(field);
       if (REQUIRED_FIELDS.indexOf(field) !== -1) {
         var req = document.createElement('span');
         req.className = 'gw-map-slot__req';
@@ -221,7 +247,7 @@
 
       var constantLabel = document.createElement('label');
       constantLabel.className = 'gw-map-slot__constant-label';
-      constantLabel.textContent = 'Fixed value';
+      constantLabel.textContent = fixedValueLabel(field);
       constantLabel.setAttribute('for', 'gwConstant_' + field);
 
       var constantInput = document.createElement('input');
