@@ -74,7 +74,7 @@ flowchart TB
 ### Main app access
 
 1. User opens hub → **Request access** with work email.
-2. **`@trimble.com`** — auto-approved; sign-in code emailed (28-day grant).
+2. **Trimble personnel** (`@trimble.com`, `@*.trimblecorp.net`) — auto-approved; sign-in code emailed (28-day grant).
 3. **Other domains** — pending until admin approves via email link; then sign-in code.
 4. Tool pages trust stored session; expired/revoked users redirect to hub.
 
@@ -86,7 +86,7 @@ BETA access is **in addition to** main app access. Users must be signed in to th
 
 | User | BETA flow |
 |------|-----------|
-| **`@trimble.com`** | Tap **Continue to BETA tool** → auto-granted (28-day grant, same duration as main app) |
+| **Trimble personnel** (`@trimble.com`, `@*.trimblecorp.net`) | BETA access activates automatically after main app sign-in (28-day grant) |
 | **Other approved users** | Tap **Request BETA access** → admin approval email → user notified when granted |
 
 **Implementation:**

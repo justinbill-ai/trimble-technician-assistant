@@ -28,7 +28,62 @@ window.WORKSPACE_CONFIG = {
       path: 'groundworks/csv-formatter/index.html',
     },
   },
+  /** Domains that skip manual approval — must match Code.gs AUTO_APPROVE_DOMAINS (subdomains included). */
+  autoApproveDomains: ['trimble.com', 'trimblecorp.net'],
 };
+
+/** Shared auto-approve domain checks (hub, BETA gate, internal tools). */
+window.WORKSPACE_ACCESS = (function () {
+  'use strict';
+
+  function normalizeEmail(raw) {
+    return String(raw || '').trim().toLowerCase();
+  }
+
+  function getEmailDomain(email) {
+    var parts = normalizeEmail(email).split('@');
+    return parts.length === 2 ? parts[1] : '';
+  }
+
+  function getAutoApproveDomains() {
+    var raw = (window.WORKSPACE_CONFIG && window.WORKSPACE_CONFIG.autoApproveDomains) || ['trimble.com'];
+    if (Array.isArray(raw)) {
+      return raw
+        .map(function (part) {
+          return String(part || '').trim().toLowerCase();
+        })
+        .filter(Boolean);
+    }
+    return String(raw)
+      .split(',')
+      .map(function (part) {
+        return part.trim().toLowerCase();
+      })
+      .filter(Boolean);
+  }
+
+  function domainMatchesAutoApprove(domain, approvedDomain) {
+    return domain === approvedDomain || domain.slice(-1 - approvedDomain.length) === '.' + approvedDomain;
+  }
+
+  function isAutoApproveEmail(email) {
+    var domain = getEmailDomain(email);
+    if (!domain) return false;
+    var domains = getAutoApproveDomains();
+    var i;
+    for (i = 0; i < domains.length; i++) {
+      if (domainMatchesAutoApprove(domain, domains[i])) return true;
+    }
+    return false;
+  }
+
+  return {
+    getAutoApproveDomains: getAutoApproveDomains,
+    isAutoApproveEmail: isAutoApproveEmail,
+    /** @deprecated Use isAutoApproveEmail — kept for callers expecting trimble.com only */
+    isTrimbleEmail: isAutoApproveEmail,
+  };
+})();
 
 /** @deprecated Use WORKSPACE_CONFIG — kept for feedback.js compatibility */
 window.FEEDBACK_CONFIG = {

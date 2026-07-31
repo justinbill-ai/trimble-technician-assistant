@@ -18,7 +18,7 @@ var CONFIG = {
   /** Days before approved users must request access again */
   ACCESS_GRANT_DAYS: 28,
   /** Comma-separated domains that auto-approve (no manual review) */
-  AUTO_APPROVE_DOMAINS: 'trimble.com',
+  AUTO_APPROVE_DOMAINS: 'trimble.com,trimblecorp.net',
   /** One-time sign-in code lifetime (minutes) */
   ACCESS_CODE_MINUTES: 15,
 };
@@ -425,7 +425,16 @@ function getAutoApproveDomains() {
 
 function isAutoApproveEmail(email) {
   var domain = getAccessEmailDomain(email);
-  return getAutoApproveDomains().indexOf(domain) !== -1;
+  if (!domain) return false;
+  var domains = getAutoApproveDomains();
+  var i;
+  for (i = 0; i < domains.length; i++) {
+    var approved = domains[i];
+    if (domain === approved || domain.slice(-1 - approved.length) === '.' + approved) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getAccessGrantDays() {

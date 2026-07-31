@@ -1,6 +1,6 @@
 /**
  * BETA tool access — per-tool grants on top of main app access.
- * @trimble.com: auto-approved for BETA. Other emails: admin approval required.
+ * @trimble.com / @*.trimblecorp.net: auto-approved for BETA when main app access is active.
  */
 (function (global) {
   'use strict';
@@ -14,8 +14,15 @@
     return String(raw || '').trim().toLowerCase();
   }
 
-  function isTrimbleEmail(email) {
+  function isAutoApproveEmail(email) {
+    if (global.WORKSPACE_ACCESS && typeof global.WORKSPACE_ACCESS.isAutoApproveEmail === 'function') {
+      return global.WORKSPACE_ACCESS.isAutoApproveEmail(email);
+    }
     return normalizeEmail(email).split('@')[1] === 'trimble.com';
+  }
+
+  function isTrimbleEmail(email) {
+    return isAutoApproveEmail(email);
   }
 
   function getToolId() {
@@ -189,6 +196,47 @@
     showStatus('Check back here after you receive approval, or tap “Check approval status”.');
   }
 
+  function showActivating(toolId, email) {
+    lockGate();
+    var label = getToolLabel(toolId);
+    document.getElementById('betaAccessTitle').textContent = 'Opening BETA tool';
+    document.getElementById('betaAccessLead').textContent =
+      'Activating BETA access for your Trimble account. You already have app access — this only takes a moment.';
+    var emailEl = document.getElementById('betaAccessEmail');
+    emailEl.textContent = 'Signed in as: ' + email;
+    emailEl.hidden = false;
+    document.getElementById('betaAccessSubmit').hidden = true;
+    document.getElementById('betaAccessCheck').hidden = true;
+    showStatus('Please wait…');
+    showError('');
+  }
+
+  function activateAutoApproveBeta(toolId, email) {
+    showActivating(toolId, email);
+    if (!global.WorkspaceApi || typeof global.WorkspaceApi.startBetaAccess !== 'function') {
+      unlockGate();
+      return;
+    }
+    global.WorkspaceApi.startBetaAccess(toolId, email)
+      .then(function (result) {
+        if (applyApproved(toolId, email, result)) return;
+        if (result && result.status === 'pending') {
+          showPending(toolId, email);
+          return;
+        }
+        if (result && result.status === 'denied') {
+          showDenied(toolId, email);
+          return;
+        }
+        showError((result && result.error) || 'Could not activate BETA access.');
+        showRequest(toolId, email);
+      })
+      .catch(function () {
+        showError('Could not reach the BETA access service. Try again in a moment.');
+        showRequest(toolId, email);
+      });
+  }
+
   function showRequest(toolId, email) {
     lockGate();
     var label = getToolLabel(toolId);
@@ -289,11 +337,27 @@
       }
 
       if (!global.WorkspaceApi || typeof global.WorkspaceApi.checkBetaAccess !== 'function') {
-        if (isTrimbleEmail(email)) {
+        if (isAutoApproveEmail(email)) {
           unlockGate();
           return;
         }
         showRequest(toolId, email);
+        return;
+      }
+
+      if (isAutoApproveEmail(email)) {
+        global.WorkspaceApi.checkBetaAccess(toolId, email, { revalidate: true }).then(function (result) {
+          if (applyApproved(toolId, email, result)) return;
+          if (result && result.status === 'pending') {
+            showPending(toolId, email);
+            return;
+          }
+          if (result && result.status === 'denied') {
+            showDenied(toolId, email);
+            return;
+          }
+          activateAutoApproveBeta(toolId, email);
+        });
         return;
       }
 
@@ -305,10 +369,6 @@
         }
         if (result && result.status === 'denied') {
           showDenied(toolId, email);
-          return;
-        }
-        if (isTrimbleEmail(email)) {
-          onRequest();
           return;
         }
         showRequest(toolId, email);

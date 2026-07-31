@@ -43,7 +43,7 @@ Share this folder only with people who should see opt-in report uploads. The App
    - `RECIPIENT_EMAIL` — your inbox (access request notifications + feedback)
    - `APP_URL` — public GitHub Pages URL (used in approval emails)
    - `ACCESS_GRANT_DAYS` — default `28` (approved access duration)
-   - `AUTO_APPROVE_DOMAINS` — default `trimble.com` (comma-separated; no manual approval)
+   - `AUTO_APPROVE_DOMAINS` — default `trimble.com,trimblecorp.net` (comma-separated; subdomains such as `am.trimblecorp.net` match automatically; no manual approval)
 
 5. Run **`setupSheets`** once from the editor (Run ▶). Approve permissions when prompted.
    - Creates **README**, **Events**, **Feedback**, **Uploads**, **AccessRequests**, **ApprovedUsers**, **AccessCodes**, **BetaAccessRequests**, **BetaApprovedUsers** with Trimble-style headers

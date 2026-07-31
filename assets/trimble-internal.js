@@ -27,6 +27,9 @@
   }
 
   function isTrimbleEmailAddress(email) {
+    if (global.WORKSPACE_ACCESS && typeof global.WORKSPACE_ACCESS.isAutoApproveEmail === 'function') {
+      return global.WORKSPACE_ACCESS.isAutoApproveEmail(email);
+    }
     return normalizeEmail(email).split('@')[1] === 'trimble.com';
   }
 

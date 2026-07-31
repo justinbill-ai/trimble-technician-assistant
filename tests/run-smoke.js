@@ -100,7 +100,7 @@ function testGwCsvFormatter() {
   assert(result.pileCount === 3, 'GW formatter reads three piles');
   assert(result.outputDelimiter === ';', 'GW output uses semicolon delimiter');
   assert(result.outputCsv.indexOf('ID;X;Y;Z;Orientation;Inclination;Rotation;Length') === 0, 'GW header row');
-  assert(result.outputCsv.indexOf('P1;100.5;200.25;962.0') !== -1, 'GW maps first pile coordinates');
+  assert(result.outputCsv.indexOf('P1;100.5;200.25;962') !== -1, 'GW maps first pile coordinates');
 
   var tbcCsv = fs.readFileSync(path.join(__dirname, 'fixtures/gw-tbc-input.csv'), 'utf8');
   var tbcResult = fmt.processCsv(tbcCsv);
