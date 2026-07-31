@@ -28,6 +28,8 @@ var GwCsvFormatter = (function () {
   var GROUNDWORKS_HEADER = ['ID', 'X', 'Y', 'Z', 'Orientation', 'Inclination', 'Rotation', 'Length'];
 
   var LINEAR_FIELDS = ['X', 'Y', 'Z', 'Length'];
+  var MAX_VALIDATION_ISSUES = 100;
+  var NUMERIC_SAMPLE_ROWS = 400;
 
   function normalizeInputUnits(units) {
     var raw = String(units || '').trim().toUpperCase();
@@ -176,14 +178,39 @@ var GwCsvFormatter = (function () {
   function columnNumericRatio(column, dataRows) {
     var numeric = 0;
     var total = 0;
-    dataRows.forEach(function (row) {
+    var limit = dataRows.length > NUMERIC_SAMPLE_ROWS ? NUMERIC_SAMPLE_ROWS : dataRows.length;
+    var r;
+    for (r = 0; r < limit; r++) {
+      var row = dataRows[r];
       var value = String(row[column.index] != null ? row[column.index] : '').trim();
-      if (!value) return;
+      if (!value) continue;
       total++;
       if (isNumericValue(value)) numeric++;
-    });
+    }
     if (!total) return 0;
     return numeric / total;
+  }
+
+  function pushValidationIssue(issues, message) {
+    if (issues.length >= MAX_VALIDATION_ISSUES) {
+      issues.truncated = true;
+      return false;
+    }
+    issues.push(message);
+    return true;
+  }
+
+  function finishValidationIssues(issues, totalRows) {
+    if (issues.truncated) {
+      issues.push(
+        'Validation stopped after ' +
+          MAX_VALIDATION_ISSUES +
+          ' issue(s). Fix these and re-run preview (' +
+          totalRows +
+          ' row(s) in file).'
+      );
+    }
+    return issues;
   }
 
   var FIELD_ALIASES = {
@@ -417,7 +444,7 @@ var GwCsvFormatter = (function () {
     var gwRecords = recordsFromMapping(sourceTable.dataRows, mapping, options);
     var issues = validateGroundworksRecords(gwRecords);
     var result = {
-      ok: issues.length === 0,
+      ok: issues.length === 0 && !issues.truncated,
       issues: issues,
       pileCount: gwRecords.length,
       groundworksRecords: gwRecords,
@@ -523,37 +550,83 @@ var GwCsvFormatter = (function () {
 
   function validateGroundworksRecords(records) {
     var issues = [];
+    issues.truncated = false;
     var seen = {};
+    var idx;
 
-    records.forEach(function (rec, idx) {
+    for (idx = 0; idx < records.length; idx++) {
+      if (issues.length >= MAX_VALIDATION_ISSUES) {
+        issues.truncated = true;
+        break;
+      }
+      var rec = records[idx];
       var rowNum = idx + 1;
       var id = String(rec.ID || '').trim();
       if (!id) {
-        issues.push('Row ' + rowNum + ': missing ID');
-        return;
+        if (!pushValidationIssue(issues, 'Row ' + rowNum + ': missing ID')) break;
+        continue;
       }
-      if (seen[id]) issues.push('Row ' + rowNum + ': duplicate ID \'' + id + '\'');
+      if (seen[id]) {
+        if (!pushValidationIssue(issues, 'Row ' + rowNum + ': duplicate ID \'' + id + '\'')) break;
+      }
       seen[id] = true;
 
-      ['X', 'Y', 'Z'].forEach(function (field) {
-        var value = String(rec[field] || '').trim();
-        if (!value) issues.push('Row ' + rowNum + ' (' + id + '): missing ' + field);
-        else if (isNaN(parseFloat(value))) issues.push('Row ' + rowNum + ' (' + id + '): ' + field + ' is not numeric (' + value + ')');
-      });
+      var field;
+      for (field = 0; field < 3; field++) {
+        var coordField = ['X', 'Y', 'Z'][field];
+        var value = String(rec[coordField] || '').trim();
+        if (!value) {
+          if (!pushValidationIssue(issues, 'Row ' + rowNum + ' (' + id + '): missing ' + coordField)) break;
+        } else if (isNaN(parseFloat(value))) {
+          if (
+            !pushValidationIssue(
+              issues,
+              'Row ' + rowNum + ' (' + id + '): ' + coordField + ' is not numeric (' + value + ')'
+            )
+          ) {
+            break;
+          }
+        }
+      }
+      if (issues.length >= MAX_VALIDATION_ISSUES) {
+        issues.truncated = true;
+        break;
+      }
 
       var lengthValue = String(rec.Length || '').trim();
       if (lengthValue && isNaN(parseFloat(lengthValue))) {
-        issues.push('Row ' + rowNum + ' (' + id + '): Length is not numeric (' + lengthValue + ')');
+        if (
+          !pushValidationIssue(
+            issues,
+            'Row ' + rowNum + ' (' + id + '): Length is not numeric (' + lengthValue + ')'
+          )
+        ) {
+          break;
+        }
       }
 
-      ['Orientation', 'Inclination', 'Rotation'].forEach(function (field) {
-        var value = String(rec[field] || '').trim();
-        if (!value) return;
-        if (isNaN(parseFloat(value))) issues.push('Row ' + rowNum + ' (' + id + '): ' + field + ' is not numeric (' + value + ')');
-      });
-    });
+      for (field = 0; field < 3; field++) {
+        var angleField = ['Orientation', 'Inclination', 'Rotation'][field];
+        var angleValue = String(rec[angleField] || '').trim();
+        if (!angleValue) continue;
+        if (isNaN(parseFloat(angleValue))) {
+          if (
+            !pushValidationIssue(
+              issues,
+              'Row ' + rowNum + ' (' + id + '): ' + angleField + ' is not numeric (' + angleValue + ')'
+            )
+          ) {
+            break;
+          }
+        }
+      }
+      if (issues.length >= MAX_VALIDATION_ISSUES) {
+        issues.truncated = true;
+        break;
+      }
+    }
 
-    return issues;
+    return finishValidationIssues(issues, records.length);
   }
 
   function coerceTbcRecord(raw, index) {
@@ -616,39 +689,87 @@ var GwCsvFormatter = (function () {
 
   function validateTbcRecords(records) {
     var issues = [];
+    issues.truncated = false;
     var seen = {};
+    var idx;
 
-    records.forEach(function (rec, idx) {
+    for (idx = 0; idx < records.length; idx++) {
+      if (issues.length >= MAX_VALIDATION_ISSUES) {
+        issues.truncated = true;
+        break;
+      }
+      var rec = records[idx];
       var rowNum = idx + 1;
       var name = String(rec.Name || '').trim();
       if (!name) {
-        issues.push('Row ' + rowNum + ': missing Name/ID');
-        return;
+        if (!pushValidationIssue(issues, 'Row ' + rowNum + ': missing Name/ID')) break;
+        continue;
       }
-      if (seen[name]) issues.push('Row ' + rowNum + ': duplicate Name \'' + name + '\'');
+      if (seen[name]) {
+        if (!pushValidationIssue(issues, 'Row ' + rowNum + ': duplicate Name \'' + name + '\'')) break;
+      }
       seen[name] = true;
 
-      ['Easting', 'Northing', 'Height'].forEach(function (field) {
-        var value = String(rec[field] || '').trim();
-        if (!value) issues.push('Row ' + rowNum + ' (' + name + '): missing ' + field);
-        else if (isNaN(parseFloat(value))) issues.push('Row ' + rowNum + ' (' + name + '): ' + field + ' is not numeric (' + value + ')');
-      });
+      var field;
+      for (field = 0; field < 3; field++) {
+        var coordField = ['Easting', 'Northing', 'Height'][field];
+        var value = String(rec[coordField] || '').trim();
+        if (!value) {
+          if (!pushValidationIssue(issues, 'Row ' + rowNum + ' (' + name + '): missing ' + coordField)) break;
+        } else if (isNaN(parseFloat(value))) {
+          if (
+            !pushValidationIssue(
+              issues,
+              'Row ' + rowNum + ' (' + name + '): ' + coordField + ' is not numeric (' + value + ')'
+            )
+          ) {
+            break;
+          }
+        }
+      }
+      if (issues.length >= MAX_VALIDATION_ISSUES) {
+        issues.truncated = true;
+        break;
+      }
 
       var tbcLength = String(rec.Length || '').trim();
       if (tbcLength && isNaN(parseFloat(tbcLength))) {
-        issues.push('Row ' + rowNum + ' (' + name + '): Length is not numeric (' + tbcLength + ')');
+        if (
+          !pushValidationIssue(
+            issues,
+            'Row ' + rowNum + ' (' + name + '): Length is not numeric (' + tbcLength + ')'
+          )
+        ) {
+          break;
+        }
       }
 
-      Object.keys(NUMERIC_FIELDS_TBC).forEach(function (field) {
-        if (field === 'Name') return;
-        var value = String(rec[field] || '').trim();
-        if (!value) return;
-        if (['Easting', 'Northing', 'Height', 'Length'].indexOf(field) !== -1) return;
-        if (isNaN(parseFloat(value))) issues.push('Row ' + rowNum + ' (' + name + '): ' + field + ' is not numeric (' + value + ')');
-      });
-    });
+      var numericFields = Object.keys(NUMERIC_FIELDS_TBC);
+      var nf;
+      for (nf = 0; nf < numericFields.length; nf++) {
+        field = numericFields[nf];
+        if (field === 'Name') continue;
+        value = String(rec[field] || '').trim();
+        if (!value) continue;
+        if (['Easting', 'Northing', 'Height', 'Length'].indexOf(field) !== -1) continue;
+        if (isNaN(parseFloat(value))) {
+          if (
+            !pushValidationIssue(
+              issues,
+              'Row ' + rowNum + ' (' + name + '): ' + field + ' is not numeric (' + value + ')'
+            )
+          ) {
+            break;
+          }
+        }
+      }
+      if (issues.length >= MAX_VALIDATION_ISSUES) {
+        issues.truncated = true;
+        break;
+      }
+    }
 
-    return issues;
+    return finishValidationIssues(issues, records.length);
   }
 
   function tbcToGroundworks(records) {
@@ -756,7 +877,7 @@ var GwCsvFormatter = (function () {
     }
 
     var result = {
-      ok: issues.length === 0,
+      ok: issues.length === 0 && !issues.truncated,
       issues: issues,
       pileCount: gwRecords.length,
       inputDelimiter: parsed.delimiter,

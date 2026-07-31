@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Groundworks CSV Formatter — Trimble Technician Assistant</title>
+  <title>Groundworks CSV Formatter (BETA) — Trimble Technician Assistant</title>
   <meta name="theme-color" content="#005f9e" />
-  <link rel="icon" type="image/png" sizes="32x32" href="../../../favicon-32.png" />
-  <link rel="stylesheet" href="../../../assets/trimble-connect.css" />
-  <link rel="stylesheet" href="../../../assets/app-access.css" />
-  <link rel="stylesheet" href="../../../assets/feedback.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=3" />
-  <link rel="stylesheet" href="../../../assets/trimble-internal.css?v=3" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32.png" />
+  <link rel="stylesheet" href="../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../../assets/app-access.css" />
+  <link rel="stylesheet" href="../../assets/beta-access.css?v=1" />
+  <link rel="stylesheet" href="../../assets/feedback.css?v=1" />
+  <link rel="stylesheet" href="styles.css?v=4" />
 </head>
-<body data-gw-page="csv-formatter">
+<body data-gw-page="csv-formatter" data-beta-tool="gw-csv-formatter" class="beta-access-locked">
   <header class="tc-app-header">
-    <a class="tc-back-link" href="../../index.html#category/groundworks-internal">&larr; Trimble Internal</a>
+    <a class="tc-back-link" href="../index.html">&larr; Trimble Groundworks</a>
     <div class="tc-header__inner">
       <div class="tc-header__brand">
-        <img class="tc-header__logo" src="../../../assets/brand/trimble-logo-white.png" alt="Trimble" />
+        <img class="tc-header__logo" src="../../assets/brand/trimble-logo-white.png" alt="Trimble" />
         <div class="tc-header__titles">
-          <h1 class="tc-header__product">Groundworks CSV formatter</h1>
+          <h1 class="tc-header__product">Groundworks CSV Formatter (BETA)</h1>
           <p class="tc-header__sub">Map columns and export pile CSV for Groundworks import</p>
         </div>
       </div>
@@ -28,8 +28,8 @@
 
   <main class="tc-main gw-csv-main">
     <p class="intro gw-csv-intro">
-      Upload a drill/pile CSV from <strong>TBC</strong>, <strong>Siteworks</strong>, or a data collector. Map your columns to the
-      Groundworks import layout, preview the result, then download or email a semicolon-separated file for Project Setup (Groundworks v2.0+).
+      <strong>BETA tool in development.</strong> Upload a drill/pile CSV from <strong>TBC</strong>, <strong>Siteworks</strong>, or a data collector.
+      Map your columns to the Groundworks import layout, preview the result, then download or email a semicolon-separated file for Project Setup (Groundworks v2.0+).
     </p>
 
     <div class="gw-format-note" role="note">
@@ -92,7 +92,6 @@
       </p>
       <div class="gw-angle-note" role="note">
         <strong>Orientation / Inclination / Rotation</strong> are in degrees. For vertical piles, start with <code>0</code> for each and confirm in a test Groundworks import.
-        Inclination is typically measured from vertical — verify in your project whether tilt follows the Orientation heading.
       </div>
       <div class="gw-mapping-slots" id="gwMappingSlots"></div>
     </section>
@@ -159,18 +158,23 @@
     </section>
   </main>
 
-  <footer class="tc-footer">Groundworks CSV formatter · Trimble Technician Assistant</footer>
+  <footer class="tc-footer">Groundworks CSV Formatter (BETA) · Trimble Technician Assistant</footer>
 
-  <script src="../../../assets/workspace-config.js?v=3"></script>
-  <script src="../../workspace-config.js"></script>
-  <script src="../../../assets/workspace-api.js?v=8"></script>
-  <script src="../../../assets/app-access.js?v=9"></script>
-  <script src="../../../assets/trimble-internal-icons.js?v=5"></script>
-  <script src="../../../assets/trimble-internal.js?v=4"></script>
-  <script src="../../../assets/header-home.js"></script>
-  <script src="../../../assets/feedback-config.js?v=3"></script>
-  <script src="../../../assets/feedback.js?v=4"></script>
-  <script src="formatter.js?v=9"></script>
-  <script src="app.js?v=11"></script>
+  <div class="gw-busy-overlay hidden" id="gwBusyOverlay" aria-live="polite" aria-busy="true">
+    <div class="gw-busy-overlay__panel" role="status">
+      <div class="gw-busy-overlay__spinner" aria-hidden="true"></div>
+      <p class="gw-busy-overlay__text" id="gwBusyText">Working…</p>
+    </div>
+  </div>
+
+  <script src="../../assets/workspace-config.js?v=5"></script>
+  <script src="../../assets/workspace-api.js?v=9"></script>
+  <script src="../../assets/app-access.js?v=10"></script>
+  <script src="../../assets/beta-access.js?v=3"></script>
+  <script src="../../assets/header-home.js"></script>
+  <script src="../../assets/feedback-config.js?v=3"></script>
+  <script src="../../assets/feedback.js?v=4"></script>
+  <script src="formatter.js?v=10"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

@@ -62,6 +62,14 @@
     return 'Fixed value';
   }
   var dragColumnIndex = null;
+  var LARGE_ROW_THRESHOLD = 2000;
+  var AUTO_PROCESS_ROW_THRESHOLD = 500;
+  var MAX_DISPLAY_ISSUES = 50;
+  var processTimer = null;
+  var ignoreTimer = null;
+  var processGeneration = 0;
+  var loadGeneration = 0;
+  var isBusy = false;
 
   var state = {
     fileName: '',
@@ -114,6 +122,84 @@
     els.emailMessage = $('gwEmailMessage');
     els.emailBtn = $('gwEmailBtn');
     els.emailHint = $('gwEmailHint');
+    els.busyOverlay = $('gwBusyOverlay');
+    els.busyText = $('gwBusyText');
+  }
+
+  function rowCount() {
+    return state.sourceTable && state.sourceTable.dataRows ? state.sourceTable.dataRows.length : 0;
+  }
+
+  function isLargeDataset() {
+    return rowCount() > LARGE_ROW_THRESHOLD;
+  }
+
+  function shouldAutoProcess() {
+    return rowCount() > 0 && rowCount() <= AUTO_PROCESS_ROW_THRESHOLD;
+  }
+
+  function setBusy(message) {
+    isBusy = true;
+    if (els.busyOverlay) {
+      els.busyOverlay.classList.remove('hidden');
+      if (els.busyText) els.busyText.textContent = message || 'Working…';
+    }
+    document.body.classList.add('gw-csv-busy');
+    if (els.processBtn) els.processBtn.disabled = true;
+    if (els.autoMapBtn) els.autoMapBtn.disabled = true;
+  }
+
+  function clearBusy() {
+    isBusy = false;
+    if (els.busyOverlay) els.busyOverlay.classList.add('hidden');
+    document.body.classList.remove('gw-csv-busy');
+    if (els.processBtn && state.inputText) els.processBtn.disabled = false;
+    if (els.autoMapBtn && state.inputText) els.autoMapBtn.disabled = false;
+  }
+
+  function showAwaitingPreviewStatus() {
+    els.statusCard.classList.remove('hidden', 'gw-card--ok', 'gw-card--warn', 'gw-card--error');
+    els.statusCard.classList.add('gw-card--warn');
+    els.issuesList.hidden = true;
+    els.issuesList.innerHTML = '';
+    var rows = rowCount();
+    els.statusLine.textContent =
+      rows.toLocaleString() +
+      ' row(s) loaded — map columns above, then click Apply mapping & preview to validate and export.';
+    if (isLargeDataset()) {
+      els.statusLine.textContent =
+        'Large file (' +
+        rows.toLocaleString() +
+        ' rows) — preview updates after you click Apply mapping & preview. Mapping stays responsive while you work.';
+    }
+    els.statusCard.classList.remove('hidden');
+  }
+
+  function invalidatePreview() {
+    state.result = null;
+    renderOutputPreview(null);
+    updateExportUi();
+    showAwaitingPreviewStatus();
+  }
+
+  function scheduleProcess(delay) {
+    if (processTimer) clearTimeout(processTimer);
+    processTimer = setTimeout(function () {
+      processTimer = null;
+      processCurrent();
+    }, delay == null ? 0 : delay);
+  }
+
+  function debouncedAutoProcess(delay) {
+    if (!shouldAutoProcess()) {
+      invalidatePreview();
+      return;
+    }
+    if (processTimer) clearTimeout(processTimer);
+    processTimer = setTimeout(function () {
+      processTimer = null;
+      processCurrent();
+    }, delay || 400);
   }
 
   function getProcessOptions() {
@@ -274,7 +360,7 @@
       constantInput.addEventListener('input', function () {
         if (constantInput.value.trim() === '') delete state.fieldConstants[field];
         else state.fieldConstants[field] = constantInput.value;
-        processCurrent();
+        debouncedAutoProcess(400);
       });
 
       slot.appendChild(constantLabel);
@@ -422,7 +508,13 @@
 
     if (result.issues.length) {
       els.issuesList.hidden = false;
-      result.issues.forEach(function (issue) {
+      var displayIssues = result.issues.slice(0, MAX_DISPLAY_ISSUES);
+      if (result.issues.length > MAX_DISPLAY_ISSUES) {
+        displayIssues.push(
+          '… and ' + (result.issues.length - MAX_DISPLAY_ISSUES) + ' more issue(s) not shown.'
+        );
+      }
+      displayIssues.forEach(function (issue) {
         var li = document.createElement('li');
         li.textContent = issue;
         els.issuesList.appendChild(li);
@@ -479,41 +571,55 @@
       alert('Choose a CSV file first.');
       return;
     }
+    if (isBusy) return;
 
-    try {
-      buildSourceState(false);
-      renderSourcePreview();
-      var mapIssues = mappingIssues();
-      if (mapIssues.length) {
-        state.result = {
-          ok: false,
-          issues: mapIssues,
-          pileCount: 0,
-        };
+    var gen = ++processGeneration;
+    setBusy('Validating and building export…');
+
+    setTimeout(function () {
+      if (gen !== processGeneration) return;
+
+      try {
+        buildSourceState(false);
+        if (gen !== processGeneration) return;
+
+        renderSourcePreview();
+        var mapIssues = mappingIssues();
+        if (mapIssues.length) {
+          state.result = {
+            ok: false,
+            issues: mapIssues,
+            pileCount: 0,
+          };
+          setStatus(state.result);
+          renderOutputPreview(null);
+          updateExportUi();
+          return;
+        }
+
+        state.result = GwCsvFormatter.processWithMapping(state.sourceTable, state.mapping, getProcessOptions());
+        if (gen !== processGeneration) return;
+
+        state.outputFileName = GwCsvFormatter.defaultOutputName(state.fileName);
         setStatus(state.result);
-        renderOutputPreview(null);
+        renderOutputPreview(state.result);
         updateExportUi();
-        rebuildMappingUiOnly();
-        return;
+        if (window.WorkspaceApi) {
+          window.WorkspaceApi.logCalcRun(state.result.ok ? 'ok' : 'issues', state.result.pileCount);
+        }
+      } catch (err) {
+        if (gen !== processGeneration) return;
+        state.result = null;
+        els.statusCard.classList.remove('hidden', 'gw-card--ok', 'gw-card--warn');
+        els.statusCard.classList.add('gw-card--error');
+        els.statusLine.textContent = err.message || 'Could not process CSV.';
+        els.issuesList.hidden = true;
+        els.outputCard.classList.add('hidden');
+        els.exportCard.classList.add('hidden');
+      } finally {
+        if (gen === processGeneration) clearBusy();
       }
-
-      state.result = GwCsvFormatter.processWithMapping(state.sourceTable, state.mapping, getProcessOptions());
-      state.outputFileName = GwCsvFormatter.defaultOutputName(state.fileName);
-      setStatus(state.result);
-      renderOutputPreview(state.result);
-      updateExportUi();
-      if (window.WorkspaceApi) {
-        window.WorkspaceApi.logCalcRun(state.result.ok ? 'ok' : 'issues', state.result.pileCount);
-      }
-    } catch (err) {
-      state.result = null;
-      els.statusCard.classList.remove('hidden', 'gw-card--ok', 'gw-card--warn');
-      els.statusCard.classList.add('gw-card--error');
-      els.statusLine.textContent = err.message || 'Could not process CSV.';
-      els.issuesList.hidden = true;
-      els.outputCard.classList.add('hidden');
-      els.exportCard.classList.add('hidden');
-    }
+    }, 0);
   }
 
   function rebuildMappingUiOnly() {
@@ -525,10 +631,25 @@
 
   function rebuildUi() {
     rebuildMappingUiOnly();
-    processCurrent();
+    if (!shouldAutoProcess()) {
+      invalidatePreview();
+      return;
+    }
+    scheduleProcess(0);
   }
 
   function resetUi() {
+    processGeneration++;
+    loadGeneration++;
+    if (processTimer) {
+      clearTimeout(processTimer);
+      processTimer = null;
+    }
+    if (ignoreTimer) {
+      clearTimeout(ignoreTimer);
+      ignoreTimer = null;
+    }
+    clearBusy();
     state.parsedRaw = null;
     state.sourceTable = null;
     state.mapping = {};
@@ -550,14 +671,42 @@
   }
 
   function onFileLoaded(file, text) {
+    var gen = ++loadGeneration;
+    processGeneration++;
     state.fileName = file.name;
     state.inputText = text;
     state.mappingTouched = false;
     els.fileMeta.textContent = file.name + ' (' + Math.max(1, Math.round(file.size / 1024)) + ' KB)';
     els.autoMapBtn.disabled = false;
     els.processBtn.disabled = false;
-    buildSourceState(true);
-    rebuildUi();
+    setBusy('Reading CSV…');
+
+    setTimeout(function () {
+      if (gen !== loadGeneration) return;
+
+      try {
+        buildSourceState(true);
+        if (gen !== loadGeneration) return;
+
+        rebuildMappingUiOnly();
+        if (shouldAutoProcess()) {
+          processCurrent();
+        } else {
+          invalidatePreview();
+          clearBusy();
+        }
+      } catch (err) {
+        if (gen !== loadGeneration) return;
+        state.result = null;
+        els.statusCard.classList.remove('hidden', 'gw-card--ok', 'gw-card--warn');
+        els.statusCard.classList.add('gw-card--error');
+        els.statusLine.textContent = err.message || 'Could not read CSV.';
+        els.issuesList.hidden = true;
+        els.outputCard.classList.add('hidden');
+        els.exportCard.classList.add('hidden');
+        clearBusy();
+      }
+    }, 0);
   }
 
   function downloadCsv() {
@@ -710,8 +859,29 @@
 
     els.ignoreRows.addEventListener('input', function () {
       if (!state.inputText) return;
-      buildSourceState(false);
-      processCurrent();
+      if (ignoreTimer) clearTimeout(ignoreTimer);
+      ignoreTimer = setTimeout(function () {
+        ignoreTimer = null;
+        if (!state.inputText) return;
+        setBusy('Updating row filter…');
+        setTimeout(function () {
+          try {
+            buildSourceState(false);
+            rebuildMappingUiOnly();
+            if (shouldAutoProcess()) {
+              processCurrent();
+            } else {
+              invalidatePreview();
+              clearBusy();
+            }
+          } catch (err) {
+            els.statusCard.classList.remove('hidden', 'gw-card--ok', 'gw-card--warn');
+            els.statusCard.classList.add('gw-card--error');
+            els.statusLine.textContent = err.message || 'Could not update ignored rows.';
+            clearBusy();
+          }
+        }, 0);
+      }, 450);
     });
 
     initEmailHint();
