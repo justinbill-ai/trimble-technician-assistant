@@ -165,12 +165,12 @@
     var rows = rowCount();
     els.statusLine.textContent =
       rows.toLocaleString() +
-      ' row(s) loaded — map columns above, then click Apply mapping & preview to validate and export.';
+      ' row(s) loaded — drag column headers to section 3, then click Apply mapping & preview.';
     if (isLargeDataset()) {
       els.statusLine.textContent =
         'Large file (' +
         rows.toLocaleString() +
-        ' rows) — preview updates after you click Apply mapping & preview. Mapping stays responsive while you work.';
+        ' rows) — map columns in section 3, then click Apply mapping & preview. The table in section 2 stays responsive while you work.';
     }
     els.statusCard.classList.remove('hidden');
   }
@@ -321,7 +321,19 @@
         });
         drop.appendChild(clearBtn);
       } else {
-        drop.textContent = 'Drop column here';
+        drop.classList.add('gw-map-slot__drop--empty');
+        var dropHint = document.createElement('div');
+        dropHint.className = 'gw-map-slot__drop-hint';
+        var dropArrow = document.createElement('span');
+        dropArrow.className = 'gw-map-slot__drop-arrow';
+        dropArrow.setAttribute('aria-hidden', 'true');
+        dropArrow.textContent = '↑';
+        var dropText = document.createElement('span');
+        dropText.className = 'gw-map-slot__drop-text';
+        dropText.textContent = 'Drag a column header here';
+        dropHint.appendChild(dropArrow);
+        dropHint.appendChild(dropText);
+        drop.appendChild(dropHint);
       }
 
       drop.addEventListener('dragover', function (e) {
@@ -383,7 +395,7 @@
       (state.sourceTable.ignoredRows && state.sourceTable.ignoredRows.length
         ? '. Ignoring file row(s): ' + state.sourceTable.ignoredRows.join(', ')
         : '') +
-      '. Drag a column header onto a Groundworks field above. Values interpreted as ' +
+      '. Grab a blue column header below and drag it down to section 3. Values interpreted as ' +
       inputUnitsLabel() +
       '.';
 
@@ -396,11 +408,27 @@
       th.className = 'gw-source-col';
       th.draggable = true;
       th.setAttribute('data-col-index', String(col.index));
-      th.textContent = sourceColumnHeaderText(col);
-      if (th.textContent === '') {
-        th.innerHTML = '&nbsp;';
-        th.title = 'Column ' + (col.index + 1);
-      }
+
+      var headerText = sourceColumnHeaderText(col);
+      if (!headerText) headerText = 'Column ' + (col.index + 1);
+      th.title = 'Drag to map: ' + headerText;
+
+      var grip = document.createElement('span');
+      grip.className = 'gw-source-col__grip';
+      grip.setAttribute('aria-hidden', 'true');
+      grip.textContent = '⋮⋮';
+
+      var label = document.createElement('span');
+      label.className = 'gw-source-col__label';
+      label.textContent = headerText;
+
+      var badge = document.createElement('span');
+      badge.className = 'gw-source-col__badge';
+      badge.textContent = 'Drag';
+
+      th.appendChild(grip);
+      th.appendChild(label);
+      th.appendChild(badge);
 
       var isMapped = Object.keys(state.mapping).some(function (field) {
         return state.mapping[field] === col.index;
@@ -410,6 +438,7 @@
       th.addEventListener('dragstart', function (e) {
         dragColumnIndex = col.index;
         th.classList.add('gw-source-col--dragging');
+        document.body.classList.add('gw-csv-dragging');
         if (e.dataTransfer) {
           e.dataTransfer.setData('text/plain', String(col.index));
           e.dataTransfer.effectAllowed = 'move';
@@ -417,6 +446,7 @@
       });
       th.addEventListener('dragend', function () {
         th.classList.remove('gw-source-col--dragging');
+        document.body.classList.remove('gw-csv-dragging');
         dragColumnIndex = null;
       });
 
@@ -623,10 +653,10 @@
   }
 
   function rebuildMappingUiOnly() {
-    els.mappingCard.classList.remove('hidden');
     els.sourceCard.classList.remove('hidden');
-    renderMappingSlots();
+    els.mappingCard.classList.remove('hidden');
     renderSourcePreview();
+    renderMappingSlots();
   }
 
   function rebuildUi() {
