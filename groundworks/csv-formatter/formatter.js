@@ -30,11 +30,24 @@ var GwCsvFormatter = (function () {
   var LINEAR_FIELDS = ['X', 'Y', 'Z', 'Length'];
 
   function normalizeInputUnits(units) {
-    return units === 'METRIC' ? 'METRIC' : 'US FT';
+    var raw = String(units || '').trim().toUpperCase();
+    if (raw === 'METRIC') return 'METRIC';
+    if (raw === 'INTL FT' || raw === 'INTERNATIONAL FT') return 'INTL FT';
+    return 'US FT';
   }
 
   function inputUnitLabel(units) {
-    return normalizeInputUnits(units) === 'METRIC' ? 'm' : 'US survey ft';
+    var normalized = normalizeInputUnits(units);
+    if (normalized === 'METRIC') return 'm';
+    if (normalized === 'INTL FT') return 'international ft';
+    return 'US survey ft';
+  }
+
+  function linearUnitSuffix(units) {
+    var normalized = normalizeInputUnits(units);
+    if (normalized === 'METRIC') return 'm';
+    if (normalized === 'INTL FT') return "Int'l ft";
+    return 'US ft';
   }
 
   function formatLinearValue(value) {
@@ -769,6 +782,7 @@ var GwCsvFormatter = (function () {
     defaultOutputName: defaultOutputName,
     normalizeInputUnits: normalizeInputUnits,
     inputUnitLabel: inputUnitLabel,
+    linearUnitSuffix: linearUnitSuffix,
     formatLinearValue: formatLinearValue,
     applyInputUnits: applyInputUnits,
     toTbcRecords: toTbcRecords,

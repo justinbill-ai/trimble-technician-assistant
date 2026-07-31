@@ -45,11 +45,12 @@
           <label class="gw-label" for="gwUnits">Imported CSV units</label>
           <select class="gw-input" id="gwUnits">
             <option value="US FT">US FT</option>
+            <option value="INTL FT">International FT</option>
             <option value="METRIC">METRIC</option>
           </select>
-          <p class="gw-hint">Match the coordinate and length units in your uploaded file before mapping and preview. Groundworks import expects the same units as your project.</p>
+          <p class="gw-hint">Match the coordinate and length units in your uploaded file before mapping and preview. Choose <strong>US FT</strong> (US survey foot), <strong>International FT</strong>, or <strong>METRIC</strong> to match your Groundworks project.</p>
           <div class="gw-angle-note gw-units-note" role="note">
-            <strong>No unit conversion.</strong> This formatter does not convert between metric and US feet — it treats values as already in the units you select above, which matches how pile coordinates are usually exported from TBC or Siteworks.
+            <strong>No unit conversion.</strong> This formatter does not convert between metric, US survey feet, or international feet — it treats values as already in the units you select above, which matches how pile coordinates are usually exported from TBC or Siteworks.
           </div>
         </div>
 
@@ -165,7 +166,7 @@
   <script src="../../assets/header-home.js"></script>
   <script src="../../assets/feedback-config.js?v=3"></script>
   <script src="../../assets/feedback.js?v=4"></script>
-  <script src="formatter.js?v=7"></script>
-  <script src="app.js?v=9"></script>
+  <script src="formatter.js?v=8"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

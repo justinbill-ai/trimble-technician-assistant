@@ -14,7 +14,13 @@
 
   function getInputUnits() {
     if (!els.units) return 'US FT';
-    return els.units.value === 'METRIC' ? 'METRIC' : 'US FT';
+    if (typeof GwCsvFormatter !== 'undefined' && GwCsvFormatter.normalizeInputUnits) {
+      return GwCsvFormatter.normalizeInputUnits(els.units.value);
+    }
+    var value = String(els.units.value || '').toUpperCase();
+    if (value === 'METRIC') return 'METRIC';
+    if (value === 'INTL FT' || value === 'INTERNATIONAL FT') return 'INTL FT';
+    return 'US FT';
   }
 
   function updateConstantPlaceholders() {
@@ -24,11 +30,17 @@
   }
 
   function inputUnitsLabel() {
+    if (typeof GwCsvFormatter !== 'undefined' && GwCsvFormatter.inputUnitLabel) {
+      return GwCsvFormatter.inputUnitLabel(getInputUnits());
+    }
     return getInputUnits() === 'METRIC' ? 'm' : 'US survey ft';
   }
 
   function linearUnitSuffix() {
-    return getInputUnits() === 'METRIC' ? 'm' : 'ft';
+    if (typeof GwCsvFormatter !== 'undefined' && GwCsvFormatter.linearUnitSuffix) {
+      return GwCsvFormatter.linearUnitSuffix(getInputUnits());
+    }
+    return getInputUnits() === 'METRIC' ? 'm' : 'US ft';
   }
 
   function fieldDisplayLabel(field) {

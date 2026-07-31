@@ -135,6 +135,13 @@ function testGwCsvFormatter() {
     inputUnits: 'METRIC',
   });
   assert(swMetric.inputUnits === 'METRIC', 'GW formatter records METRIC input units');
+  var swIntl = fmt.processWithMapping(swSource, swMapping, {
+    fieldConstants: { Length: '15' },
+    inputUnits: 'INTL FT',
+  });
+  assert(swIntl.inputUnits === 'INTL FT', 'GW formatter records International FT input units');
+  assert(fmt.linearUnitSuffix('INTL FT') === "Int'l ft", 'GW formatter International FT suffix');
+  assert(fmt.linearUnitSuffix('US FT') === 'US ft', 'GW formatter US FT suffix');
 
   var ignored = fmt.parseIgnoreRows('1,2...4,7');
   assert(ignored[1] && ignored[2] && ignored[3] && ignored[4] && ignored[7], 'Ignore rows parses singles and ranges');
