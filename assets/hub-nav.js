@@ -68,7 +68,6 @@
           icon: 'CS',
           name: 'CSV Formatter (BETA)',
           summary: 'Map survey/TBC CSV columns and export Groundworks pile import files — BETA access required',
-          beta: true,
         },
       ],
     },
