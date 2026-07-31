@@ -88,6 +88,54 @@ function testPd25() {
   assert(pnezLayout.idxN === 1 && pnezLayout.idxE === 2, 'PD25 PNEZ column order');
 }
 
+function testGwCsvFormatter() {
+  var sandbox = loadGlobalScript(path.join(root, 'groundworks/csv-formatter/formatter.js'), 'GwCsvFormatter');
+  var fmt = sandbox.GwCsvFormatter;
+  var flexCsv = fs.readFileSync(path.join(__dirname, 'fixtures/gw-flex-input.csv'), 'utf8');
+  var result = fmt.processCsv(flexCsv, {
+    fieldConstants: { Z: '962' },
+  });
+
+  assert(result.ok, 'GW formatter validates flex input');
+  assert(result.pileCount === 3, 'GW formatter reads three piles');
+  assert(result.outputDelimiter === ';', 'GW output uses semicolon delimiter');
+  assert(result.outputCsv.indexOf('ID;X;Y;Z;Orientation;Inclination;Rotation;Length') === 0, 'GW header row');
+  assert(result.outputCsv.indexOf('P1;100.5;200.25;962.0') !== -1, 'GW maps first pile coordinates');
+
+  var tbcCsv = fs.readFileSync(path.join(__dirname, 'fixtures/gw-tbc-input.csv'), 'utf8');
+  var tbcResult = fmt.processCsv(tbcCsv);
+  assert(tbcResult.ok, 'GW formatter accepts TBC header input');
+  assert(tbcResult.outputRecords[0].ID === 'A1', 'GW maps TBC Name to ID');
+  assert(tbcResult.outputRecords[0].Orientation === '45', 'GW maps Heading to Orientation');
+
+  var aliasParsed = fmt.parseCsvText('pile id;easting;northing;height;depth\nB1;10;20;30;12\n');
+  var aliasRecords = fmt.toGroundworksRecords(aliasParsed.header, aliasParsed.records);
+  assert(aliasRecords[0].ID === 'B1', 'GW coerces pile id alias');
+  assert(aliasRecords[0].Length === '12', 'GW coerces depth alias to Length');
+
+  var dupCsv = 'ID,X,Y,Z,Length\nD1,1,2,3,15\nD1,4,5,6,15\n';
+  var dupResult = fmt.processCsv(dupCsv, { validateOnly: true });
+  assert(!dupResult.ok, 'GW flags duplicate IDs');
+  assert(dupResult.issues.some(function (i) { return i.indexOf('duplicate') !== -1; }), 'GW duplicate issue message');
+
+  var swCsv = fs.readFileSync(path.join(__dirname, 'fixtures/gw-siteworks-export.csv'), 'utf8');
+  var swRaw = fmt.parseCsvRaw(swCsv);
+  var swSource = fmt.buildSourceTable(swRaw, { hasHeaderRow: true });
+  var swMapping = fmt.guessColumnMapping(swSource.columns);
+  assert(swMapping.ID === 0, 'Siteworks export maps point names to ID');
+  var swMapped = fmt.processWithMapping(swSource, swMapping, { fieldConstants: { Length: '15' } });
+  assert(swMapped.pileCount === 6, 'Siteworks export yields six piles');
+  assert(swMapped.outputRecords[0].ID === 'ML', 'Siteworks first pile ID preserved');
+  assert(swMapped.outputRecords[0].X === '5000', 'Siteworks northing maps to X');
+  assert(swMapped.outputRecords[0].Y === '1000', 'Siteworks easting maps to Y');
+  assert(swMapped.outputRecords[0].Z === '100.709', 'Siteworks elevation maps to Z');
+
+  var ignored = fmt.parseIgnoreRows('1,2...4,7');
+  assert(ignored[1] && ignored[2] && ignored[3] && ignored[4] && ignored[7], 'Ignore rows parses singles and ranges');
+  var swSkip = fmt.buildSourceTable(swRaw, { hasHeaderRow: true, ignoreRows: '7' });
+  assert(swSkip.dataRows.length === 5, 'Ignore rows removes a data row from export');
+}
+
 console.log('--- CTL measure-up ---');
 try {
   testCtl();
@@ -102,6 +150,14 @@ try {
 } catch (err) {
   failed++;
   console.error('FAIL: PD25 threw', err.message);
+}
+
+console.log('--- Groundworks CSV formatter ---');
+try {
+  testGwCsvFormatter();
+} catch (err) {
+  failed++;
+  console.error('FAIL: GW CSV formatter threw', err.message);
 }
 
 if (failed) {

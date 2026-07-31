@@ -3,6 +3,7 @@
   "private": true,
   "description": "Static field tools hub — PD25, CTL measure-up, pre-inspection, and related workflows.",
   "scripts": {
-    "test": "node tests/run-smoke.js"
+    "test": "node tests/run-smoke.js",
+    "verify:dealer": "node scripts/verify-dealer-deploy.js"
   }
 }

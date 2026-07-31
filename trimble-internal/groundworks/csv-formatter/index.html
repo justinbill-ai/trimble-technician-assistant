@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groundworks CSV Formatter — Trimble Technician Assistant</title>
+  <meta name="theme-color" content="#005f9e" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../favicon-32.png" />
+  <link rel="stylesheet" href="../../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../../../assets/app-access.css" />
+  <link rel="stylesheet" href="../../../assets/feedback.css?v=1" />
+  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="../../../assets/trimble-internal.css?v=3" />
+</head>
+<body data-gw-page="csv-formatter">
+  <header class="tc-app-header">
+    <a class="tc-back-link" href="../../index.html#category/groundworks-internal">&larr; Trimble Internal</a>
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img class="tc-header__logo" src="../../../assets/brand/trimble-logo-white.png" alt="Trimble" />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Groundworks CSV formatter</h1>
+          <p class="tc-header__sub">Map columns and export pile CSV for Groundworks import</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main gw-csv-main">
+    <p class="intro gw-csv-intro">
+      Upload a drill/pile CSV from <strong>TBC</strong>, <strong>Siteworks</strong>, or a data collector. Map your columns to the
+      Groundworks import layout, preview the result, then download or email a semicolon-separated file for Project Setup (Groundworks v2.0+).
+    </p>
+
+    <div class="gw-format-note" role="note">
+      <strong>Groundworks export columns</strong> (semicolon-separated):
+      <code>ID;X;Y;Z;Orientation;Inclination;Rotation;Length</code>.
+      Orientation, Inclination, and Rotation are in degrees.
+    </div>
+
+    <section class="gw-card" aria-labelledby="gwUploadHeading">
+      <h2 id="gwUploadHeading" class="gw-card__title">1. Upload &amp; options</h2>
+      <div class="gw-form-grid">
+        <div class="gw-field gw-field--full">
+          <label class="gw-label" for="gwCsvFile">Input CSV</label>
+          <input class="gw-input" id="gwCsvFile" type="file" accept=".csv,text/csv" />
+          <p class="gw-hint" id="gwFileMeta">No file selected.</p>
+        </div>
+
+        <div class="gw-field gw-field--full">
+          <label class="gw-check">
+            <input type="checkbox" id="gwHasHeader" checked />
+            First row is a header (row 1 is never exported — used for column labels only)
+          </label>
+        </div>
+
+        <div class="gw-field gw-field--full">
+          <label class="gw-label" for="gwIgnoreRows">Ignore rows</label>
+          <input class="gw-input" id="gwIgnoreRows" type="text" inputmode="text" placeholder="e.g. 1 or 1,3...6,9" />
+          <p class="gw-hint">
+            1-based row numbers from your CSV file. Separate with commas; use ranges like <code>3...6</code> or <code>3-6</code>
+            (same style as TBC). Example: <code>1,2...4,7</code> skips rows 1, 2, 3, 4, and 7. Row 1 is always skipped when the header box above is checked.
+          </p>
+        </div>
+      </div>
+
+      <div class="gw-actions">
+        <button type="button" class="gw-btn gw-btn--secondary" id="gwAutoMapBtn" disabled>Auto-map columns</button>
+        <button type="button" class="gw-btn gw-btn--primary" id="gwProcessBtn" disabled>Apply mapping &amp; preview</button>
+      </div>
+    </section>
+
+    <section class="gw-card hidden" id="gwMappingCard" aria-labelledby="gwMappingHeading">
+      <h2 id="gwMappingHeading" class="gw-card__title">2. Map columns</h2>
+      <p class="gw-hint gw-mapping-lead">
+        Drag a column from your imported file onto each Groundworks field, or enter a fixed value when your CSV does not include that column.
+        Required: <strong>ID</strong>, <strong>X</strong>, <strong>Y</strong>, <strong>Z</strong>, and <strong>Length</strong> (map or fixed value).
+      </p>
+      <div class="gw-angle-note" role="note">
+        <strong>Orientation / Inclination / Rotation</strong> are in degrees. For vertical piles, start with <code>0</code> for each and confirm in a test Groundworks import.
+        Inclination is typically measured from vertical — verify in your project whether tilt follows the Orientation heading.
+      </div>
+      <div class="gw-mapping-slots" id="gwMappingSlots"></div>
+    </section>
+
+    <section class="gw-card hidden" id="gwSourceCard" aria-labelledby="gwSourceHeading">
+      <h2 id="gwSourceHeading" class="gw-card__title">Imported CSV preview</h2>
+      <p class="gw-hint" id="gwSourceMeta"></p>
+      <div class="gw-table-wrap">
+        <table class="gw-table gw-table--source" id="gwSourceTable">
+          <thead id="gwSourceHead"></thead>
+          <tbody id="gwSourceBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="gw-card gw-card--status hidden" id="gwStatusCard" aria-live="polite">
+      <h2 class="gw-card__title">Validation</h2>
+      <p class="gw-status-line" id="gwStatusLine"></p>
+      <ul class="gw-issues" id="gwIssuesList" hidden></ul>
+    </section>
+
+    <section class="gw-card hidden" id="gwOutputCard" aria-labelledby="gwOutputHeading">
+      <h2 id="gwOutputHeading" class="gw-card__title">3. Groundworks export preview</h2>
+      <p class="gw-hint" id="gwOutputMeta"></p>
+      <div class="gw-table-wrap">
+        <table class="gw-table" id="gwOutputTable">
+          <thead id="gwOutputHead"></thead>
+          <tbody id="gwOutputBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="gw-card hidden" id="gwExportCard" aria-labelledby="gwExportHeading">
+      <h2 id="gwExportHeading" class="gw-card__title">4. Export &amp; deliver</h2>
+      <p class="gw-hint">
+        Save the converted CSV locally for USB transfer or Groundworks upload, or email it directly to the end user.
+      </p>
+
+      <div class="gw-actions gw-actions--wrap">
+        <button type="button" class="gw-btn gw-btn--primary" id="gwDownloadBtn">Download CSV</button>
+      </div>
+
+      <div class="gw-email-panel">
+        <h3 class="gw-email-panel__title">Email formatted CSV</h3>
+        <div class="gw-form-grid">
+          <div class="gw-field gw-field--full">
+            <label class="gw-label" for="gwEmailTo">Recipient email</label>
+            <input class="gw-input" id="gwEmailTo" type="email" inputmode="email" autocomplete="email" placeholder="customer@example.com" />
+          </div>
+          <div class="gw-field gw-field--full">
+            <label class="gw-label" for="gwEmailSubject">Subject</label>
+            <input class="gw-input" id="gwEmailSubject" type="text" value="Groundworks pile CSV" />
+          </div>
+          <div class="gw-field gw-field--full">
+            <label class="gw-label" for="gwEmailMessage">Message</label>
+            <textarea class="gw-input gw-textarea" id="gwEmailMessage" rows="3" placeholder="Attached is the formatted pile CSV for Groundworks import."></textarea>
+          </div>
+        </div>
+        <div class="gw-actions">
+          <button type="button" class="gw-btn gw-btn--secondary" id="gwEmailBtn">Send email</button>
+        </div>
+        <p class="gw-hint" id="gwEmailHint"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="tc-footer">Groundworks CSV formatter · Trimble Technician Assistant</footer>
+
+  <script src="../../../assets/workspace-config.js?v=3"></script>
+  <script src="../../workspace-config.js"></script>
+  <script src="../../../assets/workspace-api.js?v=8"></script>
+  <script src="../../../assets/app-access.js?v=9"></script>
+  <script src="../../../assets/trimble-internal-icons.js?v=5"></script>
+  <script src="../../../assets/trimble-internal.js?v=4"></script>
+  <script src="../../../assets/header-home.js"></script>
+  <script src="../../../assets/feedback-config.js?v=3"></script>
+  <script src="../../../assets/feedback.js?v=4"></script>
+  <script src="formatter.js?v=6"></script>
+  <script src="app.js?v=6"></script>
+</body>
+</html>

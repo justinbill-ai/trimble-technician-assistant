@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trimble Internal — Technician Assistant</title>
+  <meta name="theme-color" content="#003d66" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/app-access.css" />
+  <link rel="stylesheet" href="../assets/trimble-internal.css?v=3" />
+  <style>
+    .internal-notice {
+      max-width: 960px;
+      margin: 0 auto 16px;
+      padding: 10px 14px;
+      background: #fff8e6;
+      border-left: 4px solid #fbad26;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .category-pick--tmc { border-color: #003d66; }
+    .category-pick--groundworks-internal { border-color: #005f9e; }
+  </style>
+</head>
+<body data-app-access-entry>
+  <header class="tc-app-header">
+    <div class="tc-header__inner tc-header__inner--with-help">
+      <div class="tc-header__brand">
+        <img class="tc-header__logo" src="../assets/brand/trimble-logo-white.png" alt="Trimble" />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Trimble Internal</h1>
+          <p class="tc-header__sub">Technician Assistant — personnel only</p>
+        </div>
+      </div>
+      <div class="tc-header__actions">
+        <div id="trimbleInternalHeaderMount"></div>
+      </div>
+    </div>
+  </header>
+
+  <p class="internal-notice">
+    <strong>Not for dealer GitHub Pages.</strong> This package is kept separate from the public dealer hub.
+    Deploy only to a private or access-controlled host. Sign in with a verified <code>@trimble.com</code> email.
+  </p>
+
+  <main class="tc-main">
+    <section id="hubHome" class="hub-view">
+      <div id="categoryPicker" class="category-picker-grid" role="list"></div>
+    </section>
+
+    <section id="hubCategory" class="hub-view" hidden>
+      <a href="#" class="hub-back" id="hubBack">&larr; All categories</a>
+      <div class="hub-category-banner card">
+        <h2 class="hub-category-title" id="hubCategoryTitle"></h2>
+        <p class="hub-category-desc" id="hubCategoryDesc"></p>
+      </div>
+      <p class="tools-label">Tools</p>
+      <ul class="tool-list" id="hubToolList"></ul>
+    </section>
+  </main>
+
+  <footer class="tc-footer">Trimble Internal · not published on dealer GitHub Pages</footer>
+
+  <script src="../assets/workspace-config.js?v=3"></script>
+  <script src="./workspace-config.js"></script>
+  <script src="../assets/workspace-api.js?v=8"></script>
+  <script src="../assets/app-access.js?v=9"></script>
+  <script src="../assets/trimble-internal-icons.js?v=5"></script>
+  <script src="../assets/trimble-internal.js?v=4"></script>
+  <script src="./hub-nav.js"></script>
+</body>
+</html>

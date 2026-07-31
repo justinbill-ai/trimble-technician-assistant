@@ -1,0 +1,179 @@
+/* Trimble Internal — personnel status badge & hub banner */
+
+.trimble-internal-header-mount {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tc-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Personnel status badge (not a toggle) */
+.trimble-personnel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 5px;
+  border: 1px solid rgba(251, 173, 38, 0.85);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(251, 173, 38, 0.95) 0%, rgba(245, 155, 0, 0.95) 100%);
+  color: #003d66;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  max-width: min(280px, 42vw);
+}
+
+.trimble-personnel-badge__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #003d66;
+  color: #fbad26;
+}
+
+.trimble-personnel-badge__icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.trimble-personnel-badge__fallback {
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.trimble-personnel-badge__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.trimble-personnel-badge__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.trimble-personnel-badge__email {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.88;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* White card badge — compass + Trimble mark */
+.trimble-personnel-badge--white-card {
+  background: #ffffff;
+  border: 1px solid #e0e1e9;
+  color: #003d66;
+  box-shadow: 0 1px 4px rgba(37, 42, 46, 0.12);
+}
+
+.trimble-personnel-badge--white-card .trimble-personnel-badge__icon {
+  background: #ffffff;
+  border: 1px solid #e0e1e9;
+  width: 32px;
+  height: 32px;
+  box-shadow: inset 0 0 0 1px #f7f8fa;
+}
+
+.trimble-personnel-badge--white-card .trimble-personnel-badge__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.trimble-personnel-badge--white-card .trimble-personnel-badge__label {
+  color: #005f9e;
+}
+
+.trimble-personnel-badge--white-card .trimble-personnel-badge__email {
+  color: #6a6e79;
+  opacity: 1;
+}
+
+.trimble-internal-hub-banner__icon--white-card {
+  background: #ffffff;
+  border: 1px solid #e0e1e9;
+}
+
+.trimble-internal-hub-banner__icon--white-card svg {
+  width: 18px;
+  height: 18px;
+}
+
+.trimble-internal-hub-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, #003d66 0%, #005f9e 100%);
+  color: #fff;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  border-bottom: 3px solid #fbad26;
+}
+
+.trimble-internal-hub-banner[hidden] {
+  display: none !important;
+}
+
+.trimble-internal-hub-banner__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fbad26;
+  color: #003d66;
+}
+
+.trimble-internal-hub-banner__icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.category-pick--tmc {
+  border-color: #003d66;
+  background: linear-gradient(145deg, #f4f9fc 0%, #e8f2f8 100%);
+}
+
+.category-pick--tmc .category-pick__title {
+  color: #003d66;
+}
+
+.category-pick--tmc::after {
+  content: 'Trimble personnel';
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #005f9e;
+}

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trimble Internal — Icon Concepts (Local Preview)</title>
+  <link rel="stylesheet" href="../../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../../assets/trimble-internal.css?v=3" />
+  <style>
+    body { max-width: 1140px; margin: 0 auto; padding: 20px 18px 48px; }
+    h1 { color: var(--tc-blue); margin-top: 0; font-size: 1.35rem; }
+    h2 { font-size: 1rem; color: var(--tc-blue-dark); margin: 28px 0 12px; }
+    .lead { color: var(--tc-grey-600); margin-bottom: 20px; line-height: 1.5; }
+    .note {
+      padding: 12px 14px;
+      background: var(--tc-warn-bg);
+      border-left: 4px solid var(--tc-yellow);
+      border-radius: var(--tc-radius-lg);
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+    .palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .palette__chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid var(--tc-grey-300);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: #fff;
+    }
+    .palette__swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .filter-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--tc-grey-400);
+      border-radius: 999px;
+      background: #fff;
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--tc-blue-dark);
+    }
+    .filter-btn--active {
+      background: var(--tc-blue);
+      border-color: var(--tc-blue);
+      color: #fff;
+    }
+    .header-mock {
+      background: linear-gradient(90deg, #005f9e 0%, #003d66 100%);
+      border-radius: var(--tc-radius-lg);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .header-mock__inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header-mock__logo { height: 28px; width: auto; opacity: 0.95; }
+    .header-mock__title { font-weight: 700; font-size: 1rem; }
+    .header-mock__spacer { flex: 1; min-width: 8px; }
+    .context-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .context-tile {
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+      padding: 14px;
+      text-align: center;
+      background: #fff;
+    }
+    .context-tile__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--tc-grey-600);
+      margin-bottom: 10px;
+    }
+    .context-tile__icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .context-tile__icon svg { width: 28px; height: 28px; }
+    .context-tile__icon--dark { background: #003d66; color: #fbad26; }
+    .context-tile__icon--gold { background: linear-gradient(135deg, #fbad26, #f59b00); }
+    .context-tile__icon--blue { background: #005f9e; }
+    .context-tile__icon--white { background: #fff; border: 1px solid var(--tc-grey-300); }
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .icon-card {
+      border: 2px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+      padding: 12px;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .icon-card:hover { border-color: var(--tc-blue); box-shadow: var(--tc-shadow); }
+    .icon-card--selected {
+      border-color: #fbad26;
+      box-shadow: 0 0 0 2px rgba(251, 173, 38, 0.35);
+    }
+    .icon-card__tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .icon-card__tag--brand { background: #e8f2f8; color: #005f9e; }
+    .icon-card__tag--wrench { background: #fff8e6; color: #8d6e00; }
+    .icon-card__preview { margin-bottom: 8px; min-height: 40px; }
+    .icon-card__name { font-weight: 700; color: var(--tc-blue); font-size: 0.92rem; }
+    .icon-card__desc { font-size: 0.8rem; color: var(--tc-grey-600); margin: 4px 0 0; line-height: 1.35; }
+    .icon-card__id { font-size: 0.68rem; color: var(--tc-grey-500); font-family: ui-monospace, monospace; margin-top: 6px; }
+    .apply-bar {
+      position: sticky;
+      bottom: 0;
+      background: rgba(255,255,255,0.97);
+      border-top: 1px solid var(--tc-grey-300);
+      padding: 12px 0;
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: var(--tc-radius-lg);
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+    }
+    .btn-primary { background: var(--tc-blue); color: #fff; }
+    .btn-secondary { background: var(--tc-grey-200); color: var(--tc-blue-dark); }
+    .large-preview {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, #f4f9fc 0%, #e8f2f8 100%);
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+      margin: 16px 0 20px;
+    }
+    .large-preview__icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #003d66;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,61,102,0.25);
+    }
+    .large-preview__icon svg { width: 36px; height: 36px; }
+    .count-label { font-size: 0.84rem; color: var(--tc-grey-600); margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Trimble Internal — Header Icon Concepts</h1>
+  <p class="lead">
+    <strong id="iconCount">24</strong> badge concepts for verified <strong>@trimble.com</strong> users —
+    monochrome (gold on navy) and <strong>Trimble brand color</strong> variants.
+    Click a card to preview in the header mockup; choice persists for this browser session.
+  </p>
+  <p class="note">
+    <strong>Brand palette</strong> used in colored icons matches Technician Assistant / Trimble Connect tokens.
+    Set <code>WORKSPACE_CONFIG.trimbleInternalIcon</code> in <code>workspace-config.js</code> for production default.
+  </p>
+
+  <div class="palette" id="paletteBar" aria-label="Trimble brand palette"></div>
+
+  <div class="header-mock" aria-label="Header mockup">
+    <div class="header-mock__inner">
+      <img class="header-mock__logo" src="../../assets/brand/trimble-logo-white.png" alt="" />
+      <span class="header-mock__title">Technician Assistant</span>
+      <span class="header-mock__spacer"></span>
+      <div id="headerMockBadge"></div>
+    </div>
+  </div>
+
+  <div class="large-preview" id="largePreview">
+    <div class="large-preview__icon" id="largeIcon"></div>
+    <div>
+      <div id="largeLabel" style="font-weight:700;font-size:1.05rem;color:var(--tc-blue)"></div>
+      <div id="largeDesc" style="color:var(--tc-grey-600);margin-top:4px;font-size:0.9rem"></div>
+      <div id="largeMeta" style="font-size:0.78rem;color:var(--tc-grey-500);margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="context-row" id="contextRow" aria-label="Icon on different backgrounds"></div>
+
+  <div class="filter-bar" role="tablist">
+    <button type="button" class="filter-btn filter-btn--active" data-filter="all">All</button>
+    <button type="button" class="filter-btn" data-filter="brand">Brand color</button>
+    <button type="button" class="filter-btn" data-filter="wrench">Wrenches</button>
+    <button type="button" class="filter-btn" data-filter="mono">Monochrome</button>
+  </div>
+  <p class="count-label" id="visibleCount"></p>
+
+  <h2 id="sectionWrench" hidden>Wrench — technician service</h2>
+  <div class="icon-grid" id="gridWrench"></div>
+  <h2 id="sectionBrand" hidden>Brand color — Trimble blue &amp; gold</h2>
+  <div class="icon-grid" id="gridBrand"></div>
+  <h2 id="sectionMono" hidden>Monochrome — inherits badge gold on navy</h2>
+  <div class="icon-grid" id="gridMono"></div>
+
+  <div class="apply-bar">
+    <button type="button" class="btn btn-primary" id="openHubBtn">Open hub with selected icon</button>
+    <a class="btn btn-secondary" href="../index.html">Back to internal hub</a>
+    <span id="selectedLabel" style="font-size:0.88rem;color:var(--tc-grey-600)"></span>
+  </div>
+
+  <script src="../../assets/workspace-config.js?v=3"></script>
+  <script src="../../assets/trimble-internal-icons.js?v=5"></script>
+  <script>
+    (function () {
+      var STORAGE_KEY = 'tta-icon-preview-choice';
+      var icons = window.TrimbleInternalIcons.listIcons();
+      var brand = window.TrimbleInternalIcons.BRAND;
+      var filter = 'all';
+      var selectedLabel = document.getElementById('selectedLabel');
+      var largeIcon = document.getElementById('largeIcon');
+      var largeLabel = document.getElementById('largeLabel');
+      var largeDesc = document.getElementById('largeDesc');
+      var largeMeta = document.getElementById('largeMeta');
+
+      document.getElementById('iconCount').textContent = String(icons.length);
+
+      var paletteNames = [
+        { key: 'blue', label: 'Blue #005f9e' },
+        { key: 'dark', label: 'Dark #003d66' },
+        { key: 'mid', label: 'Mid #004a7c' },
+        { key: 'gold', label: 'Gold #fbad26' },
+        { key: 'tint', label: 'Tint #e8f2f8' },
+        { key: 'white', label: 'White' },
+      ];
+      var paletteBar = document.getElementById('paletteBar');
+      paletteNames.forEach(function (p) {
+        var chip = document.createElement('div');
+        chip.className = 'palette__chip';
+        chip.innerHTML =
+          '<span class="palette__swatch" style="background:' + brand[p.key] + '"></span>' + p.label;
+        paletteBar.appendChild(chip);
+      });
+
+      function getSelected() {
+        try {
+          return sessionStorage.getItem(STORAGE_KEY) || window.WORKSPACE_CONFIG.trimbleInternalIcon || 'shield-t';
+        } catch (e) {
+          return 'shield-t';
+        }
+      }
+
+      function setSelected(id) {
+        try { sessionStorage.setItem(STORAGE_KEY, id); } catch (e) {}
+        if (window.WORKSPACE_CONFIG) window.WORKSPACE_CONFIG.trimbleInternalIcon = id;
+        render();
+      }
+
+      function buildBadgeHtml(id) {
+        var icon = icons.find(function (i) { return i.id === id; }) || icons[0];
+        var whiteCard = icon.badgeStyle === 'white-card' ? ' trimble-personnel-badge--white-card' : '';
+        return (
+          '<div class="trimble-personnel-badge trimble-personnel-badge--' + icon.id + whiteCard + '">' +
+          '<span class="trimble-personnel-badge__icon">' + icon.svg + '</span>' +
+          '<span class="trimble-personnel-badge__text">' +
+          '<span class="trimble-personnel-badge__label">Internal</span>' +
+          '<span class="trimble-personnel-badge__email">you@trimble.com</span>' +
+          '</span></div>'
+        );
+      }
+
+      function makeCard(icon) {
+        var selected = getSelected();
+        var card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'icon-card' + (icon.id === selected ? ' icon-card--selected' : '');
+        card.innerHTML =
+          '<span class="icon-card__tag icon-card__tag--' +
+          (icon.family === 'wrench' ? 'wrench' : icon.palette) +
+          '">' +
+          (icon.family === 'wrench' ? 'Wrench' : icon.palette === 'brand' ? 'Brand color' : 'Monochrome') +
+          '</span>' +
+          '<div class="icon-card__preview">' + buildBadgeHtml(icon.id) + '</div>' +
+          '<div class="icon-card__name">' + icon.label + '</div>' +
+          '<p class="icon-card__desc">' + icon.desc + '</p>' +
+          '<div class="icon-card__id">' + icon.id + '</div>';
+        card.addEventListener('click', function () { setSelected(icon.id); });
+        return card;
+      }
+
+      function renderContext(svg) {
+        var row = document.getElementById('contextRow');
+        row.innerHTML = '';
+        var contexts = [
+          { label: 'Navy circle (badge)', cls: 'dark' },
+          { label: 'Gold badge bg', cls: 'gold' },
+          { label: 'Trimble blue', cls: 'blue' },
+          { label: 'White card', cls: 'white' },
+        ];
+        contexts.forEach(function (ctx) {
+          var tile = document.createElement('div');
+          tile.className = 'context-tile';
+          tile.innerHTML =
+            '<div class="context-tile__label">' + ctx.label + '</div>' +
+            '<div class="context-tile__icon context-tile__icon--' + ctx.cls + '">' + svg + '</div>';
+          row.appendChild(tile);
+        });
+      }
+
+      function renderGrid(container, list) {
+        container.innerHTML = '';
+        list.forEach(function (icon) {
+          container.appendChild(makeCard(icon));
+        });
+      }
+
+      function render() {
+        var selected = getSelected();
+        document.getElementById('headerMockBadge').innerHTML = buildBadgeHtml(selected);
+        selectedLabel.textContent = 'Selected: ' + selected;
+
+        var icon = icons.find(function (i) { return i.id === selected; }) || icons[0];
+        largeIcon.innerHTML = icon.svg;
+        largeLabel.textContent = icon.label;
+        largeDesc.textContent = icon.desc;
+        largeMeta.textContent = icon.id + ' · ' + (icon.palette === 'brand' ? 'Trimble brand colors' : 'Monochrome (currentColor)');
+        renderContext(icon.svg);
+
+        var brandIcons = icons.filter(function (i) { return i.palette === 'brand' && i.family !== 'wrench'; });
+        var monoIcons = icons.filter(function (i) { return i.palette === 'mono'; });
+        var wrenchIcons = icons.filter(function (i) { return i.family === 'wrench'; });
+        var visible = icons;
+        if (filter === 'brand') visible = brandIcons;
+        if (filter === 'mono') visible = monoIcons;
+        if (filter === 'wrench') visible = wrenchIcons;
+
+        document.getElementById('visibleCount').textContent =
+          'Showing ' + visible.length + ' of ' + icons.length + ' icons';
+
+        var showBrand = filter === 'all' || filter === 'brand';
+        var showMono = filter === 'all' || filter === 'mono';
+        var showWrench = filter === 'all' || filter === 'wrench';
+        document.getElementById('sectionBrand').hidden = !showBrand;
+        document.getElementById('sectionMono').hidden = !showMono;
+        document.getElementById('sectionWrench').hidden = !showWrench;
+        document.getElementById('gridBrand').hidden = !showBrand;
+        document.getElementById('gridMono').hidden = !showMono;
+        document.getElementById('gridWrench').hidden = !showWrench;
+
+        if (showBrand) renderGrid(document.getElementById('gridBrand'), brandIcons);
+        if (showMono) renderGrid(document.getElementById('gridMono'), monoIcons);
+        if (showWrench) renderGrid(document.getElementById('gridWrench'), wrenchIcons);
+      }
+
+      document.querySelectorAll('.filter-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.filter-btn').forEach(function (b) {
+            b.classList.toggle('filter-btn--active', b === btn);
+          });
+          filter = btn.getAttribute('data-filter');
+          render();
+        });
+      });
+
+      document.getElementById('openHubBtn').addEventListener('click', function () {
+        window.location.href = '../index.html';
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -87,8 +87,11 @@
   }
 
   function isAuthorized() {
-    if (global.AppAccess && typeof global.AppAccess.isAuthorized === 'function' && global.AppAccess.isAuthorized()) {
-      return true;
+    if (global.TrimbleInternal && typeof global.TrimbleInternal.isTrimblePersonnel === 'function') {
+      return global.TrimbleInternal.isTrimblePersonnel();
+    }
+    if (global.AppAccess && typeof global.AppAccess.isTrimblePersonnel === 'function') {
+      return global.AppAccess.isTrimblePersonnel();
     }
     return Boolean(loadSession() || loadStored());
   }

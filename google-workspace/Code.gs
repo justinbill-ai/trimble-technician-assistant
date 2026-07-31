@@ -110,6 +110,18 @@ var SHEET_HEADERS = {
     'Revoke',
   ],
   AccessCodes: ['email', 'code', 'expiresAt', 'createdAt'],
+  BetaAccessRequests: [
+    'timestamp',
+    'toolId',
+    'email',
+    'status',
+    'token',
+    'requestedAt',
+    'resolvedAt',
+    'resolvedBy',
+    'page',
+  ],
+  BetaApprovedUsers: ['toolId', 'email', 'grantedAt', 'expiresAt', 'grantType', 'approvedBy', 'lastCheckAt'],
 };
 
 function ensureSheet(ss, name, headers) {
@@ -315,6 +327,31 @@ function appendUpload(data, fileId, fileUrl) {
     fileId || '',
     fileUrl || '',
   ]);
+}
+
+function sendCsvEmail(data) {
+  var to = String(data.to || '').trim();
+  if (!isValidAccessEmail(to)) {
+    throw new Error('Invalid recipient email.');
+  }
+  if (!data.fileBase64) {
+    throw new Error('Missing CSV attachment.');
+  }
+  var bytes = Utilities.base64Decode(data.fileBase64);
+  var name = String(data.fileName || 'groundworks.csv').replace(/[\\/:*?"<>|]+/g, '_');
+  if (name.indexOf('.') === -1) name += '.csv';
+  var blob = Utilities.newBlob(bytes, data.mimeType || 'text/csv', name);
+  var subject = String(data.subject || 'Groundworks pile CSV');
+  var body =
+    String(data.message || '').trim() +
+    '\n\nSent from Trimble Technician Assistant.' +
+    '\nTool: ' +
+    (data.tool || '') +
+    '\nPage: ' +
+    (data.page || '');
+  var options = { attachments: [blob] };
+  if (data.email) options.replyTo = data.email;
+  MailApp.sendEmail(to, subject, body, options);
 }
 
 function sendFeedbackEmail(data) {
@@ -1063,6 +1100,361 @@ function handleAccessDeny(params) {
   return htmlAccessPage('Access denied', 'Denied access for <strong>' + email + '</strong>.', true);
 }
 
+function getBetaToolLabel(toolId) {
+  var labels = {
+    'gw-csv-formatter': 'Groundworks CSV Formatter (BETA)',
+  };
+  return labels[String(toolId || '')] || String(toolId || 'BETA tool');
+}
+
+function getBetaToolPage(toolId) {
+  var base = getAppUrl();
+  if (toolId === 'gw-csv-formatter') {
+    return base + 'groundworks/csv-formatter/index.html';
+  }
+  return base;
+}
+
+function findBetaApprovedUserRow(sheet, toolId, email) {
+  var normalized = normalizeAccessEmail(email);
+  var tid = String(toolId || '');
+  var values = sheet.getDataRange().getValues();
+  var i;
+  for (i = 1; i < values.length; i++) {
+    if (String(values[i][0] || '') === tid && normalizeAccessEmail(values[i][1]) === normalized) {
+      return { row: i + 1, values: values[i] };
+    }
+  }
+  return null;
+}
+
+function findLatestBetaRequestRow(sheet, toolId, email) {
+  var normalized = normalizeAccessEmail(email);
+  var tid = String(toolId || '');
+  var values = sheet.getDataRange().getValues();
+  var i;
+  var latest = null;
+  for (i = 1; i < values.length; i++) {
+    if (String(values[i][1] || '') === tid && normalizeAccessEmail(values[i][2]) === normalized) {
+      latest = { row: i + 1, values: values[i] };
+    }
+  }
+  return latest;
+}
+
+function upsertBetaApprovedUser(toolId, email, grantType, approvedBy) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'BetaApprovedUsers', SHEET_HEADERS.BetaApprovedUsers);
+  var now = Date.now();
+  var expiresAt = now + getAccessGrantMs();
+  var existing = findBetaApprovedUserRow(sheet, toolId, email);
+  var rowValues = [
+    String(toolId || ''),
+    normalizeAccessEmail(email),
+    accessIsoDate(now),
+    accessIsoDate(expiresAt),
+    grantType || 'manual',
+    approvedBy || '',
+    accessIsoDate(now),
+  ];
+  if (existing) {
+    sheet.getRange(existing.row, 1, existing.row, rowValues.length).setValues([rowValues]);
+  } else {
+    sheet.appendRow(rowValues);
+  }
+  return {
+    toolId: String(toolId || ''),
+    email: normalizeAccessEmail(email),
+    status: 'approved',
+    grantType: grantType || 'manual',
+    expiresAt: accessIsoDate(expiresAt),
+  };
+}
+
+function readBetaApprovedAccess(toolId, email) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'BetaApprovedUsers', SHEET_HEADERS.BetaApprovedUsers);
+  var existing = findBetaApprovedUserRow(sheet, toolId, email);
+  if (!existing) return null;
+  var expiresAt = new Date(existing.values[3]).getTime();
+  if (!expiresAt || isNaN(expiresAt)) return null;
+  if (Date.now() > expiresAt) {
+    return {
+      toolId: String(toolId || ''),
+      email: normalizeAccessEmail(email),
+      status: 'expired',
+      expiresAt: accessIsoDate(expiresAt),
+      grantType: existing.values[4] || '',
+    };
+  }
+  sheet.getRange(existing.row, 7).setValue(accessIsoDate(Date.now()));
+  return {
+    toolId: String(toolId || ''),
+    email: normalizeAccessEmail(email),
+    status: 'approved',
+    expiresAt: accessIsoDate(expiresAt),
+    grantType: existing.values[4] || '',
+  };
+}
+
+function createPendingBetaRequest(data) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'BetaAccessRequests', SHEET_HEADERS.BetaAccessRequests);
+  var toolId = String(data.toolId || '');
+  var email = normalizeAccessEmail(data.email);
+  var latest = findLatestBetaRequestRow(sheet, toolId, email);
+  if (latest && String(latest.values[3] || '').toLowerCase() === 'pending') {
+    return {
+      toolId: toolId,
+      email: email,
+      status: 'pending',
+      token: latest.values[4] || '',
+      duplicate: true,
+    };
+  }
+  var token = Utilities.getUuid();
+  var nowIso = accessIsoDate(Date.now());
+  sheet.appendRow([nowIso, toolId, email, 'pending', token, nowIso, '', '', data.page || '']);
+  return {
+    toolId: toolId,
+    email: email,
+    status: 'pending',
+    token: token,
+    duplicate: false,
+  };
+}
+
+function resolveBetaRequest(toolId, email, status, resolvedBy, token) {
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'BetaAccessRequests', SHEET_HEADERS.BetaAccessRequests);
+  var latest = findLatestBetaRequestRow(sheet, toolId, email);
+  if (!latest) return false;
+  if (token && String(latest.values[4]) !== String(token)) return false;
+  if (String(latest.values[3] || '').toLowerCase() !== 'pending') return false;
+  sheet.getRange(latest.row, 4).setValue(status);
+  sheet.getRange(latest.row, 7).setValue(accessIsoDate(Date.now()));
+  sheet.getRange(latest.row, 8).setValue(resolvedBy || '');
+  return true;
+}
+
+function sendBetaAdminEmail(toolId, email, token) {
+  var recipient = CONFIG.RECIPIENT_EMAIL;
+  var webAppUrl = getWebAppUrl();
+  var label = getBetaToolLabel(toolId);
+  var approveUrl =
+    webAppUrl +
+    '?action=beta_access_approve&toolId=' +
+    encodeURIComponent(toolId) +
+    '&email=' +
+    encodeURIComponent(email) +
+    '&token=' +
+    encodeURIComponent(token);
+  var denyUrl =
+    webAppUrl +
+    '?action=beta_access_deny&toolId=' +
+    encodeURIComponent(toolId) +
+    '&email=' +
+    encodeURIComponent(email) +
+    '&token=' +
+    encodeURIComponent(token);
+  var subject = '[Tech Assistant] BETA access — ' + label + ' — ' + email;
+  var plain =
+    email +
+    ' is requesting BETA access to ' +
+    label +
+    '.\n\nGrant: ' +
+    approveUrl +
+    '\nDeny: ' +
+    denyUrl;
+  var html =
+    '<p><strong>' +
+    email +
+    '</strong> is requesting <strong>BETA</strong> access to <strong>' +
+    label +
+    '</strong>.</p>' +
+    '<p style="margin:24px 0;">' +
+    '<a href="' +
+    approveUrl +
+    '" style="display:inline-block;padding:12px 20px;margin-right:12px;background:#005f9e;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">Grant BETA access</a>' +
+    '<a href="' +
+    denyUrl +
+    '" style="display:inline-block;padding:12px 20px;background:#fff;color:#b42318;text-decoration:none;border-radius:6px;border:1px solid #d0d5dd;font-weight:700;">Deny</a>' +
+    '</p>';
+  MailApp.sendEmail({
+    to: recipient,
+    subject: subject,
+    body: plain,
+    htmlBody: html,
+    replyTo: email,
+  });
+}
+
+function sendBetaApprovedUserEmail(toolId, email, expiresAt) {
+  var label = getBetaToolLabel(toolId);
+  var toolUrl = getBetaToolPage(toolId);
+  var subject = 'Technician Assistant — BETA access approved';
+  var plain =
+    'Your BETA access to ' +
+    label +
+    ' has been approved.\n\nOpen the tool: ' +
+    toolUrl +
+    '\n\nAccess expires: ' +
+    expiresAt;
+  var html =
+    '<p>Your <strong>BETA</strong> access to <strong>' +
+    label +
+    '</strong> has been approved.</p>' +
+    '<p style="margin:24px 0;"><a href="' +
+    toolUrl +
+    '" style="display:inline-block;padding:12px 20px;background:#005f9e;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">Open BETA tool</a></p>' +
+    '<p style="color:#666;font-size:13px;">Access expires: ' +
+    expiresAt +
+    '</p>';
+  MailApp.sendEmail({
+    to: email,
+    subject: subject,
+    body: plain,
+    htmlBody: html,
+    name: 'Technician Assistant',
+  });
+}
+
+function sendBetaDeniedUserEmail(toolId, email) {
+  var label = getBetaToolLabel(toolId);
+  var subject = 'Technician Assistant — BETA access update';
+  var body =
+    'Your request for BETA access to ' +
+    label +
+    ' was not approved at this time.\n\nContact the app administrator if you believe this is an error.';
+  MailApp.sendEmail(email, subject, body);
+}
+
+function buildBetaAccessCheckResult(toolId, email, options) {
+  options = options || {};
+  var revalidate = options.revalidate === true || String(options.revalidate || '') === '1';
+  var normalized = normalizeAccessEmail(email);
+  var tid = String(toolId || '');
+  if (!tid || !isValidAccessEmail(normalized)) {
+    return { ok: false, status: 'invalid', email: normalized, toolId: tid };
+  }
+  var approved = readBetaApprovedAccess(tid, normalized);
+  if (approved && approved.status === 'approved') {
+    return {
+      ok: true,
+      status: 'approved',
+      email: normalized,
+      toolId: tid,
+      expiresAt: approved.expiresAt,
+      grantType: approved.grantType,
+    };
+  }
+  if (approved && approved.status === 'expired') {
+    return { ok: true, status: 'expired', email: normalized, toolId: tid, expiresAt: approved.expiresAt };
+  }
+  var ss = getSpreadsheet();
+  var sheet = ensureSheet(ss, 'BetaAccessRequests', SHEET_HEADERS.BetaAccessRequests);
+  var latest = findLatestBetaRequestRow(sheet, tid, normalized);
+  if (latest) {
+    var requestStatus = String(latest.values[3] || '').toLowerCase();
+    if (requestStatus === 'pending') {
+      return { ok: true, status: 'pending', email: normalized, toolId: tid };
+    }
+    if (requestStatus === 'denied') {
+      return { ok: true, status: 'denied', email: normalized, toolId: tid };
+    }
+  }
+  return { ok: true, status: 'none', email: normalized, toolId: tid };
+}
+
+function handleBetaAccessRequest(data) {
+  var toolId = String(data.toolId || '');
+  var email = normalizeAccessEmail(data.email);
+  if (!toolId) {
+    return { ok: false, error: 'Missing tool id.' };
+  }
+  if (!isValidAccessEmail(email)) {
+    return { ok: false, error: 'Invalid email address.' };
+  }
+  var appAccess = readApprovedAccess(email);
+  if (!appAccess || appAccess.status !== 'approved') {
+    return { ok: false, error: 'App access is required before requesting BETA access.' };
+  }
+  var existing = readBetaApprovedAccess(toolId, email);
+  if (existing && existing.status === 'approved') {
+    return {
+      ok: true,
+      status: 'approved',
+      email: email,
+      toolId: toolId,
+      expiresAt: existing.expiresAt,
+      grantType: existing.grantType,
+    };
+  }
+  if (isAutoApproveEmail(email)) {
+    var granted = upsertBetaApprovedUser(toolId, email, 'trimble_auto', 'auto');
+    logAccessEvent('beta_access_granted', email, 'trimble_auto', data);
+    return {
+      ok: true,
+      status: 'approved',
+      email: email,
+      toolId: toolId,
+      expiresAt: granted.expiresAt,
+      grantType: 'trimble_auto',
+    };
+  }
+  var pending = createPendingBetaRequest(data);
+  if (!pending.duplicate) {
+    sendBetaAdminEmail(toolId, email, pending.token);
+    logAccessEvent('beta_access_requested', email, 'pending', data);
+  } else {
+    logAccessEvent('beta_access_requested', email, 'pending_duplicate', data);
+  }
+  return { ok: true, status: 'pending', email: email, toolId: toolId, duplicate: !!pending.duplicate };
+}
+
+function handleBetaAccessApprove(params) {
+  var toolId = String(params.toolId || '');
+  var email = normalizeAccessEmail(params.email);
+  var token = String(params.token || '');
+  if (!toolId || !isValidAccessEmail(email) || !token) {
+    return htmlAccessPage('BETA approval failed', 'Missing tool, email, or token.', false);
+  }
+  if (!resolveBetaRequest(toolId, email, 'approved', CONFIG.RECIPIENT_EMAIL, token)) {
+    return htmlAccessPage('BETA approval failed', 'This request is invalid or already resolved.', false);
+  }
+  var granted = upsertBetaApprovedUser(toolId, email, 'manual', CONFIG.RECIPIENT_EMAIL);
+  logAccessEvent('beta_access_granted', email, 'manual', { tool: toolId, page: getBetaToolPage(toolId) });
+  try {
+    sendBetaApprovedUserEmail(toolId, email, granted.expiresAt);
+  } catch (err) {}
+  return htmlAccessPage(
+    'BETA access granted',
+    'Approved <strong>' +
+      email +
+      '</strong> for <strong>' +
+      getBetaToolLabel(toolId) +
+      '</strong>. The user has been emailed a link to open the tool.',
+    true
+  );
+}
+
+function handleBetaAccessDeny(params) {
+  var toolId = String(params.toolId || '');
+  var email = normalizeAccessEmail(params.email);
+  var token = String(params.token || '');
+  if (!toolId || !isValidAccessEmail(email) || !token) {
+    return htmlAccessPage('BETA denial failed', 'Missing tool, email, or token.', false);
+  }
+  if (!resolveBetaRequest(toolId, email, 'denied', CONFIG.RECIPIENT_EMAIL, token)) {
+    return htmlAccessPage('BETA denial failed', 'This request is invalid or already resolved.', false);
+  }
+  logAccessEvent('beta_access_denied', email, 'manual', { tool: toolId, page: getBetaToolPage(toolId) });
+  try {
+    sendBetaDeniedUserEmail(toolId, email);
+  } catch (err) {}
+  return htmlAccessPage('BETA access denied', 'Denied BETA access for <strong>' + email + '</strong>.', true);
+}
+
 function htmlAccessPage(title, message, success) {
   var color = success ? '#005f9e' : '#b42318';
   var html =
@@ -1111,6 +1503,17 @@ function doPost(e) {
       return jsonResponse({ ok: true, fileId: saved.id, fileUrl: saved.url });
     }
 
+    if (action === 'csv_email') {
+      sendCsvEmail(data);
+      appendEvent(
+        Object.assign({}, data, {
+          event: 'csv_email',
+          detail: data.to || '',
+        })
+      );
+      return jsonResponse({ ok: true });
+    }
+
     if (action === 'access_request') {
       return jsonResponse(handleAccessRequest(data));
     }
@@ -1154,6 +1557,25 @@ function doGet(e) {
     return handleAccessRevoke(params);
   }
 
+  if (action === 'beta_access_check') {
+    return respondJson(
+      buildBetaAccessCheckResult(params.toolId, params.email, { revalidate: params.revalidate }),
+      callback
+    );
+  }
+
+  if (action === 'beta_access_start') {
+    return respondJson(handleBetaAccessRequest(params), callback);
+  }
+
+  if (action === 'beta_access_approve') {
+    return handleBetaAccessApprove(params);
+  }
+
+  if (action === 'beta_access_deny') {
+    return handleBetaAccessDeny(params);
+  }
+
   if (callback) {
     return respondJson({ ok: false, error: 'Unknown action' }, callback);
   }
@@ -1178,7 +1600,19 @@ function setupSheets() {
 
   setupReadmeSheet(ss);
   removeDefaultSheet(ss);
-  reorderSheets(ss, ['README', 'Events', 'Feedback', 'Uploads', 'AccessRequests', 'ApprovedUsers', 'AccessCodes']);
+  reorderSheets(ss, [
+    'README',
+    'Events',
+    'Feedback',
+    'Uploads',
+    'AccessRequests',
+    'ApprovedUsers',
+    'AccessCodes',
+    'BetaAccessRequests',
+    'BetaApprovedUsers',
+  ]);
   refreshApprovedUserRevokeLinks();
-  Logger.log('Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers, AccessCodes');
+  Logger.log(
+    'Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers, AccessCodes, BetaAccessRequests, BetaApprovedUsers'
+  );
 }

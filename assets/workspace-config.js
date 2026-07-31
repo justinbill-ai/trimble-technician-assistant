@@ -21,6 +21,13 @@ window.WORKSPACE_CONFIG = {
   telemetryEnabled: true,
   /** Show “Send copy to Trimble” on PDF export sections. */
   driveUploadEnabled: true,
+  /** BETA tools — per-tool labels for access gate and admin emails */
+  betaTools: {
+    'gw-csv-formatter': {
+      label: 'Groundworks CSV Formatter (BETA)',
+      path: 'groundworks/csv-formatter/index.html',
+    },
+  },
 };
 
 /** @deprecated Use WORKSPACE_CONFIG — kept for feedback.js compatibility */

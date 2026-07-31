@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trimble Groundworks — Technician Assistant</title>
+  <meta name="theme-color" content="#005f9e" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png" />
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <link rel="stylesheet" href="../assets/app-access.css" />
+  <style>
+    .gw-hub-intro { margin-bottom: 20px; }
+    .tool-list { list-style: none; margin: 0; padding: 0; }
+    .tool-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--tc-grey-400);
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-surface);
+      text-decoration: none;
+      color: inherit;
+      margin-bottom: 10px;
+      box-shadow: var(--tc-shadow);
+    }
+    .tool-link:hover { border-color: var(--tc-blue); background: var(--tc-blue-soft); }
+    .tool-link__icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: var(--tc-radius-lg);
+      background: var(--tc-blue);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tool-link__text { flex: 1; min-width: 0; }
+    .tool-link__name { font-weight: 700; color: var(--tc-blue); display: block; }
+    .tool-link__summary { font-size: 0.84rem; color: var(--tc-grey-600); display: block; }
+    .tool-link__arrow { margin-left: auto; color: var(--tc-grey-500); font-size: 1.2rem; }
+    .tool-link__beta {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #fff8e6;
+      border: 1px solid #fbad26;
+      color: #8d6e00;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body data-gw-page="hub">
+  <header class="tc-app-header">
+    <a class="tc-back-link" href="../index.html#category/groundworks">&larr; Trimble Groundworks</a>
+    <div class="tc-header__inner">
+      <div class="tc-header__brand">
+        <img class="tc-header__logo" src="../assets/brand/trimble-logo-white.png" alt="Trimble" />
+        <div class="tc-header__titles">
+          <h1 class="tc-header__product">Trimble Groundworks</h1>
+          <p class="tc-header__sub">Measure-up, calibration, and pile import tools</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="tc-main">
+    <p class="intro gw-hub-intro">
+      Field workflows for Groundworks pile drivers — PD25 measure-up and calibration.
+    </p>
+
+    <ul class="tool-list">
+      <li>
+        <a class="tool-link" href="./pd25/index.html">
+          <span class="tool-link__icon">PD</span>
+          <span class="tool-link__text">
+            <span class="tool-link__name">Vermeer PD25</span>
+            <span class="tool-link__summary">Guided pre measure-up workflow and COGO measure-up calculator</span>
+          </span>
+          <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+      </li>
+      <li>
+        <a class="tool-link" href="./csv-formatter/index.html">
+          <span class="tool-link__icon">CS</span>
+          <span class="tool-link__text">
+            <span class="tool-link__name">CSV Formatter <span class="tool-link__beta">BETA</span></span>
+            <span class="tool-link__summary">Map survey/TBC CSV columns and export Groundworks pile import files — BETA access required</span>
+          </span>
+          <span class="tool-link__arrow" aria-hidden="true">&#8250;</span>
+        </a>
+      </li>
+    </ul>
+  </main>
+
+  <footer class="tc-footer">Trimble Groundworks · Technician Assistant</footer>
+  <script src="../assets/workspace-config.js?v=3"></script>
+  <script src="../assets/workspace-api.js?v=7"></script>
+  <script src="../assets/app-access.js?v=9"></script>
+  <script src="../assets/header-home.js"></script>
+</body>
+</html>

@@ -126,7 +126,38 @@
     return days > 0 ? days : 28;
   }
 
+  function isLocalPreviewHost() {
+    var protocol = location.protocol || '';
+    if (protocol === 'file:') return true;
+    var host = (location.hostname || '').toLowerCase();
+    if (!host || host === 'localhost' || host === '127.0.0.1' || host === '[::1]') return true;
+    var appUrl = cfg('appUrl', '');
+    if (!appUrl) return false;
+    try {
+      var configured = new URL(appUrl);
+      return configured.hostname.toLowerCase() !== host;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function localHubEntryUrl() {
+    var script = document.querySelector('script[src*="app-access"]');
+    if (script) {
+      var src = script.getAttribute('src') || '';
+      var depth = (src.match(/\.\.\//g) || []).length;
+      var prefix = '';
+      var i;
+      for (i = 0; i < depth; i++) prefix += '../';
+      return prefix + 'index.html';
+    }
+    return './index.html';
+  }
+
   function hubEntryUrl() {
+    if (isLocalPreviewHost()) {
+      return localHubEntryUrl();
+    }
     var configured = cfg('appUrl', '');
     if (configured) {
       return configured.replace(/\/?$/, '/') + 'index.html';
@@ -146,6 +177,9 @@
   function redirectToHub() {
     var returnPath = location.pathname + location.search + location.hash;
     var hub = hubEntryUrl();
+    if (isLocalPreviewHost() && /^https?:\/\//i.test(hub)) {
+      hub = localHubEntryUrl();
+    }
     if (returnPath && !/\/index\.html$/i.test(returnPath) && returnPath !== '/') {
       var join = hub.indexOf('?') === -1 ? '?' : '&';
       hub += join + 'return=' + encodeURIComponent(returnPath);
@@ -158,15 +192,27 @@
     try {
       var params = new URLSearchParams(location.search);
       var target = params.get('return');
-      if (!target || target.indexOf('//') !== -1) return;
-      if (!target.startsWith('/')) return;
+      if (!target || target.indexOf('//') === 0) return;
+
+      var resolved;
+      if (/^https?:\/\//i.test(target)) {
+        resolved = new URL(target);
+      } else if (target.charAt(0) === '/') {
+        if (/^\/[A-Za-z]:\//.test(target)) return;
+        resolved = new URL(target, location.origin);
+      } else {
+        resolved = new URL(target, location.href);
+      }
+
+      if (resolved.origin !== location.origin) return;
+
       params.delete('return');
       var clean =
         location.pathname +
         (params.toString() ? '?' + params.toString() : '') +
         location.hash;
       history.replaceState({}, '', clean);
-      location.assign(target);
+      location.assign(resolved.href);
     } catch (err) {}
   }
 
@@ -711,6 +757,11 @@
 
   function bootstrapEntry() {
     ensureGate();
+    if (isLocalPreviewHost()) {
+      bootstrapLocalPreview();
+      setGateVisible(false);
+      return;
+    }
     if (!global.WorkspaceApi || !global.WORKSPACE_CONFIG || !global.WORKSPACE_CONFIG.endpoint) {
       lockAccess();
       showError('Access service is not configured. Contact the app developer.');
@@ -738,7 +789,21 @@
     lockAccess();
   }
 
+  function bootstrapLocalPreview() {
+    authorized = true;
+    document.body.classList.remove('app-access-locked');
+    dispatchAccessReady({
+      email: 'local-preview',
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      grantType: 'local-preview',
+    });
+  }
+
   function bootstrapVisitor() {
+    if (isLocalPreviewHost()) {
+      bootstrapLocalPreview();
+      return;
+    }
     var stored = loadAnyAccess();
     if (stored) {
       authorizeFromStorage(stored);
@@ -803,10 +868,16 @@
     redirectToHub();
   }
 
+  function isCurrentUserTrimbleEmail() {
+    return isAuthorized() && isTrimbleEmail(getEmail());
+  }
+
   global.AppAccess = {
     whenReady: whenReady,
     isAuthorized: isAuthorized,
     getEmail: getEmail,
+    isTrimbleEmail: isTrimbleEmail,
+    isTrimblePersonnel: isCurrentUserTrimbleEmail,
     signOut: signOut,
     bootstrap: bootstrap,
     isEntryPage: isEntryPage,

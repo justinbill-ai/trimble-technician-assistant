@@ -27,21 +27,28 @@
       path.indexOf('/pre-inspection/') !== -1 ||
       path.indexOf('/install-deliverable/') !== -1 ||
       path.indexOf('/excavator/') !== -1 ||
-      path.indexOf('/bench-crane/') !== -1
+      path.indexOf('/trimble-internal/') !== -1
     );
   }
 
   function detectTool() {
     var path = (window.location.pathname || '').toLowerCase().replace(/\\/g, '/');
+    if (path.indexOf('/groundworks/csv-formatter') !== -1) return 'gw-csv-formatter';
+    if (path.indexOf('/trimble-internal/groundworks/csv-formatter') !== -1) return 'gw-csv-formatter';
+    if (path.indexOf('/trimble-internal/bench-crane/') !== -1) return 'bench-crane';
+    if (path.indexOf('/trimble-internal/index.html') !== -1 || /\/trimble-internal\/?$/.test(path)) {
+      return 'internal-hub';
+    }
     if (path.indexOf('/groundworks/pd25/calculator') !== -1) return 'pd25-calculator';
     if (path.indexOf('/groundworks/pd25/guide') !== -1) return 'pd25-guide';
     if (path.indexOf('/groundworks/pd25/') !== -1) return 'pd25-hub';
+    if (path.indexOf('/groundworks/index.html') !== -1) return 'groundworks-hub';
+    if (/\/groundworks\/?$/.test(path)) return 'groundworks-hub';
     if (path.indexOf('/measure-up/ctl/') !== -1) return 'ctl-calculator';
     if (path.indexOf('/measure-up/') !== -1) return 'measure-up-hub';
     if (path.indexOf('/pre-inspection/') !== -1) return 'pre-inspection';
     if (path.indexOf('/install-deliverable/') !== -1) return 'install-deliverable';
     if (path.indexOf('/excavator/') !== -1) return 'excavator';
-    if (path.indexOf('/bench-crane/') !== -1) return 'bench-crane';
 
     if (!isSubAppPath(path)) {
       if (/\/index\.html$/i.test(path)) return 'hub';
@@ -221,6 +228,31 @@
     });
   }
 
+  function startBetaAccess(toolId, email) {
+    var ctx = baseContext();
+    return jsonpGet({
+      action: 'beta_access_start',
+      toolId: toolId,
+      email: email,
+      tool: ctx.tool,
+      page: ctx.page,
+      appVersion: ctx.appVersion,
+      userAgent: ctx.userAgent,
+      deviceType: ctx.deviceType,
+    }).catch(function () {
+      return { ok: false, error: 'Could not start BETA access request.' };
+    });
+  }
+
+  function checkBetaAccess(toolId, email, options) {
+    options = options || {};
+    var params = { action: 'beta_access_check', toolId: toolId, email: email };
+    if (options.revalidate) params.revalidate = '1';
+    return jsonpGet(params).catch(function () {
+      return { ok: false, error: 'Could not verify BETA access status.' };
+    });
+  }
+
   function logEvent(event, props) {
     props = props || {};
     var payload = Object.assign({ action: 'event', event: event }, baseContext(), props);
@@ -232,6 +264,23 @@
 
   function submitFeedback(data) {
     var payload = Object.assign({ action: 'feedback' }, baseContext(), data || {});
+    return postPayload(payload);
+  }
+
+  function sendCsvEmail(options) {
+    options = options || {};
+    var payload = Object.assign(
+      {
+        action: 'csv_email',
+        to: options.to || '',
+        subject: options.subject || 'Groundworks pile CSV',
+        message: options.message || '',
+        fileName: options.fileName || 'groundworks.csv',
+        mimeType: options.mimeType || 'text/csv',
+        fileBase64: options.fileBase64 || '',
+      },
+      baseContext()
+    );
     return postPayload(payload);
   }
 
@@ -275,6 +324,13 @@
     if (window.AppAccess && typeof window.AppAccess.isAuthorized === 'function' && !window.AppAccess.isAuthorized()) {
       return;
     }
+    if (
+      document.body &&
+      document.body.getAttribute('data-beta-tool') &&
+      document.body.classList.contains('beta-access-locked')
+    ) {
+      return;
+    }
     var tool = detectTool();
     if (tool === 'hub') {
       logEvent('hub_open');
@@ -288,6 +344,7 @@
     logCalcRun: logCalcRun,
     submitFeedback: submitFeedback,
     uploadReport: uploadReport,
+    sendCsvEmail: sendCsvEmail,
     utf8ToBase64: utf8ToBase64,
     detectTool: detectTool,
     baseContext: baseContext,
@@ -298,6 +355,8 @@
     verifyAccessCode: verifyAccessCode,
     resendAccessCode: resendAccessCode,
     checkAccess: checkAccess,
+    startBetaAccess: startBetaAccess,
+    checkBetaAccess: checkBetaAccess,
   };
 
   if (document.readyState === 'loading') {

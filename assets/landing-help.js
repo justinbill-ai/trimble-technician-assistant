@@ -14,7 +14,11 @@
     navList.innerHTML = '';
     var categories = (window.HubNav && window.HubNav.categories) || [];
     categories.forEach(function (cat) {
-      if (cat.hubHidden) return;
+      if (window.HubNav && typeof window.HubNav.isCategoryVisible === 'function') {
+        if (!window.HubNav.isCategoryVisible(cat)) return;
+      } else if (cat.hubHidden || cat.audience === 'internal') {
+        return;
+      }
       var li = document.createElement('li');
       li.className = 'help-guide__nav-cat';
       var toolsHtml = (cat.tools || [])

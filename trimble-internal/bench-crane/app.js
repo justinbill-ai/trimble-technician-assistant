@@ -11,7 +11,7 @@
       '<strong>Assembly guide could not start</strong>' +
       '<p style="margin:8px 0 0;font-size:0.9rem;">' + message + '</p>' +
       '<p style="margin:8px 0 0;font-size:0.85rem;color:#6a6e79;">Open from ' +
-      '<code>Trimble Technician Assistant\\bench-crane\\index.html</code> and hard refresh (Ctrl+Shift+R).</p>';
+      '<code>trimble-internal\\bench-crane\\index.html</code> and hard refresh (Ctrl+Shift+R).</p>';
     document.body.insertBefore(box, document.body.firstChild);
   }
 

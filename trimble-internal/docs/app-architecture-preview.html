@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Technician Assistant — Architecture Preview (Local)</title>
+  <link rel="stylesheet" href="../assets/trimble-connect.css" />
+  <style>
+    body { max-width: 1100px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { color: var(--tc-blue); margin-top: 0; }
+    h2 { margin-top: 32px; color: var(--tc-blue-dark); font-size: 1.1rem; }
+    .note {
+      padding: 12px 14px;
+      background: var(--tc-warn-bg);
+      border-left: 4px solid var(--tc-yellow);
+      border-radius: var(--tc-radius-lg);
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+    .diagram {
+      background: #fff;
+      border: 1px solid var(--tc-grey-300);
+      border-radius: var(--tc-radius-lg);
+      padding: 16px;
+      margin: 16px 0 24px;
+      overflow-x: auto;
+    }
+    pre.mermaid { margin: 0; background: transparent; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 12px 0 24px;
+    }
+    th, td {
+      border: 1px solid var(--tc-grey-300);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--tc-grey-100); }
+    code { font-size: 0.85em; }
+    a { color: var(--tc-blue); }
+  </style>
+</head>
+<body>
+  <h1>Technician Assistant — Dealer vs Trimble Internal</h1>
+  <p class="note">
+    <strong>Local preview only.</strong> This diagram documents the proposed two-sided hub architecture.
+    Nothing here is deployed to GitHub Pages until you approve. Open
+    <a href="../index.html">index.html</a> and toggle the header <strong>Internal</strong> control to try the preview.
+  </p>
+
+  <h2>1. High-level site structure</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TB
+  subgraph deploy [Deployment targets]
+    GH[GitHub Pages — dealer-facing]
+    INT[Future internal host / same app dual-mode]
+  end
+
+  subgraph hub [Technician Assistant Hub]
+    GATE[App access gate — email + code]
+    DEALER[Dealer hub mode]
+    INTERNAL[Trimble Internal hub mode]
+  end
+
+  GATE --> DEALER
+  GATE --> INTERNAL
+
+  GH --> GATE
+  INT --> GATE
+
+  DEALER --> D1[Earthworks]
+  DEALER --> D2[Siteworks]
+  DEALER --> D3[Installation]
+  DEALER --> D4[Groundworks — PD25 only]
+
+  INTERNAL --> I1[GW CSV formatter]
+  INTERNAL --> I2[TMC Bench Crane]
+  INTERNAL --> I3[Future internal tools]
+    </pre>
+  </div>
+
+  <h2>2. Access &amp; identity flow</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+sequenceDiagram
+  participant User
+  participant Hub as Hub index.html
+  participant Gate as App access
+  participant API as Apps Script
+  participant Mail as Email
+
+  User->>Hub: Open Technician Assistant
+  Hub->>Gate: Show access gate
+  User->>Gate: Submit work email
+  Gate->>API: access_start
+
+  alt @trimble.com auto-approve
+    API-->>Gate: approved + session
+  else External dealer email
+    API->>Mail: Admin approval + sign-in code
+    Mail-->>User: 6-digit code
+    User->>Gate: Verify code
+    API-->>Gate: approved + session
+  end
+
+  Gate-->>Hub: Unlock hub
+
+  alt Trimble personnel @trimble.com
+    Hub->>User: Show Internal master control in header
+  else Dealer / partner email
+    Hub->>User: Dealer hub only
+  end
+    </pre>
+  </div>
+
+  <h2>3. Hub mode switching (Trimble personnel)</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+stateDiagram-v2
+  [*] --> DealerHub: Default after sign-in
+  DealerHub --> InternalHub: Click header Internal control
+  InternalHub --> DealerHub: Click Internal control again
+
+  state DealerHub {
+    [*] --> ShowDealerCategories
+    ShowDealerCategories: Earthworks, Siteworks, Installation, Groundworks
+  }
+
+  state InternalHub {
+    [*] --> ShowInternalCategory
+    ShowInternalCategory: Trimble Internal tile only
+    ShowInternalCategory --> GWCSV: GW CSV formatter
+    ShowInternalCategory --> Bench: TMC Bench Crane
+  }
+    </pre>
+  </div>
+
+  <h2>4. Tool page protection</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart LR
+  A[User opens tool URL] --> B{Internal-only path?}
+  B -->|No| C[Normal app access check]
+  B -->|Yes| D{@trimble.com + authorized?}
+  D -->|Yes| C
+  D -->|No| E[Redirect to hub]
+  C --> F[Render tool]
+    </pre>
+  </div>
+
+  <h2>5. Current vs preview file map</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Area</th>
+        <th>Dealer-facing (live GitHub)</th>
+        <th>Trimble Internal (local preview)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Hub entry</td>
+        <td><code>index.html</code></td>
+        <td>Same — dual mode via header control</td>
+      </tr>
+      <tr>
+        <td>Access</td>
+        <td><code>assets/app-access.js</code></td>
+        <td>+ <code>isTrimblePersonnel()</code></td>
+      </tr>
+      <tr>
+        <td>Internal UI</td>
+        <td>—</td>
+        <td><code>assets/trimble-internal.js</code> + <code>.css</code></td>
+      </tr>
+      <tr>
+        <td>Categories</td>
+        <td><code>assets/hub-nav.js</code> audience: dealer</td>
+        <td>+ <code>trimble-internal</code> category</td>
+      </tr>
+      <tr>
+        <td>Groundworks</td>
+        <td>PD25 only</td>
+        <td>+ CSV formatter (internal path guard)</td>
+      </tr>
+      <tr>
+        <td>TMC / Bench crane</td>
+        <td>Hidden legacy TMC gate</td>
+        <td>Listed under Trimble Internal</td>
+      </tr>
+      <tr>
+        <td>Telemetry / email</td>
+        <td><code>google-workspace/Code.gs</code></td>
+        <td>Unchanged — logs <code>hub_mode</code> events</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>6. Feasibility summary</h2>
+  <p>
+    <strong>Difficulty: moderate — mostly wiring, not a rewrite.</strong> You already have email verification,
+    @trimble.com auto-approve, session storage, and a hidden TMC pattern. This preview adds:
+  </p>
+  <ul>
+    <li>A personnel check (<code>@trimble.com</code> + valid app session)</li>
+    <li>Hub mode toggle (dealer vs internal) stored in <code>sessionStorage</code></li>
+    <li>Category <code>audience</code> filtering in <code>hub-nav.js</code></li>
+    <li>Path guards for internal-only tools</li>
+    <li>Header <strong>Internal</strong> master control (gold badge when active)</li>
+  </ul>
+  <p>
+    For production you can keep <strong>one GitHub Pages site</strong> (dealer tools only in deploy branch) or
+    split deploy later. Internal tools stay out of dealer navigation until you flip
+    <code>trimbleInternalLocalPreview</code> off and deploy with real @trimble.com sign-in.
+  </p>
+
+  <p><a href="../index.html">&larr; Back to Technician Assistant</a></p>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+  </script>
+</body>
+</html>

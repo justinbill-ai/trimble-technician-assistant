@@ -1,0 +1,107 @@
+/* BETA tool access gate — extends app-access gate patterns */
+
+body.beta-access-locked .tc-main,
+body.beta-access-locked .tc-footer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.beta-access-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 550;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: linear-gradient(160deg, #003d66 0%, #005f9e 55%, #004a7c 100%);
+}
+
+.beta-access-gate[hidden] {
+  display: none;
+}
+
+.beta-access-gate__panel {
+  width: min(100%, 480px);
+  padding: 28px 24px 22px;
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius-lg);
+  background: var(--tc-surface);
+  box-shadow: var(--tc-shadow-md);
+}
+
+.beta-access-gate__badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff8e6;
+  border: 1px solid #fbad26;
+  color: #8d6e00;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.beta-access-gate__title {
+  margin: 0 0 8px;
+  font-size: 1.22rem;
+  line-height: 1.3;
+  color: var(--tc-text);
+}
+
+.beta-access-gate__lead {
+  margin: 0 0 16px;
+  color: var(--tc-grey-600);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.beta-access-gate__email {
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  background: var(--tc-grey-100);
+  border-radius: var(--tc-radius);
+  font-size: 0.88rem;
+  color: var(--tc-text);
+  word-break: break-all;
+}
+
+.beta-access-gate__error {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: var(--tc-radius);
+  background: var(--tc-error-bg);
+  color: var(--tc-error);
+  font-size: 0.85rem;
+}
+
+.beta-access-gate__status {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--tc-radius);
+  background: var(--tc-blue-soft);
+  color: var(--tc-blue-dark);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.beta-access-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tool-link__beta {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fff8e6;
+  border: 1px solid #fbad26;
+  color: #8d6e00;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+}

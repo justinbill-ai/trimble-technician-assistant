@@ -46,7 +46,7 @@ Share this folder only with people who should see opt-in report uploads. The App
    - `AUTO_APPROVE_DOMAINS` — default `trimble.com` (comma-separated; no manual approval)
 
 5. Run **`setupSheets`** once from the editor (Run ▶). Approve permissions when prompted.
-   - Creates **README**, **Events**, **Feedback**, **Uploads**, **AccessRequests**, **ApprovedUsers** with Trimble-style headers
+   - Creates **README**, **Events**, **Feedback**, **Uploads**, **AccessRequests**, **ApprovedUsers**, **AccessCodes**, **BetaAccessRequests**, **BetaApprovedUsers** with Trimble-style headers
    - Removes the default empty **Sheet1** tab
    - Safe to run again after updating `Code.gs` — refreshes headers and formatting without deleting data rows
 6. **Deploy** → **New deployment** → type **Web app**:
@@ -143,6 +143,45 @@ After deploying a new web app URL/version, run **Tech Assistant → Refresh revo
 
 ---
 
+## BETA tool access
+
+Some dealer tools (e.g. **Groundworks CSV Formatter (BETA)**) require a **second** access grant on top of main app access. Users must already be approved in **ApprovedUsers** before they can request BETA access.
+
+| Domain / user | BETA flow |
+|---------------|-----------|
+| `@trimble.com` | Auto-approved on first **Continue to BETA tool** (no admin email) |
+| Everyone else | **Request BETA access** → admin email with **Grant BETA access** / **Deny** → user emailed when approved |
+
+**Sheets (created by `setupSheets`):**
+
+| Sheet | Purpose |
+|-------|---------|
+| **BetaAccessRequests** | Pending / resolved BETA requests (`toolId`, `email`, `status`, `token`, `page`) |
+| **BetaApprovedUsers** | Active BETA grants per tool (`toolId`, `email`, `expiresAt`, `grantType`) |
+
+**Tool IDs** (must match `data-beta-tool` on the page and `betaTools` in `assets/workspace-config.js`):
+
+| Tool ID | Label | Dealer path |
+|---------|-------|-------------|
+| `gw-csv-formatter` | Groundworks CSV Formatter (BETA) | `groundworks/csv-formatter/index.html` |
+
+**Client modules:** `assets/beta-access.js`, `assets/beta-access.css` — loaded on BETA tool pages after `app-access.js`. The tool UI defers initialization until `tta:beta-access-ready` fires.
+
+**Telemetry events:** `beta_access_requested`, `beta_access_granted`, `beta_access_denied` (logged from Apps Script and the client).
+
+**Redeploy required:** After updating `Code.gs` with BETA handlers, run **`setupSheets`** (adds **BetaAccessRequests** and **BetaApprovedUsers** tabs) and deploy a **new version** of the web app so `beta_access_start`, `beta_access_check`, `beta_access_approve`, and `beta_access_deny` work.
+
+**Publishing a new BETA tool:**
+
+1. Add the tool folder under the dealer path (e.g. `groundworks/csv-formatter/`).
+2. Set `data-beta-tool="<tool-id>"` on `<body>` and include `beta-access.css` / `beta-access.js`.
+3. Register the tool in `assets/workspace-config.js` → `betaTools` and `assets/hub-nav.js`.
+4. Add `getBetaToolLabel` / `getBetaToolPage` entries in `Code.gs`.
+5. Defer tool `app.js` init until `tta:beta-access-ready` (or check `beta-access-locked` is removed).
+6. Run `setupSheets`, deploy new Apps Script version, bump script `?v=` cache busters, push static site to GitHub Pages.
+
+---
+
 ## Telemetry conventions (when adding features)
 
 1. Add a `detectTool()` branch in `assets/workspace-api.js` if the tool is new.
@@ -159,7 +198,11 @@ After deploying a new web app URL/version, run **Tech Assistant → Refresh revo
 | `access_requested` | Non-Trimble user requested app access |
 | `access_granted` | Access approved (`trimble_auto` or manual grant) |
 | `access_denied` | Access request denied |
-| `calc_run` | User ran CTL or PD25 calculator (Calculate / Run calculations) |
+| `beta_access_requested` | Non-Trimble user requested BETA tool access |
+| `beta_access_granted` | BETA access approved (`trimble_auto` or manual grant) |
+| `beta_access_denied` | BETA access request denied |
+| `calc_run` | User ran CTL, PD25, or GW CSV formatter |
+| `csv_download` / `csv_email` | GW CSV formatter export actions |
 | `csv_uploaded` | Survey CSV file selected |
 | `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculation outcome |
 | `csv_analyzed:missing` | Required survey point missing (PD25) |
