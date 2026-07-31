@@ -143,6 +143,12 @@ function testGwCsvFormatter() {
   assert(fmt.linearUnitSuffix('INTL FT') === "Int'l ft", 'GW formatter International FT suffix');
   assert(fmt.linearUnitSuffix('US FT') === 'US ft', 'GW formatter US FT suffix');
 
+  var noLengthParsed = fmt.parseCsvRaw('id,x,y,z\nA,1,2,3\n');
+  var noLengthSource = fmt.buildSourceTable(noLengthParsed, { hasHeaderRow: true });
+  var noLengthMapping = { ID: 0, X: 1, Y: 2, Z: 3 };
+  var noLengthResult = fmt.processWithMapping(noLengthSource, noLengthMapping, {});
+  assert(noLengthResult.outputRecords[0].Length === '0', 'GW defaults missing Length to 0');
+
   var ignored = fmt.parseIgnoreRows('1,2...4,7');
   assert(ignored[1] && ignored[2] && ignored[3] && ignored[4] && ignored[7], 'Ignore rows parses singles and ranges');
   var swSkip = fmt.buildSourceTable(swRaw, { hasHeaderRow: true, ignoreRows: '7' });

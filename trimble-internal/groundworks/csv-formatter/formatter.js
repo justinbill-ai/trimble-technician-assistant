@@ -535,11 +535,16 @@ var GwCsvFormatter = (function () {
       if (seen[id]) issues.push('Row ' + rowNum + ': duplicate ID \'' + id + '\'');
       seen[id] = true;
 
-      ['X', 'Y', 'Z', 'Length'].forEach(function (field) {
+      ['X', 'Y', 'Z'].forEach(function (field) {
         var value = String(rec[field] || '').trim();
         if (!value) issues.push('Row ' + rowNum + ' (' + id + '): missing ' + field);
         else if (isNaN(parseFloat(value))) issues.push('Row ' + rowNum + ' (' + id + '): ' + field + ' is not numeric (' + value + ')');
       });
+
+      var lengthValue = String(rec.Length || '').trim();
+      if (lengthValue && isNaN(parseFloat(lengthValue))) {
+        issues.push('Row ' + rowNum + ' (' + id + '): Length is not numeric (' + lengthValue + ')');
+      }
 
       ['Orientation', 'Inclination', 'Rotation'].forEach(function (field) {
         var value = String(rec[field] || '').trim();
@@ -623,11 +628,16 @@ var GwCsvFormatter = (function () {
       if (seen[name]) issues.push('Row ' + rowNum + ': duplicate Name \'' + name + '\'');
       seen[name] = true;
 
-      ['Easting', 'Northing', 'Height', 'Length'].forEach(function (field) {
+      ['Easting', 'Northing', 'Height'].forEach(function (field) {
         var value = String(rec[field] || '').trim();
         if (!value) issues.push('Row ' + rowNum + ' (' + name + '): missing ' + field);
         else if (isNaN(parseFloat(value))) issues.push('Row ' + rowNum + ' (' + name + '): ' + field + ' is not numeric (' + value + ')');
       });
+
+      var tbcLength = String(rec.Length || '').trim();
+      if (tbcLength && isNaN(parseFloat(tbcLength))) {
+        issues.push('Row ' + rowNum + ' (' + name + '): Length is not numeric (' + tbcLength + ')');
+      }
 
       Object.keys(NUMERIC_FIELDS_TBC).forEach(function (field) {
         if (field === 'Name') return;
@@ -699,17 +709,18 @@ var GwCsvFormatter = (function () {
 
   function applyGroundworksDefaults(records) {
     records.forEach(function (rec) {
-      ['Orientation', 'Inclination', 'Rotation'].forEach(function (field) {
+      ['Orientation', 'Inclination', 'Rotation', 'Length'].forEach(function (field) {
         if (!String(rec[field] || '').trim()) rec[field] = '0';
       });
     });
   }
 
   function applyTbcDefaults(records, options) {
+    options = options || {};
     var defaultLength = options.defaultLength != null ? options.defaultLength : options.defaultDepth;
     records.forEach(function (rec) {
-      if (!String(rec.Length || '').trim() && defaultLength != null) {
-        rec.Length = String(defaultLength);
+      if (!String(rec.Length || '').trim()) {
+        rec.Length = defaultLength != null ? String(defaultLength) : '0';
       }
       if (!String(rec.Height || '').trim() && options.defaultHeight != null) {
         rec.Height = String(options.defaultHeight);

@@ -1,11 +1,11 @@
 (function () {
   'use strict';
 
-  var REQUIRED_FIELDS = ['ID', 'X', 'Y', 'Z', 'Length'];
+  var REQUIRED_FIELDS = ['ID', 'X', 'Y', 'Z'];
   var LINEAR_FIELDS = ['X', 'Y', 'Z', 'Length'];
   var ANGLE_FIELDS = ['Orientation', 'Inclination', 'Rotation'];
   var FIELD_CONSTANT_PLACEHOLDERS = {
-    Length: 'e.g. 15',
+    Length: '0',
     Z: 'e.g. 100.5',
     Orientation: '0',
     Inclination: '0',
@@ -25,7 +25,6 @@
 
   function updateConstantPlaceholders() {
     var metric = getInputUnits() === 'METRIC';
-    FIELD_CONSTANT_PLACEHOLDERS.Length = metric ? 'e.g. 4.5' : 'e.g. 15';
     FIELD_CONSTANT_PLACEHOLDERS.Z = metric ? 'e.g. 30.5' : 'e.g. 100.5';
   }
 
@@ -74,6 +73,7 @@
       Orientation: '0',
       Inclination: '0',
       Rotation: '0',
+      Length: '0',
     },
     mappingTouched: false,
     result: null,
@@ -536,6 +536,7 @@
       Orientation: '0',
       Inclination: '0',
       Rotation: '0',
+      Length: '0',
     };
     state.mappingTouched = false;
     state.result = null;
