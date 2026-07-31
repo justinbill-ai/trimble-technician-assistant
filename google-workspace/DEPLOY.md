@@ -202,7 +202,7 @@ Some dealer tools (e.g. **Groundworks CSV Formatter (BETA)**) require a **second
 | `beta_access_granted` | BETA access approved (`trimble_auto` or manual grant) |
 | `beta_access_denied` | BETA access request denied |
 | `calc_run` | User ran CTL, PD25, or GW CSV formatter |
-| `csv_download` / `csv_email` | GW CSV formatter export actions |
+| `csv_download` / `csv_email_sent` / `csv_email_failed` | GW CSV formatter export actions |
 | `csv_uploaded` | Survey CSV file selected |
 | `csv_analyzed:ok` / `csv_analyzed:fail` | Measure-up calculation outcome |
 | `csv_analyzed:missing` | Required survey point missing (PD25) |
@@ -231,3 +231,6 @@ Some dealer tools (e.g. **Groundworks CSV Formatter (BETA)**) require a **second
 | Feedback email works, no Sheet rows | Old script without `appendFeedback` — replace with full `Code.gs` |
 | Upload fails | Check `DRIVE_FOLDER_ID`; script account needs edit access to folder |
 | CORS / fetch errors | App uses iframe form POST — do not switch to `fetch()` without Apps Script CORS setup |
+| CSV email UI says sent but no mail | Old Events rows named `csv_email` are client telemetry only. After redeploy, look for **`csv_email_sent`** or **`csv_email_failed`** in Events. Large files upload in chunks — redeploy latest `Code.gs` and `workspace-api.js`. |
+| `setupSheets` unknown error | Run **`setupSheetsMinimal`** first (headers only, no banding). If that works, full `setupSheets` is optional. Also close the spreadsheet tab in your browser while running from the editor. |
+| Large CSV email fails | Files over ~1.5 MB are emailed as a **Drive download link** instead of an attachment. Confirm the script account can share files from the report archive folder. |

@@ -143,6 +143,19 @@ function clearSheetBanding(sheet) {
   }
 }
 
+function formatSheetHeaderOnly(sheet, colCount) {
+  if (!sheet || !colCount || colCount < 1) return;
+  sheet
+    .getRange(1, 1, 1, colCount)
+    .setBackground('#005f9e')
+    .setFontColor('#ffffff')
+    .setFontWeight('bold')
+    .setFontSize(10)
+    .setVerticalAlignment('middle');
+  sheet.setFrozenRows(1);
+  sheet.setRowHeight(1, 32);
+}
+
 function formatDataSheet(sheet, colCount) {
   if (!sheet) {
     throw new Error('formatDataSheet requires a sheet. Run setupSheets instead of formatDataSheet.');
@@ -158,7 +171,7 @@ function formatDataSheet(sheet, colCount) {
     .setFontSize(10)
     .setVerticalAlignment('middle');
   sheet.setFrozenRows(1);
-  sheet.getRange(1, 1, sheet.getMaxRows(), colCount).setWrap(false);
+  sheet.getRange(1, 1, 1, colCount).setWrap(false);
   sheet.setRowHeight(1, 32);
 
   var widths = {
@@ -183,8 +196,9 @@ function formatDataSheet(sheet, colCount) {
 
   if (sheet.getLastRow() > 1) {
     clearSheetBanding(sheet);
+    var bandEndRow = Math.min(sheet.getLastRow(), 5000);
     sheet
-      .getRange(2, 1, sheet.getLastRow(), colCount)
+      .getRange(2, 1, bandEndRow, colCount)
       .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
   }
 }
@@ -249,7 +263,11 @@ function setupReadmeSheet(ss) {
     .setFontColor('#ffffff')
     .setFontWeight('bold');
   clearSheetBanding(sheet);
-  sheet.getRange('A6:D11').applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+  try {
+    sheet.getRange('A6:D11').applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+  } catch (bandErr) {
+    Logger.log('setupReadmeSheet: skipped row banding — ' + bandErr);
+  }
   sheet.setFrozenRows(5);
 }
 
@@ -261,12 +279,13 @@ function removeDefaultSheet(ss) {
 }
 
 function reorderSheets(ss, namesInOrder) {
+  // Move from last to first so indices stay stable.
   var i;
-  for (i = 0; i < namesInOrder.length; i++) {
+  for (i = namesInOrder.length - 1; i >= 0; i--) {
     var sheet = ss.getSheetByName(namesInOrder[i]);
     if (sheet) {
       ss.setActiveSheet(sheet);
-      ss.moveActiveSheet(i + 1);
+      ss.moveActiveSheet(1);
     }
   }
 }
@@ -329,6 +348,75 @@ function appendUpload(data, fileId, fileUrl) {
   ]);
 }
 
+function logCsvEmailEvent(eventName, data, detail) {
+  appendEvent({
+    timestamp: data.timestamp || new Date().toISOString(),
+    event: eventName,
+    tool: data.tool || '',
+    page: data.page || '',
+    appVersion: data.appVersion || '',
+    dealer: data.dealer || '',
+    email: data.email || '',
+    detail: detail || data.to || '',
+    userAgent: data.userAgent || '',
+    deviceType: data.deviceType || '',
+  });
+}
+
+function csvPartCacheKey(uploadId, index) {
+  return 'csvpart_' + uploadId + '_' + index;
+}
+
+function cacheCsvEmailPart(data) {
+  var uploadId = String(data.uploadId || '').trim();
+  var index = parseInt(data.index, 10);
+  var totalParts = parseInt(data.totalParts, 10);
+  var chunk = String(data.chunk || '');
+  if (!uploadId || isNaN(index) || isNaN(totalParts) || !chunk) {
+    throw new Error('Invalid CSV upload part.');
+  }
+  if (chunk.length > 95000) {
+    throw new Error('CSV upload part too large.');
+  }
+  CacheService.getScriptCache().put(csvPartCacheKey(uploadId, index), chunk, 600);
+}
+
+function clearCsvEmailParts(uploadId, totalParts) {
+  var cache = CacheService.getScriptCache();
+  var i;
+  for (i = 0; i < totalParts; i++) {
+    cache.remove(csvPartCacheKey(uploadId, i));
+  }
+}
+
+function assembleCsvEmailBase64(uploadId, totalParts) {
+  var cache = CacheService.getScriptCache();
+  var parts = [];
+  var i;
+  for (i = 0; i < totalParts; i++) {
+    var chunk = cache.get(csvPartCacheKey(uploadId, i));
+    if (!chunk) {
+      throw new Error('CSV upload incomplete or expired. Try again or use Download CSV.');
+    }
+    parts.push(chunk);
+  }
+  return parts.join('');
+}
+
+function saveCsvBlobToDrive(blob, name) {
+  if (!CONFIG.DRIVE_FOLDER_ID || CONFIG.DRIVE_FOLDER_ID.indexOf('PASTE_') === 0) {
+    throw new Error('Set CONFIG.DRIVE_FOLDER_ID in Apps Script.');
+  }
+  var folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
+  var file = folder.createFile(blob);
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (shareErr) {
+    // Folder policy may block public links — link still works for script account.
+  }
+  return { id: file.getId(), url: file.getUrl() };
+}
+
 function sendCsvEmail(data) {
   var to = String(data.to || '').trim();
   if (!isValidAccessEmail(to)) {
@@ -349,9 +437,30 @@ function sendCsvEmail(data) {
     (data.tool || '') +
     '\nPage: ' +
     (data.page || '');
-  var options = { attachments: [blob] };
+  var options = {};
   if (data.email) options.replyTo = data.email;
+
+  // Gmail attachment limit — large exports get a Drive download link instead.
+  var maxAttachBytes = 1500000;
+  if (bytes.length > maxAttachBytes) {
+    var saved = saveCsvBlobToDrive(blob, name);
+    body +=
+      '\n\nThe CSV was too large to attach directly (' +
+      Math.round(bytes.length / 1024) +
+      ' KB). Download it here:\n' +
+      saved.url;
+    MailApp.sendEmail(to, subject, body, options);
+    return 'drive_link';
+  }
+
+  options.attachments = [blob];
   MailApp.sendEmail(to, subject, body, options);
+  return 'attachment';
+}
+
+function handleCsvEmailSend(data) {
+  var mode = sendCsvEmail(data);
+  logCsvEmailEvent('csv_email_sent', data, (data.to || '') + ' | ' + mode);
 }
 
 function sendFeedbackEmail(data) {
@@ -1512,14 +1621,30 @@ function doPost(e) {
       return jsonResponse({ ok: true, fileId: saved.id, fileUrl: saved.url });
     }
 
+    if (action === 'csv_email_part') {
+      cacheCsvEmailPart(data);
+      return jsonResponse({ ok: true });
+    }
+
+    if (action === 'csv_email_finish') {
+      data.fileBase64 = assembleCsvEmailBase64(data.uploadId, parseInt(data.totalParts, 10));
+      try {
+        handleCsvEmailSend(data);
+      } catch (emailErr) {
+        logCsvEmailEvent('csv_email_failed', data, String(emailErr).slice(0, 240));
+        throw emailErr;
+      }
+      clearCsvEmailParts(data.uploadId, parseInt(data.totalParts, 10));
+      return jsonResponse({ ok: true });
+    }
+
     if (action === 'csv_email') {
-      sendCsvEmail(data);
-      appendEvent(
-        Object.assign({}, data, {
-          event: 'csv_email',
-          detail: data.to || '',
-        })
-      );
+      try {
+        handleCsvEmailSend(data);
+      } catch (emailErr) {
+        logCsvEmailEvent('csv_email_failed', data, String(emailErr).slice(0, 240));
+        throw emailErr;
+      }
       return jsonResponse({ ok: true });
     }
 
@@ -1594,33 +1719,88 @@ function doGet(e) {
   ).setMimeType(ContentService.MimeType.TEXT);
 }
 
+/** Header-only setup — run this if setupSheets fails with an unknown error. */
+function setupSheetsMinimal() {
+  Logger.log('setupSheetsMinimal: start');
+  var ss = getSpreadsheet();
+  var name;
+  for (name in SHEET_HEADERS) {
+    if (!Object.prototype.hasOwnProperty.call(SHEET_HEADERS, name)) continue;
+    var headers = SHEET_HEADERS[name];
+    var sheet = ensureSheet(ss, name, headers);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    formatSheetHeaderOnly(sheet, headers.length);
+    SpreadsheetApp.flush();
+    Logger.log('setupSheetsMinimal: OK — ' + name);
+  }
+  Logger.log('setupSheetsMinimal: done — tabs and headers refreshed');
+}
+
 /** Run once (or again) from the editor — creates tabs, headers, formatting, README. */
 function setupSheets() {
-  var ss = getSpreadsheet();
+  Logger.log('setupSheets: start');
+  var ss;
+  try {
+    ss = getSpreadsheet();
+    Logger.log('setupSheets: opened spreadsheet');
+  } catch (openErr) {
+    throw new Error('Could not open spreadsheet — check CONFIG.SPREADSHEET_ID: ' + openErr);
+  }
+
   var name;
   var headers;
 
   for (name in SHEET_HEADERS) {
-    headers = SHEET_HEADERS[name];
-    var sheet = ensureSheet(ss, name, headers);
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    formatDataSheet(sheet, headers.length);
+    if (!Object.prototype.hasOwnProperty.call(SHEET_HEADERS, name)) continue;
+    try {
+      headers = SHEET_HEADERS[name];
+      var sheet = ensureSheet(ss, name, headers);
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      formatSheetHeaderOnly(sheet, headers.length);
+      SpreadsheetApp.flush();
+      Logger.log('setupSheets: OK — ' + name);
+    } catch (err) {
+      throw new Error('setupSheets failed on tab "' + name + '": ' + err);
+    }
   }
 
-  setupReadmeSheet(ss);
-  removeDefaultSheet(ss);
-  reorderSheets(ss, [
-    'README',
-    'Events',
-    'Feedback',
-    'Uploads',
-    'AccessRequests',
-    'ApprovedUsers',
-    'AccessCodes',
-    'BetaAccessRequests',
-    'BetaApprovedUsers',
-  ]);
-  refreshApprovedUserRevokeLinks();
+  try {
+    setupReadmeSheet(ss);
+    Logger.log('setupSheets: OK — README');
+  } catch (err) {
+    throw new Error('setupSheets failed on README: ' + err);
+  }
+
+  try {
+    removeDefaultSheet(ss);
+  } catch (err) {
+    Logger.log('setupSheets: skipped removeDefaultSheet — ' + err);
+  }
+
+  try {
+    reorderSheets(ss, [
+      'README',
+      'Events',
+      'Feedback',
+      'Uploads',
+      'AccessRequests',
+      'ApprovedUsers',
+      'AccessCodes',
+      'BetaAccessRequests',
+      'BetaApprovedUsers',
+    ]);
+    Logger.log('setupSheets: OK — tab order');
+  } catch (err) {
+    Logger.log('setupSheets: tab reorder skipped — ' + err);
+  }
+
+  try {
+    refreshApprovedUserRevokeLinks();
+    Logger.log('setupSheets: OK — revoke links');
+  } catch (err) {
+    Logger.log('setupSheets: revoke links skipped — ' + err);
+  }
+
   Logger.log(
     'Sheets ready: README, Events, Feedback, Uploads, AccessRequests, ApprovedUsers, AccessCodes, BetaAccessRequests, BetaApprovedUsers'
   );

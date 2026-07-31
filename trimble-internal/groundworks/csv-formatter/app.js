@@ -834,12 +834,15 @@
     function finish(ok, text) {
       els.emailBtn.disabled = false;
       els.emailHint.textContent = text;
-      if (ok && window.WorkspaceApi) {
-        window.WorkspaceApi.logEvent('csv_email', { detail: to });
-      }
     }
 
+    var csvSize = state.result.outputCsv ? state.result.outputCsv.length : 0;
+    var isLargeEmail = csvSize > 150000;
+
     if (window.WorkspaceApi && typeof window.WorkspaceApi.sendCsvEmail === 'function' && window.WorkspaceApi.isEnabled()) {
+      els.emailHint.textContent = isLargeEmail
+        ? 'Sending large file to server (may take a minute)…'
+        : 'Sending…';
       window.WorkspaceApi
         .sendCsvEmail({
           to: to,
@@ -849,7 +852,12 @@
           fileBase64: fileBase64,
         })
         .then(function () {
-          finish(true, 'Email sent to ' + to + ' with CSV attached.');
+          finish(
+            true,
+            'Email request submitted for ' +
+              to +
+              '. Check your inbox and spam folder in a few minutes. Large files may arrive as a download link instead of an attachment. If nothing arrives, use Download CSV or check the Events sheet for csv_email_sent.'
+          );
         })
         .catch(function () {
           fallbackMailto(to, subject, message, fileName);
