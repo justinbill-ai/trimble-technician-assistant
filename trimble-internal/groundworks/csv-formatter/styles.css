@@ -17,6 +17,11 @@
   word-break: break-all;
 }
 
+.gw-units-note {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
 .gw-angle-note {
   margin: 0 0 14px;
   padding: 10px 12px;

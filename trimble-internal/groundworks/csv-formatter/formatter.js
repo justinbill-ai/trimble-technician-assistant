@@ -27,6 +27,32 @@ var GwCsvFormatter = (function () {
 
   var GROUNDWORKS_HEADER = ['ID', 'X', 'Y', 'Z', 'Orientation', 'Inclination', 'Rotation', 'Length'];
 
+  var LINEAR_FIELDS = ['X', 'Y', 'Z', 'Length'];
+
+  function normalizeInputUnits(units) {
+    return units === 'METRIC' ? 'METRIC' : 'US FT';
+  }
+
+  function inputUnitLabel(units) {
+    return normalizeInputUnits(units) === 'METRIC' ? 'm' : 'US survey ft';
+  }
+
+  function formatLinearValue(value) {
+    var str = String(value || '').trim();
+    if (!str) return '';
+    var num = parseFloat(str);
+    if (isNaN(num)) return str;
+    return String(Math.round(num * 1000) / 1000);
+  }
+
+  function applyInputUnits(records) {
+    records.forEach(function (rec) {
+      LINEAR_FIELDS.forEach(function (field) {
+        if (rec[field]) rec[field] = formatLinearValue(rec[field]);
+      });
+    });
+  }
+
   var NUMERIC_FIELDS_TBC = {
     Easting: true,
     Northing: true,
@@ -369,6 +395,7 @@ var GwCsvFormatter = (function () {
     });
 
     applyGroundworksDefaults(records);
+    applyInputUnits(records);
     return records;
   }
 
@@ -382,6 +409,8 @@ var GwCsvFormatter = (function () {
       pileCount: gwRecords.length,
       groundworksRecords: gwRecords,
       mapping: mapping,
+      inputUnits: normalizeInputUnits(options.inputUnits),
+      inputUnitLabel: inputUnitLabel(options.inputUnits),
     };
 
     if (options.validateOnly) return result;
@@ -691,11 +720,13 @@ var GwCsvFormatter = (function () {
       tbcRecords = toTbcRecords(parsed.header, parsed.records);
       applyTbcDefaults(tbcRecords, options);
       gwRecords = tbcToGroundworks(tbcRecords);
+      applyInputUnits(gwRecords);
       issues = validateTbcRecords(tbcRecords);
     } else {
       gwRecords = toGroundworksRecords(parsed.header, parsed.records);
       applyFieldConstants(gwRecords, options.fieldConstants);
       applyGroundworksDefaults(gwRecords);
+      applyInputUnits(gwRecords);
       issues = validateGroundworksRecords(gwRecords);
       tbcRecords = groundworksToTbc(gwRecords);
     }
@@ -707,6 +738,8 @@ var GwCsvFormatter = (function () {
       inputDelimiter: parsed.delimiter,
       tbcRecords: tbcRecords,
       groundworksRecords: gwRecords,
+      inputUnits: normalizeInputUnits(options.inputUnits),
+      inputUnitLabel: inputUnitLabel(options.inputUnits),
     };
 
     if (options.validateOnly) return result;
@@ -734,7 +767,10 @@ var GwCsvFormatter = (function () {
     processCsv: processCsv,
     recordsToCsv: recordsToCsv,
     defaultOutputName: defaultOutputName,
-    normalizeHeader: normalizeHeader,
+    normalizeInputUnits: normalizeInputUnits,
+    inputUnitLabel: inputUnitLabel,
+    formatLinearValue: formatLinearValue,
+    applyInputUnits: applyInputUnits,
     toTbcRecords: toTbcRecords,
     toGroundworksRecords: toGroundworksRecords,
     validateTbcRecords: validateTbcRecords,

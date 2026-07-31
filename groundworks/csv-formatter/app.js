@@ -9,6 +9,21 @@
     Inclination: '0',
     Rotation: '0',
   };
+
+  function getInputUnits() {
+    if (!els.units) return 'US FT';
+    return els.units.value === 'METRIC' ? 'METRIC' : 'US FT';
+  }
+
+  function updateConstantPlaceholders() {
+    var metric = getInputUnits() === 'METRIC';
+    FIELD_CONSTANT_PLACEHOLDERS.Length = metric ? 'e.g. 4.5' : 'e.g. 15';
+    FIELD_CONSTANT_PLACEHOLDERS.Z = metric ? 'e.g. 30.5' : 'e.g. 100.5';
+  }
+
+  function inputUnitsLabel() {
+    return getInputUnits() === 'METRIC' ? 'm' : 'US survey ft';
+  }
   var dragColumnIndex = null;
 
   var state = {
@@ -34,6 +49,7 @@
   }
 
   function bindElements() {
+    els.units = $('gwUnits');
     els.file = $('gwCsvFile');
     els.fileMeta = $('gwFileMeta');
     els.hasHeader = $('gwHasHeader');
@@ -65,6 +81,7 @@
   function getProcessOptions() {
     return {
       fieldConstants: state.fieldConstants,
+      inputUnits: getInputUnits(),
     };
   }
 
@@ -138,6 +155,7 @@
 
   function renderMappingSlots() {
     if (!state.sourceTable) return;
+    updateConstantPlaceholders();
     els.mappingSlots.innerHTML = '';
 
     GwCsvFormatter.GROUNDWORKS_HEADER.forEach(function (field) {
@@ -241,7 +259,9 @@
       (state.sourceTable.ignoredRows && state.sourceTable.ignoredRows.length
         ? '. Ignoring file row(s): ' + state.sourceTable.ignoredRows.join(', ')
         : '') +
-      '. Drag a column header onto a Groundworks field above.';
+      '. Drag a column header onto a Groundworks field above. Values interpreted as ' +
+      inputUnitsLabel() +
+      '.';
 
     els.sourceHead.innerHTML = '';
     els.sourceBody.innerHTML = '';
@@ -306,7 +326,9 @@
       previewCount +
       ' of ' +
       result.outputRecords.length +
-      ' row(s). Output delimiter: semicolon.';
+      ' row(s). Coordinates and lengths in ' +
+      (result.inputUnitLabel || inputUnitsLabel()) +
+      '. Output delimiter: semicolon.';
 
     els.outputHead.innerHTML = '';
     els.outputBody.innerHTML = '';
@@ -604,6 +626,13 @@
 
   function init() {
     bindElements();
+    updateConstantPlaceholders();
+
+    els.units.addEventListener('change', function () {
+      updateConstantPlaceholders();
+      if (!state.inputText) return;
+      rebuildUi();
+    });
 
     els.file.addEventListener('change', function () {
       var file = els.file.files && els.file.files[0];
