@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../../assets/app-access.css" />
   <link rel="stylesheet" href="../../assets/beta-access.css?v=1" />
   <link rel="stylesheet" href="../../assets/feedback.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body data-gw-page="csv-formatter" data-beta-tool="gw-csv-formatter" class="beta-access-locked">
   <header class="tc-app-header">
@@ -76,10 +76,6 @@
           </p>
         </div>
       </div>
-
-      <div class="gw-actions">
-        <button type="button" class="gw-btn gw-btn--primary" id="gwProcessBtn" disabled>Apply mapping &amp; preview</button>
-      </div>
     </section>
 
     <section class="gw-card hidden" id="gwMappingCard" aria-labelledby="gwMappingHeading">
@@ -90,6 +86,7 @@
           <li><strong>Choose</strong> a CSV column from each dropdown below (works best on phone).</li>
           <li class="gw-drag-howto__desktop-only"><strong>Or drag</strong> a blue column header from the preview onto a field (desktop).</li>
           <li><strong>Or</strong> enter a fixed value when your file does not include that column.</li>
+          <li><strong>Then</strong> click <strong>Apply mapping &amp; preview</strong> at the bottom of this section.</li>
         </ol>
       </div>
       <p class="gw-hint gw-mapping-lead">
@@ -115,6 +112,10 @@
           </table>
         </div>
       </details>
+
+      <div class="gw-actions gw-actions--mapping-footer">
+        <button type="button" class="gw-btn gw-btn--primary" id="gwProcessBtn" disabled>Apply mapping &amp; preview</button>
+      </div>
     </section>
 
     <section class="gw-card gw-card--status hidden" id="gwStatusCard" aria-live="polite">
@@ -166,6 +167,6 @@
   <script src="../../assets/feedback-config.js?v=3"></script>
   <script src="../../assets/feedback.js?v=4"></script>
   <script src="formatter.js?v=11"></script>
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

@@ -487,6 +487,12 @@ body.gw-csv-dragging .gw-map-slot__drop--empty {
   margin-bottom: 16px;
 }
 
+.gw-actions--mapping-footer {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tc-grey-300);
+}
+
 .gw-btn {
   padding: 10px 16px;
   border-radius: var(--tc-radius-lg);

@@ -159,12 +159,12 @@
     var rows = rowCount();
     els.statusLine.textContent =
       rows.toLocaleString() +
-      ' row(s) loaded — choose a CSV column for each field in section 2, then click Apply mapping & preview.';
+      ' row(s) loaded — map each field below, then click Apply mapping & preview at the bottom of this section.';
     if (isLargeDataset()) {
       els.statusLine.textContent =
         'Large file (' +
         rows.toLocaleString() +
-        ' rows) — map every field in section 2, then click Apply mapping & preview.';
+        ' rows) — map every field below, then click Apply mapping & preview when you are ready.';
     }
     els.statusCard.classList.remove('hidden');
   }
@@ -658,6 +658,16 @@
     }
   }
 
+  function scrollToPreviewResults() {
+    var target =
+      els.statusCard && !els.statusCard.classList.contains('hidden')
+        ? els.statusCard
+        : els.outputCard;
+    if (target && typeof target.scrollIntoView === 'function') {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   function processCurrent() {
     if (!state.inputText) {
       alert('Choose a CSV file first.');
@@ -686,6 +696,7 @@
           setStatus(state.result);
           renderOutputPreview(null);
           updateExportUi();
+          scrollToPreviewResults();
           return;
         }
 
@@ -696,6 +707,7 @@
         setStatus(state.result);
         renderOutputPreview(state.result);
         updateExportUi();
+        scrollToPreviewResults();
         if (window.WorkspaceApi) {
           window.WorkspaceApi.logCalcRun(state.result.ok ? 'ok' : 'issues', state.result.pileCount);
         }
