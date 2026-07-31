@@ -56,12 +56,13 @@
       id: 'groundworks',
       title: 'Trimble Groundworks',
       desc: 'Measure-up, calibration, and field workflows for Groundworks pile drivers and related machine control.',
+      href: './groundworks/index.html',
       tools: [
         {
-          href: './groundworks/index.html',
-          icon: 'GW',
-          name: 'Trimble Groundworks',
-          summary: 'Vermeer PD25 measure-up and calibration workflows',
+          href: './groundworks/pd25/index.html',
+          icon: 'PD',
+          name: 'Vermeer PD25',
+          summary: 'Guided pre measure-up workflow and COGO measure-up calculator',
         },
         {
           href: './groundworks/csv-formatter/index.html',
@@ -101,6 +102,10 @@
       btn.addEventListener('click', function () {
         if (window.WorkspaceApi) {
           window.WorkspaceApi.logEvent('category_open', { detail: cat.id });
+        }
+        if (cat.href) {
+          window.location.href = cat.href;
+          return;
         }
         openCategory(cat.id, true);
       });
@@ -183,7 +188,13 @@
   function parseHash() {
     var hash = (location.hash || '').replace(/^#/, '');
     if (hash.indexOf('category/') === 0) {
-      openCategory(hash.slice('category/'.length), false);
+      var id = hash.slice('category/'.length);
+      var cat = findCategory(id);
+      if (cat && cat.href) {
+        window.location.replace(cat.href);
+        return;
+      }
+      openCategory(id, false);
       return;
     }
     openHome(false);
