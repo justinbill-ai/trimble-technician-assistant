@@ -100,11 +100,10 @@
     els.fileMeta = $('gwFileMeta');
     els.hasHeader = $('gwHasHeader');
     els.ignoreRows = $('gwIgnoreRows');
-    els.autoMapBtn = $('gwAutoMapBtn');
     els.processBtn = $('gwProcessBtn');
     els.mappingCard = $('gwMappingCard');
     els.mappingSlots = $('gwMappingSlots');
-    els.sourceCard = $('gwSourceCard');
+    els.sourceDetails = $('gwSourceDetails');
     els.sourceMeta = $('gwSourceMeta');
     els.sourceHead = $('gwSourceHead');
     els.sourceBody = $('gwSourceBody');
@@ -146,7 +145,6 @@
     }
     document.body.classList.add('gw-csv-busy');
     if (els.processBtn) els.processBtn.disabled = true;
-    if (els.autoMapBtn) els.autoMapBtn.disabled = true;
   }
 
   function clearBusy() {
@@ -154,7 +152,6 @@
     if (els.busyOverlay) els.busyOverlay.classList.add('hidden');
     document.body.classList.remove('gw-csv-busy');
     if (els.processBtn && state.inputText) els.processBtn.disabled = false;
-    if (els.autoMapBtn && state.inputText) els.autoMapBtn.disabled = false;
   }
 
   function showAwaitingPreviewStatus() {
@@ -165,12 +162,12 @@
     var rows = rowCount();
     els.statusLine.textContent =
       rows.toLocaleString() +
-      ' row(s) loaded — drag column headers to section 3, then click Apply mapping & preview.';
+      ' row(s) loaded — choose a CSV column for each field in section 2, then click Apply mapping & preview.';
     if (isLargeDataset()) {
       els.statusLine.textContent =
         'Large file (' +
         rows.toLocaleString() +
-        ' rows) — map columns in section 3, then click Apply mapping & preview. The table in section 2 stays responsive while you work.';
+        ' rows) — map every field in section 2, then click Apply mapping & preview.';
     }
     els.statusCard.classList.remove('hidden');
   }
@@ -277,6 +274,38 @@
     state.mappingTouched = true;
   }
 
+  function createColumnSelect(field) {
+    var select = document.createElement('select');
+    select.className = 'gw-input gw-map-slot__select';
+    select.id = 'gwMapSelect_' + field;
+    select.setAttribute('aria-label', 'CSV column for ' + fieldDisplayLabel(field));
+
+    var emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '— Choose CSV column —';
+    select.appendChild(emptyOpt);
+
+    state.sourceTable.columns.forEach(function (col) {
+      var opt = document.createElement('option');
+      opt.value = String(col.index);
+      opt.textContent = mappedColumnLabel(col);
+      select.appendChild(opt);
+    });
+
+    var mappedIndex = state.mapping[field];
+    if (mappedIndex != null && mappedIndex !== '') {
+      select.value = String(mappedIndex);
+    }
+
+    select.addEventListener('change', function () {
+      var val = select.value;
+      assignMapping(field, val === '' ? null : parseInt(val, 10));
+      rebuildUi();
+    });
+
+    return select;
+  }
+
   function renderMappingSlots() {
     if (!state.sourceTable) return;
     updateConstantPlaceholders();
@@ -298,7 +327,7 @@
       }
 
       var drop = document.createElement('div');
-      drop.className = 'gw-map-slot__drop';
+      drop.className = 'gw-map-slot__drop gw-map-slot__drop--desktop';
       drop.setAttribute('data-drop-field', field);
 
       var mappedIndex = state.mapping[field];
@@ -353,7 +382,24 @@
       });
 
       slot.appendChild(label);
-      slot.appendChild(drop);
+
+      var main = document.createElement('div');
+      main.className = 'gw-map-slot__main';
+
+      var selectWrap = document.createElement('div');
+      selectWrap.className = 'gw-map-slot__select-wrap';
+      var selectLabel = document.createElement('label');
+      selectLabel.className = 'gw-map-slot__select-label';
+      selectLabel.setAttribute('for', 'gwMapSelect_' + field);
+      selectLabel.textContent = 'CSV column';
+      selectWrap.appendChild(selectLabel);
+      selectWrap.appendChild(createColumnSelect(field));
+      main.appendChild(selectWrap);
+      main.appendChild(drop);
+      slot.appendChild(main);
+
+      var constantRow = document.createElement('div');
+      constantRow.className = 'gw-map-slot__constant-row';
 
       var constantLabel = document.createElement('label');
       constantLabel.className = 'gw-map-slot__constant-label';
@@ -375,8 +421,9 @@
         debouncedAutoProcess(400);
       });
 
-      slot.appendChild(constantLabel);
-      slot.appendChild(constantInput);
+      constantRow.appendChild(constantLabel);
+      constantRow.appendChild(constantInput);
+      slot.appendChild(constantRow);
       els.mappingSlots.appendChild(slot);
     });
   }
@@ -395,7 +442,7 @@
       (state.sourceTable.ignoredRows && state.sourceTable.ignoredRows.length
         ? '. Ignoring file row(s): ' + state.sourceTable.ignoredRows.join(', ')
         : '') +
-      '. Grab a blue column header below and drag it down to section 3. Values interpreted as ' +
+      '. Choose a column for each field above, or expand the preview to drag headers on desktop. Values interpreted as ' +
       inputUnitsLabel() +
       '.';
 
@@ -590,8 +637,8 @@
       hasHeaderRow: els.hasHeader.checked,
       ignoreRows: els.ignoreRows.value,
     });
-    if (resetMapping || !state.mappingTouched) {
-      state.mapping = GwCsvFormatter.guessColumnMapping(state.sourceTable.columns);
+    if (resetMapping) {
+      state.mapping = {};
       state.mappingTouched = false;
     }
   }
@@ -653,10 +700,16 @@
   }
 
   function rebuildMappingUiOnly() {
-    els.sourceCard.classList.remove('hidden');
     els.mappingCard.classList.remove('hidden');
-    renderSourcePreview();
+    if (els.sourceDetails) {
+      if (window.matchMedia('(max-width: 719px)').matches) {
+        els.sourceDetails.removeAttribute('open');
+      } else {
+        els.sourceDetails.setAttribute('open', 'open');
+      }
+    }
     renderMappingSlots();
+    renderSourcePreview();
   }
 
   function rebuildUi() {
@@ -692,11 +745,9 @@
     state.mappingTouched = false;
     state.result = null;
     els.mappingCard.classList.add('hidden');
-    els.sourceCard.classList.add('hidden');
     els.statusCard.classList.add('hidden');
     els.outputCard.classList.add('hidden');
     els.exportCard.classList.add('hidden');
-    els.autoMapBtn.disabled = true;
     els.processBtn.disabled = true;
   }
 
@@ -707,7 +758,6 @@
     state.inputText = text;
     state.mappingTouched = false;
     els.fileMeta.textContent = file.name + ' (' + Math.max(1, Math.round(file.size / 1024)) + ' KB)';
-    els.autoMapBtn.disabled = false;
     els.processBtn.disabled = false;
     setBusy('Reading CSV…');
 
@@ -868,13 +918,6 @@
           resetUi();
           els.fileMeta.textContent = 'No file selected.';
         });
-    });
-
-    els.autoMapBtn.addEventListener('click', function () {
-      if (!state.sourceTable) return;
-      state.mapping = GwCsvFormatter.guessColumnMapping(state.sourceTable.columns);
-      state.mappingTouched = false;
-      rebuildUi();
     });
 
     els.processBtn.addEventListener('click', processCurrent);

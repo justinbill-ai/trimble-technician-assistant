@@ -34,6 +34,18 @@
   color: var(--tc-grey-600);
 }
 
+.gw-verify-note {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: #fff5f5;
+  border: 1px solid #e8b4b4;
+  border-left: 3px solid var(--tc-error);
+  border-radius: var(--tc-radius-lg);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--tc-grey-600);
+}
+
 .gw-map-slot__constant-label {
   display: block;
   margin-top: 8px;
@@ -59,8 +71,123 @@
 
 .gw-mapping-slots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 720px) {
+  .gw-mapping-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.gw-map-slot {
+  border: 1px solid var(--tc-grey-300);
+  border-radius: var(--tc-radius-lg);
+  padding: 12px;
+  background: #fff;
+}
+
+.gw-map-slot__main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.gw-map-slot__select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gw-map-slot__select-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tc-grey-600);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.gw-map-slot__select {
+  width: 100%;
+  font-size: 0.86rem;
+}
+
+.gw-map-slot__constant-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.gw-map-slot__drop--desktop {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .gw-map-slot__main {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .gw-map-slot__select-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .gw-map-slot__drop--desktop {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.gw-drag-howto__desktop-only {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .gw-drag-howto__desktop-only {
+    display: list-item;
+  }
+}
+
+.gw-source-details {
+  margin-top: 4px;
+  border-top: 1px solid var(--tc-grey-300);
+  padding-top: 12px;
+}
+
+.gw-source-details__summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--tc-blue);
+  margin-bottom: 10px;
+}
+
+.gw-source-details[open] .gw-source-details__summary {
+  margin-bottom: 10px;
+}
+
+.gw-source-details .gw-hint {
+  margin-top: 0;
+}
+
+@media (max-width: 719px) {
+  .gw-source-col__badge,
+  .gw-source-col__grip {
+    display: none;
+  }
+
+  .gw-table--source th.gw-source-col {
+    padding: 8px 10px;
+  }
+
+  .gw-csv-main {
+    max-width: none;
+  }
 }
 
 .gw-map-slot__label {

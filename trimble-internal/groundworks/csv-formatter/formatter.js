@@ -383,29 +383,6 @@ var GwCsvFormatter = (function () {
       }
     });
 
-    var textColumns = columns.filter(function (col) {
-      return !used[col.index] && col.numericRatio < 0.5;
-    });
-    var numericColumns = columns
-      .filter(function (col) {
-        return !used[col.index] && col.numericRatio >= 0.5;
-      })
-      .sort(function (a, b) {
-        return a.index - b.index;
-      });
-
-    if (mapping.ID == null && textColumns.length) {
-      claim('ID', textColumns[0].index);
-    }
-
-    var coordFields = ['X', 'Y', 'Z'];
-    var n;
-    for (n = 0; n < coordFields.length; n++) {
-      var coordField = coordFields[n];
-      if (mapping[coordField] != null) continue;
-      if (numericColumns.length) claim(coordField, numericColumns.shift().index);
-    }
-
     return mapping;
   }
 
