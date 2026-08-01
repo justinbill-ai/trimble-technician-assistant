@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../../assets/app-access.css" />
   <link rel="stylesheet" href="../../assets/beta-access.css?v=1" />
   <link rel="stylesheet" href="../../assets/feedback.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=9" />
 </head>
 <body data-gw-page="csv-formatter" data-beta-tool="gw-csv-formatter" class="beta-access-locked">
   <header class="tc-app-header">
@@ -38,6 +38,38 @@
       <code>ID;X;Y;Z;Orientation;Inclination;Rotation;Length</code>.
       Orientation, Inclination, and Rotation are in degrees.
     </div>
+
+    <section class="gw-dc-reminder" id="gwDcReminder" aria-labelledby="gwDcReminderTitle">
+      <h2 class="gw-dc-reminder__title" id="gwDcReminderTitle">Don&rsquo;t forget the <code>.dc</code> file</h2>
+      <p class="gw-dc-reminder__lead">
+        The pile CSV is only half of the import. Groundworks also needs the design/coordinate
+        <code>.dc</code> file from the same project on the data collector. Copy it to your USB drive
+        together with the formatted pile CSV <strong>before</strong> running Groundworks Project Setup.
+      </p>
+      <p class="gw-dc-reminder__lead">
+        Siteworks cannot export this for you &mdash; copy it from the collector project folder or your
+        Trimble Synchronizer PC folder.
+      </p>
+      <p class="gw-dc-reminder__path-label">Example project folder (Windows Synchronizer):</p>
+      <code class="gw-dc-reminder__path">C:\Trimble Synchronizer Data\PC\Trimble SCS900 Data\EXAMPLE PROJECT\</code>
+      <p class="gw-dc-reminder__file-hint">
+        In that folder, look for <code>EXAMPLE PROJECT.dc</code> (Type: <strong>DC File</strong>) in the same
+        directory as <strong>AsBuild</strong> and <strong>Designs</strong>.
+      </p>
+      <figure class="gw-dc-reminder__figure">
+        <img
+          class="gw-dc-reminder__screenshot"
+          src="./assets/windows-dc-folder-example.png"
+          alt="Windows File Explorer showing a Trimble SCS900 project folder with AsBuild, Designs, and a .dc file"
+          width="960"
+          height="540"
+          loading="lazy"
+        />
+        <figcaption class="gw-dc-reminder__caption">
+          Example: <code>EXAMPLE PROJECT.dc</code> in the project root next to AsBuild and Designs.
+        </figcaption>
+      </figure>
+    </section>
 
     <section class="gw-card" aria-labelledby="gwUploadHeading">
       <h2 id="gwUploadHeading" class="gw-card__title">1. Upload &amp; options</h2>

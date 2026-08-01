@@ -846,7 +846,9 @@
 
   function getEmail() {
     var stored = loadAnyAccess();
-    return stored ? stored.email : '';
+    if (stored) return stored.email;
+    if (authorized && isLocalPreviewHost()) return 'local-preview';
+    return '';
   }
 
   function signOut() {
