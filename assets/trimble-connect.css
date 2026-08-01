@@ -1081,3 +1081,115 @@ a.btn:hover { background: var(--tc-blue-dark); }
   border-top: 1px solid var(--tc-grey-300);
   background: var(--tc-grey-100);
 }
+
+/* ── Theme toggle (header) ── */
+.theme-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: #fff;
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.theme-toggle__track {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.theme-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s, background 0.2s;
+}
+.theme-toggle--dark .theme-toggle__track {
+  background: rgba(255, 255, 255, 0.2);
+}
+.theme-toggle--dark .theme-toggle__knob {
+  left: 16px;
+  background: #4da3d9;
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] {
+  --tc-blue: #4da3d9;
+  --tc-blue-dark: #3b8fc4;
+  --tc-blue-darker: #2f7aad;
+  --tc-blue-tint: #1e3a4f;
+  --tc-blue-soft: #243442;
+  --tc-grey-100: #32373f;
+  --tc-grey-200: #2a2e36;
+  --tc-grey-300: #383d47;
+  --tc-grey-400: #454b56;
+  --tc-grey-500: #9b9faa;
+  --tc-grey-600: #b4b8c2;
+  --tc-text: #e8eaed;
+  --tc-surface: #282c34;
+  --tc-canvas: #1c1f24;
+  --tc-success-bg: #1a3d2e;
+  --tc-error-bg: #3d2024;
+  --tc-warn-bg: #3d3420;
+  --tc-warn: #fbad26;
+  --tc-shadow: none;
+  --tc-shadow-md: none;
+  --bg: var(--tc-canvas);
+  --card: var(--tc-surface);
+  --text: var(--tc-text);
+  --muted: var(--tc-grey-600);
+  --border: var(--tc-grey-400);
+  --border-subtle: var(--tc-grey-300);
+}
+
+[data-theme="dark"] header.tc-app-header,
+[data-theme="dark"] .tc-app-header {
+  background: linear-gradient(180deg, #003d66 0%, #002a45 100%);
+}
+
+[data-theme="dark"] .category-pick:hover,
+[data-theme="dark"] .category-pick:focus-visible,
+[data-theme="dark"] .tool-link:hover,
+[data-theme="dark"] .tool-link:focus-visible {
+  background: var(--tc-blue-soft);
+}
+
+[data-theme="dark"] .help-modal__backdrop,
+[data-theme="dark"] .feedback-modal__backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--tc-surface);
+  color: var(--tc-text);
+  border-color: var(--tc-grey-400);
+}
+
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] a.btn-secondary {
+  background: var(--tc-surface);
+  color: var(--tc-blue);
+  border-color: var(--tc-grey-400);
+}

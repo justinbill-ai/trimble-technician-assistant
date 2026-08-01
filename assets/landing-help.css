@@ -126,7 +126,7 @@ body.help-modal-open { overflow: hidden; }
   padding: 14px 16px;
   border: 1px solid var(--tc-grey-300);
   border-radius: var(--tc-radius-lg);
-  background: #f8fafc;
+  background: var(--tc-grey-100);
 }
 
 .help-guide__section {

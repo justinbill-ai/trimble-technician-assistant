@@ -76,7 +76,8 @@ body.feedback-modal-open {
   border: 1px solid var(--tc-grey-400);
   border-radius: var(--tc-radius);
   font: inherit;
-  background: #fff;
+  background: var(--tc-surface);
+  color: var(--tc-text);
 }
 
 .feedback-modal__textarea {

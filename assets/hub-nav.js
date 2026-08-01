@@ -7,7 +7,7 @@
   var CATEGORIES = [
     {
       id: 'earthworks',
-      title: 'Earthworks Excavator',
+      title: 'Earthworks',
       desc: 'Autos optimization, commissioning support, and field diagnostics for Earthworks excavator machine control.',
       tools: [
         {
@@ -19,42 +19,8 @@
       ],
     },
     {
-      id: 'siteworks',
-      title: 'Siteworks Machine Guidance',
-      desc: 'Survey-based setup, measure-up calculations, and reporting for Siteworks CTL and related guidance workflows.',
-      tools: [
-        {
-          href: './measure-up/index.html',
-          icon: 'MU',
-          name: 'CTL Measure-Up Calculator',
-          summary: 'Survey CSV upload, receiver-to-centerline, attachment width, 3D preview, and PDF report',
-        },
-      ],
-    },
-    {
-      id: 'installation',
-      title: 'Machine wear / Installation deliverables',
-      desc: 'Pre-install machine wear reports and post-install photo deliverables.',
-      howto:
-        'Start with <strong>Pre-Inspection</strong> before the install. After install, open <strong>Install Deliverable</strong> for photos, voice notes, and PDF export.',
-      tools: [
-        {
-          href: './pre-inspection/index.html',
-          icon: 'PI',
-          name: 'Pre-Inspection / Machine Wear Report',
-          summary: 'Before install — expert or guided wear documentation with photos and Trimble-branded PDF',
-        },
-        {
-          href: './install-deliverable/index.html',
-          icon: 'ID',
-          name: 'Install Deliverable',
-          summary: 'After install — named reports, unlimited photos, voice notes, resume anytime, PDF export',
-        },
-      ],
-    },
-    {
       id: 'groundworks',
-      title: 'Trimble Groundworks',
+      title: 'Groundworks',
       desc: 'Measure-up, calibration, and field workflows for Groundworks pile drivers and related machine control.',
       href: './groundworks/index.html',
       tools: [
@@ -69,6 +35,19 @@
           icon: 'CS',
           name: 'CSV Formatter (BETA)',
           summary: 'Map survey/TBC CSV columns and export Groundworks pile import files — BETA access required',
+        },
+      ],
+    },
+    {
+      id: 'siteworks',
+      title: 'Siteworks Machine Guidance',
+      desc: 'Survey-based setup, measure-up calculations, and reporting for Siteworks CTL and related guidance workflows.',
+      tools: [
+        {
+          href: './measure-up/index.html',
+          icon: 'MU',
+          name: 'CTL Measure-Up Calculator',
+          summary: 'Survey CSV upload, receiver-to-centerline, attachment width, 3D preview, and PDF report',
         },
       ],
     },
