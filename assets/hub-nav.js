@@ -8,7 +8,7 @@
     {
       id: 'earthworks',
       title: 'Earthworks',
-      desc: 'Autos optimization, commissioning support, and field diagnostics for Earthworks excavator machine control.',
+      href: './earthworks/index.html',
       tools: [
         {
           href: './excavator/index.html',
@@ -21,7 +21,6 @@
     {
       id: 'groundworks',
       title: 'Groundworks',
-      desc: 'Measure-up, calibration, and field workflows for Groundworks pile drivers and related machine control.',
       href: './groundworks/index.html',
       tools: [
         {
@@ -34,17 +33,17 @@
           href: './groundworks/csv-formatter/index.html',
           icon: 'CS',
           name: 'CSV Formatter (BETA)',
-          summary: 'Map survey/TBC CSV columns and export Groundworks pile import files — BETA access required',
+          summary: 'Map Siteworks Export/TBC CSV columns and export Groundworks pile import files — BETA access required',
         },
       ],
     },
     {
       id: 'siteworks',
       title: 'Siteworks Machine Guidance',
-      desc: 'Survey-based setup, measure-up calculations, and reporting for Siteworks CTL and related guidance workflows.',
+      href: './measure-up/index.html',
       tools: [
         {
-          href: './measure-up/index.html',
+          href: './measure-up/ctl/index.html',
           icon: 'MU',
           name: 'CTL Measure-Up Calculator',
           summary: 'Survey CSV upload, receiver-to-centerline, attachment width, 3D preview, and PDF report',
@@ -129,7 +128,10 @@
     homeView.hidden = true;
     categoryView.hidden = false;
     if (titleEl) titleEl.textContent = cat.title;
-    if (descEl) descEl.textContent = cat.desc;
+    if (descEl) {
+      descEl.textContent = '';
+      descEl.hidden = true;
+    }
     if (howtoEl) {
       if (cat.howto) {
         howtoEl.innerHTML = cat.howto;
