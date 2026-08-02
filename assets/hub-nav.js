@@ -1,5 +1,6 @@
 /**
  * Technician Assistant hub — dealer-facing categories and tool drill-in.
+ * Category hub pages (earthworks/, groundworks/, measure-up/) should stay in sync with each category's tools[] here.
  */
 (function () {
   'use strict';
@@ -33,6 +34,7 @@
           href: './groundworks/csv-formatter/index.html',
           icon: 'CS',
           name: 'CSV Formatter (BETA)',
+          beta: true,
           summary: 'Map Siteworks Export/TBC CSV columns and export Groundworks pile import files — BETA access required',
         },
       ],

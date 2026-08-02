@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
   <link rel="manifest" href="./app.webmanifest" />
   <link rel="stylesheet" href="./assets/trimble-connect.css" />
-  <link rel="stylesheet" href="./assets/landing-help.css" />
+  <link rel="stylesheet" href="./assets/landing-help.css?v=3" />
   <link rel="stylesheet" href="./assets/app-access.css" />
   <link rel="stylesheet" href="./assets/feedback.css" />
 </head>
@@ -90,13 +90,40 @@
         <button type="button" class="btn-icon" id="helpModalClose" aria-label="Close">✕</button>
       </div>
       <p class="help-modal__intro">
-        One home screen lists product categories. Tap a category to see its tools, then tap a tool to open it.
-        Each tool includes guided workflows, checklists, calculators, and PDF export beyond a basic manual.
+        Technician Assistant groups field tools by product line. From the home screen, open a category, then choose a tool from that category&rsquo;s list.
+        Many tools include guided workflows, checklists, calculators, and PDF export.
       </p>
 
       <div class="help-guide" id="helpGuide">
         <section class="help-guide__section">
+          <h3 class="help-guide__title">Getting around</h3>
+          <ol class="help-guide__list help-guide__steps">
+            <li><strong>Home</strong> &mdash; Three categories: Earthworks, Groundworks, and Siteworks Machine Guidance. Tap the Trimble logo to return here from any page.</li>
+            <li><strong>Category</strong> &mdash; Each category opens its own page with a blue header and a list of tools for that product line.</li>
+            <li><strong>Tool</strong> &mdash; Workflows and calculators open on their own pages. Use <em>All categories</em> or the back link at the top to step back one level.</li>
+            <li><strong>Machine hubs</strong> &mdash; Some categories (for example Vermeer PD25 under Groundworks) have a second tool list before the actual workflow or calculator.</li>
+          </ol>
+        </section>
+
+        <section class="help-guide__section">
+          <h3 class="help-guide__title">Light &amp; dark mode</h3>
+          <p class="help-guide__note">
+            Use the sun/moon toggle in the blue header on any page. Your choice is saved on this device and applies across the app, including category and tool pages.
+          </p>
+        </section>
+
+        <section class="help-guide__section">
+          <h3 class="help-guide__title">Developer feedback</h3>
+          <p class="help-guide__note">
+            On the home screen, tap <strong>Developer feedback</strong> to send an enhancement request, bug report, or question to the app developer.
+          </p>
+        </section>
+
+        <section class="help-guide__section">
           <h3 class="help-guide__title">Categories &amp; tools</h3>
+          <p class="help-guide__note help-guide__note--tight">
+            Summary of what you can open from the home screen. Category pages may list additional machine-specific tools.
+          </p>
           <ul class="help-guide__nav" id="helpNavList"></ul>
         </section>
       </div>
@@ -171,12 +198,12 @@
   <script src="./assets/theme-toggle.js"></script>
   <script src="./assets/header-home.js"></script>
   <script src="./assets/workspace-config.js?v=3"></script>
-  <script src="./assets/workspace-api.js?v=6"></script>
+  <script src="./assets/workspace-api.js?v=7"></script>
   <script src="./assets/app-access.js?v=9"></script>
   <script src="./assets/report-upload.js?v=1"></script>
   <script src="./assets/feedback-config.js?v=3"></script>
   <script src="./assets/feedback.js?v=4"></script>
-  <script src="./assets/hub-nav.js?v=4"></script>
-  <script src="./assets/landing-help.js?v=2"></script>
+  <script src="./assets/hub-nav.js?v=5"></script>
+  <script src="./assets/landing-help.js?v=3"></script>
 </body>
 </html>

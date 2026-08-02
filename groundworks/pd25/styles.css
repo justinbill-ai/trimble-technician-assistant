@@ -262,6 +262,17 @@
   color: #8a5a00;
 }
 
+[data-theme="dark"] .pd25-step__note--warning {
+  background: var(--tc-warn-bg);
+  border-color: #6b5a2a;
+  border-left-color: var(--tc-warn);
+  color: #f0e6c8;
+}
+
+[data-theme="dark"] .pd25-step__note--warning strong {
+  color: var(--tc-warn);
+}
+
 .pd25-step__view-image {
   margin-top: 8px;
   padding: 0;

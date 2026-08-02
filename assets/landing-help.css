@@ -180,7 +180,57 @@ body.help-modal-open { overflow: hidden; }
 }
 
 .help-guide__nav-tool {
-  margin-bottom: 2px;
+  margin-bottom: 6px;
+}
+
+.help-guide__tool-name {
+  display: block;
+  font-weight: 600;
+  color: var(--tc-text);
+}
+
+.help-guide__tool-summary {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--tc-grey-600);
+  line-height: 1.4;
+}
+
+.help-guide__beta {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fff8e6;
+  border: 1px solid #fbad26;
+  color: #8d6e00;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+}
+
+[data-theme="dark"] .help-guide__beta {
+  background: var(--tc-warn-bg);
+  border-color: #8a7328;
+  color: #ffc857;
+}
+
+.help-guide__cat-note {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: var(--tc-grey-600);
+}
+
+.help-guide__steps {
+  padding-left: 20px;
+}
+
+.help-guide__note--tight {
+  margin-top: 0;
+  margin-bottom: 10px;
 }
 
 .help-demo {
