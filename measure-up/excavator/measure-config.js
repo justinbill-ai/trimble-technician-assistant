@@ -7,7 +7,7 @@ var EXCAVATOR_MEASUREUP = {
   theoryOfOperation: {
     title: 'How to use this calculator — Excavator',
     intro:
-      'Set up your total station in a new Siteworks project, survey the machine, upload the CSV here, then copy the results into your calibration project. Use one total station setup with the stick extended between vertical and fully out, bucket on the ground in a workable triangle — and do not move any machine linkage until all Siteworks calibration steps are complete.',
+      'Set up your total station in a new Siteworks project, survey the machine, upload the CSV here, then copy the results into your calibration project. Before any shots, position on flat ground with receiver roll near zero — Siteworks Machine Leveling requires this before you tap RECORD, and surveying with roll forces a full remeasure if you reposition the machine afterward. Use one total station setup with the stick extended between vertical and fully out, bucket on the ground in a workable triangle — and do not move any machine linkage until all Siteworks calibration steps are complete.',
     sections: [
       {
         id: 'siteworks-setup',
@@ -21,7 +21,12 @@ var EXCAVATOR_MEASUREUP = {
       {
         id: 'field-positioning',
         title: 'Before you survey',
+        paragraphs: [
+          'Critical for total station measure-up: move the excavator to a flat location and rotate until receiver roll is near zero before you take any shots. On the Siteworks Machine Leveling screen, the machine must be relatively level — tap RECORD only when roll reads near zero.',
+          'If you survey with significant roll, you will have to reposition the machine after taking shots to satisfy Machine Leveling. That forces a full remeasure. Siteworks does not compensate for roll during excavator measure-up.',
+        ],
         list: [
+          'Position on flat ground with receiver roll near zero on the Machine Leveling screen — do this before your total station shots, not after.',
           'One total station setup — shoot all points without moving the machine.',
           'Extend the stick roughly between true vertical and fully extended. Set the bucket on the ground so stick and attachment IMUs are not vertical and the cutting edge is not directly below pivot G.',
           'Plumb bob, tape measure, and calibration magnet required.',

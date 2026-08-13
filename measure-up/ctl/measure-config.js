@@ -7,7 +7,7 @@ var CTL_MEASUREUP = {
   theoryOfOperation: {
     title: 'How to use this calculator — CTL',
     intro:
-      'Set up your total station in a new Siteworks project, survey the machine, upload the CSV here, then copy the results into your calibration project. Position on a level pad with minimal roll, and do not move any machine linkage until all Siteworks calibration steps are complete.',
+      'Set up your total station in a new Siteworks project, survey the machine, upload the CSV here, then copy the results into your calibration project. Before any shots, position on flat ground with receiver roll near zero — Siteworks Machine Leveling requires this before you tap RECORD, and surveying with roll forces a full remeasure if you reposition the machine afterward. Do not move any machine linkage until all Siteworks calibration steps are complete.',
     sections: [
       {
         id: 'siteworks-setup',
@@ -21,8 +21,12 @@ var CTL_MEASUREUP = {
       {
         id: 'field-positioning',
         title: 'Before you survey',
+        paragraphs: [
+          'Critical for total station measure-up: move the CTL to a flat location and rotate until receiver roll is near zero before you take any shots. On the Siteworks Machine Leveling screen, the machine must be relatively level — tap RECORD only when roll reads near zero.',
+          'If you survey with significant roll, you will have to reposition the machine after taking shots to satisfy Machine Leveling. That forces a full remeasure. Siteworks does not compensate for roll during CTL measure-up.',
+        ],
         list: [
-          'Use a level pad with minimal roll when possible — Siteworks does not compensate for roll on CTL measure-up.',
+          'Position on flat ground with receiver roll near zero on the Machine Leveling screen — do this before your total station shots, not after.',
           'Do not move tracks after Machine Setup NEXT until measure-up is complete.',
           'Keep plumb bob and tape measure on hand for manual measurements and plumb-bob calibration.',
         ],
