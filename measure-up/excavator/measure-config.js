@@ -22,11 +22,14 @@ var EXCAVATOR_MEASUREUP = {
         id: 'field-positioning',
         title: 'Before you survey',
         paragraphs: [
-          'Critical for total station measure-up: move the excavator to a flat location and rotate until receiver roll is near zero before you take any shots. On the Siteworks Machine Leveling screen, the machine must be relatively level — tap RECORD only when roll reads near zero.',
-          'If you survey with significant roll, you will have to reposition the machine after taking shots to satisfy Machine Leveling. That forces a full remeasure. Siteworks does not compensate for roll during excavator measure-up.',
+          'Critical for total station measure-up: move the excavator to a flat location and rotate until receiver roll is near zero before you take any shots.',
         ],
+        callout: {
+          title: 'Do not shoot until roll is near zero',
+          body:
+            'Verify receiver roll is near zero before your first total station shot. If you survey with significant roll, you will have to reposition the machine after taking shots — and that forces a full remeasure. Siteworks does not compensate for roll during excavator measure-up.',
+        },
         list: [
-          'Position on flat ground with receiver roll near zero on the Machine Leveling screen — do this before your total station shots, not after.',
           'One total station setup — shoot all points without moving the machine.',
           'Extend the stick roughly between true vertical and fully extended. Set the bucket on the ground so stick and attachment IMUs are not vertical and the cutting edge is not directly below pivot G.',
           'Plumb bob, tape measure, and calibration magnet required.',

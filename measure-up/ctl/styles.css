@@ -292,6 +292,10 @@
   color: var(--tc-text);
 }
 
+.ex-measure-ref__callout {
+  margin: 10px 0 14px;
+}
+
 .ex-measure-ref__subtitle {
   margin: 12px 0 6px;
   font-size: 0.8rem;

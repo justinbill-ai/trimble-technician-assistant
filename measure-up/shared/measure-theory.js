@@ -89,6 +89,25 @@
       .join('');
   }
 
+  function renderCallout(callout) {
+    if (!callout) return '';
+    var items = Array.isArray(callout) ? callout : [callout];
+    return items
+      .map(function (c) {
+        var title = c.title
+          ? '<strong>' + esc(c.title) + '</strong>'
+          : '';
+        var body = c.body ? '<p>' + esc(c.body) + '</p>' : '';
+        return (
+          '<div class="ex-measure-ref__callout mu-survey-requirement" role="note">' +
+          title +
+          body +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
   function renderTheorySections(sections) {
     if (!sections || !sections.length) return '';
     return sections
@@ -100,6 +119,7 @@
             html += '<p class="ex-measure-ref__lead">' + esc(p) + '</p>';
           });
         }
+        html += renderCallout(sec.callout);
         html += renderList(sec.list);
         html += renderMethods(sec.methods);
         if (sec.footnote) {
