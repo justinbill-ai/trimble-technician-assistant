@@ -12,6 +12,10 @@ var lastResponse = null;
 
 var dealerLogo = null;
 
+var scene, camera, renderer, controls;
+
+var vizAnimFrame = null;
+
 
 
 var MACHINE_RESULT_KEYS = [
@@ -302,6 +306,8 @@ function refreshCalcGate() {
 
     document.getElementById('pointCheckList').innerHTML = '';
 
+    hideViz();
+
     syncMeasureUpGate(false);
 
   }
@@ -329,6 +335,8 @@ function csvPreviewErrorMessage(parsed) {
 function showCsvPreviewError(message) {
 
   document.getElementById('pointCheckList').innerHTML = '';
+
+  hideViz();
 
   var errorBox = document.getElementById('errorBox');
 
@@ -436,6 +444,8 @@ function parseCSVForPreview(file) {
 
         '<p class="note">Choose both <b>measurement methods</b> above first. The checklist will then list the exact CSV points required.</p>';
 
+      hideViz();
+
       syncMeasureUpGate(false);
 
       return;
@@ -518,9 +528,371 @@ function parseCSVForPreview(file) {
 
     syncMeasureUpGate(allFound);
 
+    if (Object.keys(foundPoints).length > 0) init3D(foundPoints);
+
   };
 
   reader.readAsText(file);
+
+}
+
+
+
+function hideViz() {
+
+  var container = document.getElementById('viz-container');
+
+  if (container) container.style.display = 'none';
+
+  disposeVizRenderer();
+
+}
+
+
+
+function disposeVizRenderer() {
+
+  if (vizAnimFrame != null) {
+
+    cancelAnimationFrame(vizAnimFrame);
+
+    vizAnimFrame = null;
+
+  }
+
+  if (scene) {
+
+    scene.traverse(function (obj) {
+
+      if (obj.geometry) obj.geometry.dispose();
+
+      if (obj.material) {
+
+        var mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+
+        mats.forEach(function (m) {
+
+          if (m.map) m.map.dispose();
+
+          m.dispose();
+
+        });
+
+      }
+
+    });
+
+  }
+
+  scene = null;
+
+  if (renderer) {
+
+    try {
+
+      renderer.dispose();
+
+    } catch (e) {}
+
+    renderer = null;
+
+  }
+
+  controls = null;
+
+  camera = null;
+
+}
+
+
+
+function init3D(points) {
+
+  if (typeof THREE === 'undefined') return;
+
+  disposeVizRenderer();
+
+  var container = document.getElementById('viz-container');
+
+  container.innerHTML =
+
+    '<div id="viz-overlay">Mouse: rotate / zoom / pan</div>' +
+
+    '<div id="viz-legend"><span class="mu-legend-pt">● Points</span> <span class="mu-legend-hdg">➞ Heading</span></div>';
+
+  container.style.display = 'block';
+
+  scene = new THREE.Scene();
+
+  scene.background = new THREE.Color(0xffffff);
+
+  camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+
+  camera.position.set(0, 5, 12);
+
+  camera.up.set(0, 0, 1);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  renderer.setSize(container.clientWidth, container.clientHeight);
+
+  if (renderer.outputEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe8eaed, 0.92));
+
+  var dir = new THREE.DirectionalLight(0xffffff, 0.38);
+
+  dir.position.set(6, 10, 14);
+
+  scene.add(dir);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  controls.enableDamping = true;
+
+  controls.dampingFactor = 0.06;
+
+  var avgN = 0;
+
+  var avgE = 0;
+
+  var avgZ = 0;
+
+  var count = 0;
+
+  for (var key in points) {
+
+    avgN += points[key].n;
+
+    avgE += points[key].e;
+
+    avgZ += points[key].z;
+
+    count++;
+
+  }
+
+  if (count > 0) {
+
+    avgN /= count;
+
+    avgE /= count;
+
+    avgZ /= count;
+
+  }
+
+  var sphereGeomTemplate = new THREE.SphereGeometry(0.055, 40, 40);
+
+  var sphereMatTemplate = new THREE.MeshStandardMaterial({
+
+    color: 0x005f9e,
+
+    roughness: 0.38,
+
+    metalness: 0.08,
+
+  });
+
+  for (var k in points) {
+
+    var pt = points[k];
+
+    var x = pt.e - avgE;
+
+    var y = pt.n - avgN;
+
+    var z = pt.z - avgZ;
+
+    var sphere = new THREE.Mesh(sphereGeomTemplate.clone(), sphereMatTemplate.clone());
+
+    sphere.position.set(x, y, z);
+
+    scene.add(sphere);
+
+    var sprite = makeTextSprite(k, renderer);
+
+    sprite.position.set(x, y, z + 0.18);
+
+    sprite.renderOrder = 10;
+
+    scene.add(sprite);
+
+  }
+
+  sphereGeomTemplate.dispose();
+
+  sphereMatTemplate.dispose();
+
+  if (points['CT1'] && points['CT2']) {
+
+    var p1 = points['CT1'];
+
+    var p2 = points['CT2'];
+
+    var o = new THREE.Vector3(p1.e - avgE, p1.n - avgN, p1.z - avgZ);
+
+    var t = new THREE.Vector3(p2.e - avgE, p2.n - avgN, p2.z - avgZ);
+
+    scene.add(
+
+      new THREE.ArrowHelper(
+
+        new THREE.Vector3().subVectors(t, o).normalize(),
+
+        o,
+
+        o.distanceTo(t) + 1.6,
+
+        0xfbad26,
+
+        0.85,
+
+        0.42
+
+      )
+
+    );
+
+  }
+
+  function animate() {
+
+    vizAnimFrame = requestAnimationFrame(animate);
+
+    controls.update();
+
+    renderer.render(scene, camera);
+
+  }
+
+  animate();
+
+}
+
+
+
+function fillRoundRect(ctx, x, y, w, h, r) {
+
+  r = Math.min(r, w / 2, h / 2);
+
+  if (r <= 0) {
+
+    ctx.rect(x, y, w, h);
+
+    return;
+
+  }
+
+  ctx.beginPath();
+
+  ctx.moveTo(x + r, y);
+
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+
+  ctx.arcTo(x, y + h, x, y, r);
+
+  ctx.arcTo(x, y, x + w, y, r);
+
+  ctx.closePath();
+
+}
+
+
+
+function makeTextSprite(message, threeRenderer) {
+
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  var padX = 10 * dpr;
+
+  var padY = 6 * dpr;
+
+  var fontPx = Math.round(20 * dpr);
+
+  var cvs = document.createElement('canvas');
+
+  var ctx = cvs.getContext('2d');
+
+  ctx.font = '600 ' + fontPx + 'px "Open Sans", sans-serif';
+
+  var textW = ctx.measureText(message).width;
+
+  var lineH = Math.round(fontPx * 1.25);
+
+  var rw = Math.ceil(textW + padX * 2);
+
+  var rh = Math.ceil(lineH + padY * 2);
+
+  cvs.width = rw;
+
+  cvs.height = rh;
+
+  ctx.font = '600 ' + fontPx + 'px "Open Sans", sans-serif';
+
+  ctx.textBaseline = 'middle';
+
+  var radius = 4 * dpr;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.97)';
+
+  fillRoundRect(ctx, 0.5 * dpr, 0.5 * dpr, rw - dpr, rh - dpr, radius);
+
+  ctx.fill();
+
+  ctx.strokeStyle = '#e0e1e9';
+
+  ctx.lineWidth = Math.max(1, dpr);
+
+  fillRoundRect(ctx, 0.5 * dpr, 0.5 * dpr, rw - dpr, rh - dpr, radius);
+
+  ctx.stroke();
+
+  ctx.fillStyle = '#005f9e';
+
+  ctx.fillText(message, padX, rh / 2);
+
+  var tex = new THREE.Texture(cvs);
+
+  tex.needsUpdate = true;
+
+  tex.minFilter = THREE.LinearFilter;
+
+  tex.magFilter = THREE.LinearFilter;
+
+  if (THREE.sRGBEncoding !== undefined) tex.encoding = THREE.sRGBEncoding;
+
+  if (threeRenderer && threeRenderer.capabilities && threeRenderer.capabilities.getMaxAnisotropy) {
+
+    tex.anisotropy = threeRenderer.capabilities.getMaxAnisotropy();
+
+  }
+
+  var mat = new THREE.SpriteMaterial({
+
+    map: tex,
+
+    transparent: true,
+
+    depthTest: true,
+
+    depthWrite: false,
+
+  });
+
+  var sp = new THREE.Sprite(mat);
+
+  var scaleFac = 42 * dpr;
+
+  sp.scale.set(rw / scaleFac, rh / scaleFac, 1);
+
+  return sp;
 
 }
 
@@ -695,6 +1067,8 @@ function runCalc() {
         window.WorkspaceApi.logEvent('csv_analyzed:ok', { detail: 'excavator-measure-up' });
 
       }
+
+      if (response.vizPoints) init3D(response.vizPoints);
 
     } catch (err) {
 
@@ -1191,6 +1565,22 @@ function bindCalcUi() {
     }
 
     copyResultValue(text, btn);
+
+  });
+
+
+
+  window.addEventListener('resize', function () {
+
+    var container = document.getElementById('viz-container');
+
+    if (!renderer || !camera || !container || container.style.display === 'none') return;
+
+    camera.aspect = container.clientWidth / container.clientHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(container.clientWidth, container.clientHeight);
 
   });
 

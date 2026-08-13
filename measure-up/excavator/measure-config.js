@@ -7,13 +7,14 @@ var EXCAVATOR_MEASUREUP = {
   theoryOfOperation: {
     title: 'How to use this calculator — Excavator',
     intro:
-      'Upload one survey CSV, choose how you measured centerline and attachment width, then copy the results into Siteworks. Shoot from one setup with the stick extended when possible, and do not move the machine between survey and RECORD.',
+      'Upload one survey CSV, choose how you measured centerline and attachment width, then copy the results into Siteworks. Use one total station setup with the stick extended between vertical and fully out, bucket on the ground in a workable triangle — then do not move the machine between survey and RECORD.',
     sections: [
       {
         id: 'field-positioning',
         title: 'Before you survey',
         list: [
-          'Shoot all points from one setup with the stick extended when possible; do not move the machine between survey and RECORD.',
+          'One total station setup — shoot all points without moving the machine.',
+          'Extend the stick roughly between true vertical and fully extended. Set the bucket on the ground so stick and attachment IMUs are not vertical and the cutting edge is not directly below pivot G.',
           'GNSS receiver on the bracket; confirm mount location and coupler type in Siteworks Receiver Orientation.',
           'Plumb bob, tape measure, and calibration magnet required.',
         ],
@@ -21,7 +22,7 @@ var EXCAVATOR_MEASUREUP = {
       {
         id: 'minimum-shots',
         title: 'Minimum survey shots',
-        paragraphs: ['Required in every CSV (one setup, stick extended when possible):'],
+        paragraphs: ['Required in every CSV (one setup, stick extended between vertical and fully out):'],
         list: [
           'BB — bottom bolt of the GNSS antenna bracket',
           'CT1 — control point closest to the R780 receiver',

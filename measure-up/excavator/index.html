@@ -20,7 +20,10 @@
   <link rel="stylesheet" href="../../assets/beta-access.css?v=1" />
   <link rel="stylesheet" href="../../assets/report-upload.css?v=1" />
   <link rel="stylesheet" href="../../assets/feedback.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body data-excavator-page="measure-up" data-beta-tool="excavator-measure-up" class="beta-access-locked">
   <header class="tc-app-header">
@@ -116,11 +119,17 @@
         <h2 class="mu-section__title">Survey data</h2>
 
         <div class="mu-survey-requirement" role="note">
-          <strong>Do not move the machine</strong>
+          <strong>One setup — stick extended</strong>
           <p>
-            Shoot all points from one setup with the stick extended (away from cab) when possible.
+            Shoot all mandatory points from <b>one total station setup</b> without moving the machine.
+            Extend the stick roughly <b>between true vertical and fully extended</b> (away from cab).
+            Set the bucket on the ground so the stick and attachment form workable triangles for the IMU sensors —
+            avoid a vertical bucket IMU attitude and avoid placing the cutting edge directly below the pivot pin (<b>G</b>).
+            This lets you capture stick and bucket geometry in the same shot.
+          </p>
+          <p>
             Mandatory CSV points: <b>BB, CT1, CT2, G, CL</b>.
-            CT1 nearest R780 receiver; CT2 nearest pivot pin (Pin G).
+            <b>CT1</b> nearest R780 receiver · <b>CT2</b> nearest pivot pin (<b>G</b>).
           </p>
         </div>
 
@@ -157,6 +166,8 @@
         </div>
 
         <div id="pointCheckList"></div>
+
+        <div id="viz-container" aria-label="3D survey point preview"></div>
 
         <div class="mu-actions">
           <button type="button" class="btn btn-primary" id="calcBtn" disabled>Run calculations</button>
@@ -267,12 +278,12 @@
   <script src="../../assets/theme-toggle.js"></script>
   <script src="../../assets/header-home.js"></script>
   <script src="../shared/measure-theory.js?v=2"></script>
-  <script src="measure-config.js?v=7"></script>
+  <script src="measure-config.js?v=8"></script>
   <script src="measure-notes.js?v=5"></script>
   <script src="calc.js?v=3"></script>
   <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script src="pdf.js?v=1"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
   <script src="boot.js?v=2"></script>
   <script src="../../assets/feedback-config.js?v=3"></script>
   <script src="../../assets/feedback.js?v=4"></script>
