@@ -27,6 +27,10 @@ window.WORKSPACE_CONFIG = {
       label: 'Groundworks CSV Formatter (BETA)',
       path: 'groundworks/csv-formatter/index.html',
     },
+    'excavator-measure-up': {
+      label: 'Excavator Measure-Up Calculator (BETA)',
+      path: 'measure-up/excavator/index.html',
+    },
   },
   /** Domains that skip manual approval — must match Code.gs AUTO_APPROVE_DOMAINS (subdomains included). */
   autoApproveDomains: ['trimble.com', 'trimblecorp.net'],

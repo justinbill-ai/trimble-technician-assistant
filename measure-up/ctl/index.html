@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="../../assets/app-access.css" />
   <link rel="stylesheet" href="../../assets/report-upload.css?v=1" />
   <link rel="stylesheet" href="../../assets/feedback.css?v=1" />
-  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -45,10 +45,12 @@
   <main class="tc-main">
     <div class="card">
       <p class="mu-product-note">
-        <strong>Siteworks CTL</strong> — upload your survey CSV, choose total-station or manual tape methods, and get machine measure-up values. Optional PDF export after results.
+        <strong>Siteworks CTL</strong> — upload your survey CSV, choose total-station or manual tape methods, and get machine measure-up values. Expand <strong>How to use this calculator</strong> below for positioning tips and required survey points. Optional PDF export after results.
       </p>
 
-      <div class="mu-section">
+      <div id="calculatorSection">
+        <div id="measureReference"></div>
+
         <h2 class="mu-section__title">Measurements</h2>
 
         <div id="measurementFunnelBanner" class="mu-funnel">
@@ -72,7 +74,8 @@
             <option value="Manual">Manual tape — measure lift arm width, enter below</option>
           </select>
           <p id="centerlineHintTS" class="mu-method-hint">
-            <b>Total station:</b> Your CSV must include control points <b>BL</b> and <b>BR</b> (plus G, CT1, CT2, CL, BB). Use the offset field for rear of bracket to machine face if needed.
+            <b>Total station:</b> Your CSV must include <b>BL</b> and <b>BR</b> (plus BB, CT1, CT2, G, CL). Confirm bracket offset matches your welment if needed.<br />
+            <b>Important:</b> Place <b>equidistant</b> targets on opposite boom lift arms.
           </p>
           <p id="centerlineHintManual" class="mu-method-hint">
             <b>Manual tape:</b> Enter the full distance between lift arms and the bracket offset below. <b>BL</b> and <b>BR</b> are <b>not</b> required in the CSV.
@@ -103,7 +106,7 @@
             <option value="Manual">Manual tape — measure width, enter below</option>
           </select>
           <p id="widthHintTS" class="mu-method-hint">
-            <b>Total station:</b> Your CSV must include <b>CR</b> (with CL, G, CT1, CT2, BB). Width is computed from coordinates.
+            <b>Total station:</b> Your CSV must include <b>CR</b> (with BB, CT1, CT2, G, CL). Width is computed from coordinates.
           </p>
           <p id="widthHintManual" class="mu-method-hint">
             <b>Manual tape:</b> Enter measured attachment width below. <b>CR</b> is optional in the CSV.
@@ -114,7 +117,6 @@
           <label class="tc-label" for="manualWidthVal">Measured attachment width</label>
           <input type="number" id="manualWidthVal" class="tc-input" placeholder="Enter width (required)" step="0.001" />
         </div>
-      </div>
 
       <div class="mu-section">
         <h2 class="mu-section__title">Survey data</h2>
@@ -137,19 +139,17 @@
         </div>
 
         <div id="targetNote" class="info-box">
-          <strong>Target layout</strong><br />
-          • <b>CT1 &amp; CT2</b> define forward direction — keep them parallel to centerline, on the <b>same plane</b>, and use the <b>same target thickness</b>.<br />
-          • <b>CL</b> on a straight, unworn section of the cutting edge; <b>CR</b> on the opposite corner when measuring width.<br />
-          • <b>G</b> is the <b>attachment pivot pin</b>.<br /><br />
-          <strong>Optional total-station points (see diagram)</strong><br />
-          • <b>BL</b> and <b>BR</b> — boom lift arms. If you choose <b>Total station</b> for centerline and shoot BL and BR, the calculator bisects that width to find center automatically.<br />
-          • <b>CR</b> — opposite cutting-edge corner. If you choose <b>Total station</b> for width and shoot CR (with CL), the calculator computes cutting-edge width from coordinates.<br /><br />
-          <strong>Antenna bracket (BB)</strong><br />
-          • <b>BB</b> is the <b>bottom bolt</b> of the antenna bracket.<br />
-          • After calculations, always confirm your centerline to the <b>rear of the antenna bracket</b>.
+          <strong>Survey point layout</strong><br />
+          • <b>CT1 &amp; CT2</b> — forward direction; same plane and target thickness<br />
+          • <b>BL / BR</b> — opposite boom lift arms; use <b>equidistant</b> targets<br />
+          • <b>CL / CR</b> — cutting-edge corners · <b>G</b> — attachment pivot · <b>BB</b> — GNSS bracket bottom bolt<br />
+          • See <b>How to use this calculator</b> above for minimum shots and total-station vs manual tape methods
         </div>
 
-        <img id="guideImage" src="assets/ctl-survey-point-guide.png" alt="CTL survey point guide — G, CT1, CT2, CL, BB, and optional BL, BR, CR" />
+        <figure class="mu-guide-figure">
+          <img id="guideImage" src="assets/ctl-survey-point-guide.png" alt="CTL survey point guide — G, CT1, CT2, CL, BB, and optional BL, BR, CR" />
+          <figcaption class="mu-guide-caption">Survey point guide — BB, CT1, CT2, G, CL, CR, BL, and BR (opposite lift arm)</figcaption>
+        </figure>
 
         <div class="drop-zone" id="dropZone">
           <span class="drop-zone__prompt">Drag CSV here or <b>click to upload</b></span>
@@ -258,6 +258,7 @@
       </div>
 
       <p class="mu-version">Technician Assistant · CTL measure-up v1.0</p>
+      </div>
     </div>
   </main>
 
@@ -271,10 +272,13 @@
   <script src="../../assets/report-upload.js?v=1"></script>
   <script src="../../assets/theme-toggle.js"></script>
   <script src="../../assets/header-home.js"></script>
+  <script src="../shared/measure-theory.js?v=2"></script>
+  <script src="measure-config.js?v=3"></script>
+  <script src="measure-notes.js?v=2"></script>
   <script src="calc.js?v=2"></script>
   <script src="../../assets/brand/trimble-pdf-logo.js?v=1"></script>
   <script src="pdf.js?v=4"></script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=7"></script>
   <script src="../../assets/feedback-config.js?v=3"></script>
   <script src="../../assets/feedback.js?v=4"></script>
 </body>

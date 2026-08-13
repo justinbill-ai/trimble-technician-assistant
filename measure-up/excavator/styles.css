@@ -1,4 +1,4 @@
-/* CTL Measure-Up — tool-specific styles (shared chrome in trimble-connect.css) */
+/* Excavator Measure-Up — tool-specific styles */
 
 .mu-product-note {
   margin: 0 0 16px;
@@ -17,12 +17,6 @@
   border-top: 1px solid var(--tc-grey-300);
 }
 
-.mu-section:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
 .mu-section__title {
   font-size: 0.68rem;
   font-weight: 700;
@@ -33,8 +27,6 @@
   padding-left: 10px;
   border-left: 3px solid var(--tc-yellow);
 }
-
-/* Pre-measure-up checklist (shared pattern with excavator measure-up) */
 
 .ex-prereq-progress {
   margin: 0 0 14px;
@@ -250,6 +242,24 @@
   user-select: none;
 }
 
+.ex-calculator-placeholder {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  background: var(--tc-grey-100);
+  border: 1px dashed var(--tc-grey-400);
+  border-radius: var(--tc-radius-lg);
+  font-size: 0.9rem;
+  color: var(--tc-grey-600);
+  line-height: 1.5;
+}
+
+.ex-calculator-placeholder strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--tc-blue);
+}
+
 .ex-measure-ref-panel {
   margin: 0 0 16px;
 }
@@ -263,6 +273,7 @@
 }
 
 .ex-measure-ref {
+  margin: 0 0 16px;
   padding: 14px 16px;
   background: var(--tc-grey-100);
   border: 1px solid var(--tc-grey-300);
@@ -322,6 +333,23 @@
   line-height: 1.45;
 }
 
+.ex-measure-ref__list--compact li {
+  margin-bottom: 2px;
+}
+
+.ex-measure-ref__offset {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--tc-grey-600);
+  line-height: 1.45;
+}
+
+.ex-measure-ref__plumb {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--tc-grey-300);
+}
+
 .ex-measure-ref__warn {
   margin-top: 10px;
   padding: 8px 10px;
@@ -340,22 +368,27 @@
   color: #f0e6c8;
 }
 
-.ex-measure-ref__plumb {
-  margin: 12px 0 0;
-  padding-top: 10px;
+.info-box--attachment {
+  border-left-color: var(--tc-yellow);
+  background: var(--tc-warn-bg);
+}
+
+[data-theme="dark"] .info-box--attachment {
+  background: rgba(251, 173, 38, 0.08);
+}
+
+.mu-res-section td {
+  padding: 8px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tc-blue);
+  background: var(--tc-blue-soft);
   border-top: 1px solid var(--tc-grey-300);
 }
 
-.mu-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.mu-row .tc-field {
-  flex: 1 1 200px;
-  margin-bottom: 0;
-}
+/* Calculator UI (shared patterns with CTL measure-up) */
 
 .mu-funnel {
   margin: 0 0 14px;
@@ -398,16 +431,6 @@
 select.mu-select--pending {
   border-color: var(--tc-yellow);
   box-shadow: 0 0 0 1px rgba(251, 173, 38, 0.35);
-}
-
-.tc-field input.valid {
-  border-color: var(--tc-success);
-  background: var(--tc-success-bg);
-}
-
-.tc-field input.invalid {
-  border-color: var(--tc-error);
-  background: var(--tc-error-bg);
 }
 
 .mu-actions {
@@ -454,7 +477,7 @@ select.mu-select--pending {
   line-height: 1.5;
 }
 
-#guideImage {
+.mu-guide-figure img {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -505,58 +528,7 @@ select.mu-select--pending {
   border-color: #f5c2c8;
 }
 
-#viz-container {
-  width: 100%;
-  height: 350px;
-  background: #fff;
-  border-radius: var(--tc-radius-lg);
-  margin-top: 12px;
-  display: none;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--tc-grey-300);
-}
-
-#viz-overlay {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  color: var(--tc-blue-dark);
-  font-size: 0.68rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 6px 10px;
-  border-radius: var(--tc-radius);
-  pointer-events: none;
-  border: 1px solid var(--tc-grey-300);
-  z-index: 2;
-}
-
-#viz-legend {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 6px 10px;
-  border-radius: var(--tc-radius);
-  pointer-events: none;
-  border: 1px solid var(--tc-grey-300);
-  z-index: 2;
-}
-
-.mu-legend-pt {
-  color: var(--tc-blue);
-}
-
-.mu-legend-hdg {
-  color: var(--tc-yellow);
-}
-
-#results[hidden],
-#exportSection[hidden],
-#helpLinks[hidden] {
+#results[hidden] {
   display: none !important;
 }
 
@@ -628,14 +600,6 @@ select.mu-select--pending {
   background: var(--tc-blue-tint);
 }
 
-#trxIdDisplay {
-  font-size: 0.68rem;
-  color: var(--tc-grey-600);
-  text-align: right;
-  margin-bottom: 8px;
-  font-weight: 700;
-}
-
 #errorBox {
   margin-top: 12px;
   padding: 10px 12px;
@@ -652,38 +616,15 @@ select.mu-select--pending {
   display: none !important;
 }
 
-.mu-help-box {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--tc-grey-300);
+.mu-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.mu-help-box__title {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--tc-grey-600);
-  margin-bottom: 8px;
-}
-
-.mu-help-item {
-  display: block;
-  margin: 6px 0;
-  color: var(--tc-blue);
-  font-weight: 600;
-  font-size: 0.88rem;
-}
-
-.mu-res-section td {
-  padding: 8px 12px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--tc-blue);
-  background: var(--tc-blue-soft);
-  border-top: 1px solid var(--tc-grey-300);
+.mu-row .tc-field {
+  flex: 1 1 200px;
+  margin-bottom: 0;
 }
 
 .mu-version {
@@ -691,10 +632,6 @@ select.mu-select--pending {
   font-size: 0.72rem;
   color: var(--tc-grey-500);
   text-align: center;
-}
-
-.mu-legacy-link {
-  font-size: 0.82rem;
 }
 
 .dealer-logo-row {

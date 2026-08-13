@@ -46,9 +46,16 @@
       tools: [
         {
           href: './measure-up/ctl/index.html',
-          icon: 'MU',
+          icon: 'CTL',
           name: 'CTL Measure-Up Calculator',
           summary: 'Survey CSV upload, receiver-to-centerline, attachment width, 3D preview, and PDF report',
+        },
+        {
+          href: './measure-up/excavator/index.html',
+          icon: 'EX',
+          name: 'Excavator Measure-Up Calculator (BETA)',
+          beta: true,
+          summary: 'Survey CSV upload, usage guide, receiver-to-centerline, attachment width, and PDF report — BETA access required',
         },
       ],
     },

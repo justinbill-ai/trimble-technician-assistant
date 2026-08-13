@@ -155,12 +155,45 @@ function testGwCsvFormatter() {
   assert(swSkip.dataRows.length === 5, 'Ignore rows removes a data row from export');
 }
 
+function testExcavator() {
+  var sandbox = loadGlobalScript(path.join(root, 'measure-up/excavator/calc.js'), 'ExcavatorMeasureUpCalc');
+  var csv = fs.readFileSync(path.join(__dirname, 'fixtures/ctl-min.csv'), 'utf8');
+  var result = sandbox.ExcavatorMeasureUpCalc.calculateForWeb(
+    csv,
+    'US FT',
+    0.03,
+    'Manual',
+    '8.5',
+    'PNEZ',
+    'Manual',
+    '6.2',
+    0.03
+  );
+  assert(result && result.calculations, 'Excavator returns calculations');
+  assert(
+    result.calculations['Receiver bracket bolt to pivot point'] != null,
+    'Excavator computes machine measurement'
+  );
+  assert(
+    result.calculations['Attachment Width'] === '8.500',
+    'Excavator manual attachment width'
+  );
+}
+
 console.log('--- CTL measure-up ---');
 try {
   testCtl();
 } catch (err) {
   failed++;
   console.error('FAIL: CTL threw', err.message);
+}
+
+console.log('--- Excavator measure-up ---');
+try {
+  testExcavator();
+} catch (err) {
+  failed++;
+  console.error('FAIL: Excavator threw', err.message);
 }
 
 console.log('--- PD25 calculator ---');

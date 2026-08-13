@@ -45,6 +45,7 @@
     if (path.indexOf('/groundworks/index.html') !== -1) return 'groundworks-hub';
     if (/\/groundworks\/?$/.test(path)) return 'groundworks-hub';
     if (path.indexOf('/measure-up/ctl/') !== -1) return 'ctl-calculator';
+    if (path.indexOf('/measure-up/excavator/') !== -1) return 'excavator-measure-up';
     if (path.indexOf('/measure-up/') !== -1) return 'measure-up-hub';
     if (path.indexOf('/pre-inspection/') !== -1) return 'pre-inspection';
     if (path.indexOf('/install-deliverable/') !== -1) return 'install-deliverable';

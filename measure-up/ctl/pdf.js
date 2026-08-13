@@ -2,14 +2,23 @@
  * CTL measure-up PDF — matches pre-inspection / install-deliverable report layout.
  */
 var MeasureUpPdf = (function () {
-  var PDF_RESULT_ROW_ORDER = [
+  var MACHINE_KEYS = [
     'Receiver bracket bolt to pivot point',
     'Reciever Bracket to Centerline',
     'Pivot point to plumb bob',
+  ];
+
+  var ATTACHMENT_KEYS = [
     'Pivot Point to Attachment Cutting Edge',
     'Attachment Cutting Edge to Plumb Bob',
     'Attachment Width',
   ];
+
+  function sectionHeading(title) {
+    return (
+      "<tr><td colspan='2' class='sec'>" + escapeHtml(title) + '</td></tr>'
+    );
+  }
 
   function trimblePdfLogoSrc() {
     return typeof TRIMBLE_PDF_LOGO_SRC !== 'undefined'
@@ -65,14 +74,24 @@ var MeasureUpPdf = (function () {
     var html = '<table>';
     var i;
     var key;
-    for (i = 0; i < PDF_RESULT_ROW_ORDER.length; i++) {
-      key = PDF_RESULT_ROW_ORDER[i];
+
+    html += sectionHeading('Machine Measurement');
+    for (i = 0; i < MACHINE_KEYS.length; i++) {
+      key = MACHINE_KEYS[i];
       if (!Object.prototype.hasOwnProperty.call(calculations, key)) continue;
       html += row(key, calculations[key]);
     }
+
+    html += sectionHeading('Pivot Point Measurement — attachment');
+    for (i = 0; i < ATTACHMENT_KEYS.length; i++) {
+      key = ATTACHMENT_KEYS[i];
+      if (!Object.prototype.hasOwnProperty.call(calculations, key)) continue;
+      html += row(key, calculations[key]);
+    }
+
     for (key in calculations) {
       if (!Object.prototype.hasOwnProperty.call(calculations, key)) continue;
-      if (PDF_RESULT_ROW_ORDER.indexOf(key) !== -1) continue;
+      if (MACHINE_KEYS.indexOf(key) !== -1 || ATTACHMENT_KEYS.indexOf(key) !== -1) continue;
       html += row(key, calculations[key]);
     }
     html += '</table>';
@@ -101,6 +120,7 @@ var MeasureUpPdf = (function () {
       "table{width:100%;border-collapse:collapse;margin-bottom:8px;}" +
       "td{padding:8px 10px;border:1px solid #e0e1e9;font-size:13px;vertical-align:top;}" +
       "td.lbl{width:38%;background:#f7f8fa;font-weight:700;color:#6a6e79;}" +
+      "td.sec{background:#eef4f9;font-weight:700;color:#005f9e;text-transform:uppercase;letter-spacing:.04em;font-size:11px;}" +
       ".footer{margin-top:32px;padding-top:12px;border-top:1px solid #e0e1e9;font-size:11px;color:#6a6e79;}" +
       "@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}" +
       "</style></head><body>" +
