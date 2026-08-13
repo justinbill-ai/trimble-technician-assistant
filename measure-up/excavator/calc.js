@@ -101,11 +101,16 @@ var ExcavatorMeasureUpCalc = (function () {
     }
 
     function getPt(name) {
-      var row = csvData.find(function (r) {
-        return r[idxName] && r[idxName].toString().toUpperCase().trim() === name;
-      });
-      return row
-        ? { n: parseFloat(row[idxN]), e: parseFloat(row[idxE]), z: parseFloat(row[idxZ]) }
+      var match = null;
+      for (var i = 0; i < csvData.length; i++) {
+        if (hasHeader && i === 0) continue;
+        var r = csvData[i];
+        if (r[idxName] && r[idxName].toString().toUpperCase().trim() === name) {
+          match = r;
+        }
+      }
+      return match
+        ? { n: parseFloat(match[idxN]), e: parseFloat(match[idxE]), z: parseFloat(match[idxZ]) }
         : null;
     }
 

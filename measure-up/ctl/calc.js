@@ -124,14 +124,19 @@ var MeasureUpCalc = (function () {
     }
 
     function getPt(name) {
-      var row = csvData.find(function (r) {
-        return r[idxName] && r[idxName].toString().toUpperCase().trim() === name;
-      });
-      return row
+      var match = null;
+      for (var i = 0; i < csvData.length; i++) {
+        if (hasHeader && i === 0) continue;
+        var r = csvData[i];
+        if (r[idxName] && r[idxName].toString().toUpperCase().trim() === name) {
+          match = r;
+        }
+      }
+      return match
         ? {
-            n: parseFloat(row[idxN]),
-            e: parseFloat(row[idxE]),
-            z: parseFloat(row[idxZ]),
+            n: parseFloat(match[idxN]),
+            e: parseFloat(match[idxE]),
+            z: parseFloat(match[idxZ]),
           }
         : null;
     }
@@ -142,6 +147,7 @@ var MeasureUpCalc = (function () {
     if (machine === 'CTL') {
       var required = ['G', 'CT1', 'CT2', 'CL', 'BB'];
       if (centerlineMethod === 'Total Station') required.push('BL', 'BR');
+      if (widthMethod === 'Total Station') required.push('CR');
 
       var missing = required.filter(function (p) {
         return !getPt(p);

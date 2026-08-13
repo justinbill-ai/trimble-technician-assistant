@@ -3,7 +3,6 @@
  */
 var EXCAVATOR_MEASUREUP = {
   machine: 'Excavator',
-  earthworksPivotLabel: 'Pin G',
 
   theoryOfOperation: {
     title: 'How to use this calculator — Excavator',
@@ -82,7 +81,6 @@ var EXCAVATOR_MEASUREUP = {
     'Receiver bracket bolt to pivot point',
     'Receiver bracket to centerline',
     'Pivot point to plumb bob',
-    'Receiver pitch',
     'Pivot point to attachment cutting edge',
     'Attachment cutting edge to plumb bob',
     'Attachment width',

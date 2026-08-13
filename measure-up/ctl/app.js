@@ -161,6 +161,23 @@ function refreshCalcGate() {
   }
 }
 
+function csvPreviewErrorMessage(parsed) {
+  if (parsed.error === 'Header columns not identified') {
+    return 'Header detected, but required columns were not identified.';
+  }
+  if (parsed.error === 'Empty file') return 'CSV file is empty.';
+  return parsed.error;
+}
+
+function showCsvPreviewError(message) {
+  document.getElementById('pointCheckList').innerHTML = '';
+  document.getElementById('viz-container').style.display = 'none';
+  var errorBox = document.getElementById('errorBox');
+  errorBox.textContent = message;
+  errorBox.hidden = false;
+  syncMeasureUpGate(false);
+}
+
 function toggleCenterlineInputs() {
   var method = document.getElementById('centerlineMethod').value;
   var tsH = document.getElementById('centerlineHintTS');
@@ -226,11 +243,12 @@ function parseCSVForPreview(file) {
     }
 
     var parsed = MeasureUpCalc.parseSurveyPoints(text, csvFormat);
-    if (parsed.error === 'Header columns not identified') {
-      alert('Header detected, but required columns were not identified.');
+    if (parsed.error) {
+      showCsvPreviewError(csvPreviewErrorMessage(parsed));
       return;
     }
 
+    document.getElementById('errorBox').hidden = true;
     var foundPoints = parsed.foundPoints;
     document.getElementById('pointCheckList').innerHTML = '';
 
@@ -570,6 +588,11 @@ function runCalc() {
         });
       }
     }
+  };
+  reader.onerror = function () {
+    errorBox.textContent = 'Could not read the CSV file.';
+    errorBox.hidden = false;
+    calcBtn.textContent = 'Run calculations';
   };
   reader.readAsText(file);
 }

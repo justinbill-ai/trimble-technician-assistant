@@ -310,6 +310,38 @@ function refreshCalcGate() {
 
 
 
+function csvPreviewErrorMessage(parsed) {
+
+  if (parsed.error === 'Header columns not identified') {
+
+    return 'Header detected, but required columns were not identified.';
+
+  }
+
+  if (parsed.error === 'Empty file') return 'CSV file is empty.';
+
+  return parsed.error;
+
+}
+
+
+
+function showCsvPreviewError(message) {
+
+  document.getElementById('pointCheckList').innerHTML = '';
+
+  var errorBox = document.getElementById('errorBox');
+
+  errorBox.textContent = message;
+
+  errorBox.hidden = false;
+
+  syncMeasureUpGate(false);
+
+}
+
+
+
 function toggleCenterlineInputs() {
 
   var method = document.getElementById('centerlineMethod').value;
@@ -414,15 +446,17 @@ function parseCSVForPreview(file) {
 
     var parsed = ExcavatorMeasureUpCalc.parseSurveyPoints(e.target.result, csvFormat);
 
-    if (parsed.error === 'Header columns not identified') {
+    if (parsed.error) {
 
-      alert('Header detected, but required columns were not identified.');
+      showCsvPreviewError(csvPreviewErrorMessage(parsed));
 
       return;
 
     }
 
 
+
+    document.getElementById('errorBox').hidden = true;
 
     var foundPoints = parsed.foundPoints;
 
@@ -634,6 +668,20 @@ function runCalc() {
 
 
 
+      var rk;
+
+      for (rk in calcs) {
+
+        if (!Object.prototype.hasOwnProperty.call(calcs, rk)) continue;
+
+        if (MACHINE_RESULT_KEYS.indexOf(rk) !== -1 || ATTACHMENT_RESULT_KEYS.indexOf(rk) !== -1) continue;
+
+        body.innerHTML += buildResultRowHtml(rk, calcs[rk]);
+
+      }
+
+
+
       document.getElementById('results').hidden = false;
 
       showExportSection(true);
@@ -669,6 +717,16 @@ function runCalc() {
       }
 
     }
+
+  };
+
+  reader.onerror = function () {
+
+    errorBox.textContent = 'Could not read the CSV file.';
+
+    errorBox.hidden = false;
+
+    calcBtn.textContent = 'Run calculations';
 
   };
 
