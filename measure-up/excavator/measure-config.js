@@ -7,15 +7,23 @@ var EXCAVATOR_MEASUREUP = {
   theoryOfOperation: {
     title: 'How to use this calculator — Excavator',
     intro:
-      'Upload one survey CSV, choose how you measured centerline and attachment width, then copy the results into Siteworks. Use one total station setup with the stick extended between vertical and fully out, bucket on the ground in a workable triangle — then do not move the machine between survey and RECORD.',
+      'Set up your total station in a new Siteworks project, survey the machine, upload the CSV here, then copy the results into your calibration project. Use one total station setup with the stick extended between vertical and fully out, bucket on the ground in a workable triangle — and do not move any machine linkage until all Siteworks calibration steps are complete.',
     sections: [
+      {
+        id: 'siteworks-setup',
+        title: 'Siteworks and total station setup',
+        list: [
+          'Create a new project in Siteworks for your total station survey — separate from the project where you will calibrate the excavator.',
+          'Set the new project to the same units as your working calibration project (for example, if the working project is US FT, set the measure-up project to US FT).',
+          'You do not need the GNSS receiver on the bracket for excavator measure-up.',
+        ],
+      },
       {
         id: 'field-positioning',
         title: 'Before you survey',
         list: [
           'One total station setup — shoot all points without moving the machine.',
           'Extend the stick roughly between true vertical and fully extended. Set the bucket on the ground so stick and attachment IMUs are not vertical and the cutting edge is not directly below pivot G.',
-          'GNSS receiver on the bracket; confirm mount location and coupler type in Siteworks Receiver Orientation.',
           'Plumb bob, tape measure, and calibration magnet required.',
         ],
       },
@@ -69,9 +77,10 @@ var EXCAVATOR_MEASUREUP = {
         id: 'running',
         title: 'Run and copy results',
         list: [
-          'Set units to match your Siteworks project.',
+          'Set calculator units to match your Siteworks measure-up project.',
           'Choose both measurement methods, upload the CSV, and confirm all required points are found.',
           'Tap Run calculations, then copy each result into the matching Siteworks measure-up screen.',
+          'Important: Once survey measurements are taken, do not move the machine linkage until you complete all Siteworks calibration steps.',
           'Do not move the machine between plumb-bob measurements and tapping RECORD in Siteworks.',
         ],
       },
@@ -88,5 +97,5 @@ var EXCAVATOR_MEASUREUP = {
   ],
 
   plumbBobNote:
-    'Pivot point to plumb bob and attachment cutting edge to plumb bob are calibration measurements. Do not move the machine between measuring and tapping RECORD in Siteworks.',
+    'Pivot point to plumb bob and attachment cutting edge to plumb bob are calibration measurements. Do not move the machine linkage between measuring and completing all Siteworks calibration steps.',
 };

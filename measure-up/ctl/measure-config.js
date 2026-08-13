@@ -7,14 +7,22 @@ var CTL_MEASUREUP = {
   theoryOfOperation: {
     title: 'How to use this calculator — CTL',
     intro:
-      'Upload one survey CSV, choose how you measured centerline and attachment width, then copy the results into Siteworks. Position on a level pad with minimal roll, and do not move the tracks after Machine Setup NEXT until measure-up is complete.',
+      'Set up your total station in a new Siteworks project, survey the machine, upload the CSV here, then copy the results into your calibration project. Position on a level pad with minimal roll, and do not move any machine linkage until all Siteworks calibration steps are complete.',
     sections: [
+      {
+        id: 'siteworks-setup',
+        title: 'Siteworks and total station setup',
+        list: [
+          'Create a new project in Siteworks for your total station survey — separate from the project where you will calibrate the CTL.',
+          'Set the new project to the same units as your working calibration project (for example, if the working project is US FT, set the measure-up project to US FT).',
+          'You do not need the GNSS receiver on the bracket for CTL measure-up.',
+        ],
+      },
       {
         id: 'field-positioning',
         title: 'Before you survey',
         list: [
           'Use a level pad with minimal roll when possible — Siteworks does not compensate for roll on CTL measure-up.',
-          'GNSS receiver on the bracket; set receiver mount location to match your CTL bracket in Siteworks.',
           'Do not move tracks after Machine Setup NEXT until measure-up is complete.',
           'Keep plumb bob and tape measure on hand for manual measurements and plumb-bob calibration.',
         ],
@@ -69,9 +77,10 @@ var CTL_MEASUREUP = {
         id: 'running',
         title: 'Run and copy results',
         list: [
-          'Set units to match your Siteworks project.',
+          'Set calculator units to match your Siteworks measure-up project.',
           'Choose both measurement methods, upload the CSV, and confirm all required points are found.',
           'Tap Run calculations, then copy each result into the matching Siteworks measure-up screen.',
+          'Important: Once survey measurements are taken, do not move the machine linkage until you complete all Siteworks calibration steps.',
           'Do not move the machine between plumb-bob measurements and tapping RECORD in Siteworks.',
         ],
       },
@@ -88,5 +97,5 @@ var CTL_MEASUREUP = {
   ],
 
   plumbBobNote:
-    'Pivot point to plumb bob and attachment cutting edge to plumb bob are calibration measurements. Do not move the machine between measuring and tapping RECORD in Siteworks.',
+    'Pivot point to plumb bob and attachment cutting edge to plumb bob are calibration measurements. Do not move the machine linkage between measuring and completing all Siteworks calibration steps.',
 };
