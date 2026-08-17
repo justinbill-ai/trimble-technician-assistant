@@ -334,7 +334,25 @@
 
       var stored = readGrant(toolId);
       if (stored && stored.email === email) {
-        unlockGate();
+        if (!global.WorkspaceApi || typeof global.WorkspaceApi.checkBetaAccess !== 'function') {
+          unlockGate();
+          return;
+        }
+        global.WorkspaceApi.checkBetaAccess(toolId, email, { revalidate: true }).then(function (result) {
+          if (applyApproved(toolId, email, result)) return;
+          clearGrant(toolId);
+          if (result && result.status === 'pending') {
+            showPending(toolId, email);
+            return;
+          }
+          if (result && result.status === 'denied') {
+            showDenied(toolId, email);
+            return;
+          }
+          showRequest(toolId, email);
+        }).catch(function () {
+          unlockGate();
+        });
         return;
       }
       if (stored && stored.email !== email) {
@@ -342,11 +360,8 @@
       }
 
       if (!global.WorkspaceApi || typeof global.WorkspaceApi.checkBetaAccess !== 'function') {
-        if (isAutoApproveEmail(email)) {
-          unlockGate();
-          return;
-        }
         showRequest(toolId, email);
+        showError('BETA access service is not configured. Contact the app administrator.');
         return;
       }
 

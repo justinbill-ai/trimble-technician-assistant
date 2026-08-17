@@ -134,14 +134,7 @@
     if (protocol === 'file:') return true;
     var host = (location.hostname || '').toLowerCase();
     if (!host || host === 'localhost' || host === '127.0.0.1' || host === '[::1]') return true;
-    var appUrl = cfg('appUrl', '');
-    if (!appUrl) return false;
-    try {
-      var configured = new URL(appUrl);
-      return configured.hostname.toLowerCase() !== host;
-    } catch (err) {
-      return false;
-    }
+    return cfg('localPreview', false) === true;
   }
 
   function localHubEntryUrl() {

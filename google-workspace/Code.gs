@@ -197,10 +197,12 @@ function formatDataSheet(sheet, colCount) {
 
   if (sheet.getLastRow() > 1) {
     clearSheetBanding(sheet);
-    var bandEndRow = Math.min(sheet.getLastRow(), 5000);
-    sheet
-      .getRange(2, 1, bandEndRow, colCount)
-      .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+    var bandNumRows = Math.min(sheet.getLastRow(), 5000) - 1;
+    if (bandNumRows > 0) {
+      sheet
+        .getRange(2, 1, bandNumRows, colCount)
+        .applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+    }
   }
 }
 
@@ -613,7 +615,7 @@ function upsertApprovedUser(email, grantType, approvedBy) {
   var targetRow;
   if (existing) {
     targetRow = existing.row;
-    sheet.getRange(existing.row, 1, existing.row, rowValues.length).setValues([rowValues]);
+    sheet.getRange(existing.row, 1, 1, rowValues.length).setValues([rowValues]);
   } else {
     sheet.appendRow(rowValues);
     targetRow = sheet.getLastRow();
@@ -1164,7 +1166,7 @@ function upsertBetaApprovedUser(toolId, email, grantType, approvedBy) {
     accessIsoDate(now),
   ];
   if (existing) {
-    sheet.getRange(existing.row, 1, existing.row, rowValues.length).setValues([rowValues]);
+    sheet.getRange(existing.row, 1, 1, rowValues.length).setValues([rowValues]);
   } else {
     sheet.appendRow(rowValues);
   }
@@ -1524,60 +1526,69 @@ function doGet(e) {
   var action = String(params.action || '').toLowerCase();
   var callback = params.callback || '';
 
-  if (action === 'access_check') {
-    return respondJson(buildAccessCheckResult(params.email, { revalidate: params.revalidate }), callback);
-  }
+  try {
+    if (action === 'access_check') {
+      return respondJson(buildAccessCheckResult(params.email, { revalidate: params.revalidate }), callback);
+    }
 
-  if (action === 'access_start') {
-    return respondJson(handleAccessRequest(params), callback);
-  }
+    if (action === 'access_start') {
+      return respondJson(handleAccessRequest(params), callback);
+    }
 
-  if (action === 'access_verify') {
-    return respondJson(handleAccessVerify(params), callback);
-  }
+    if (action === 'access_verify') {
+      return respondJson(handleAccessVerify(params), callback);
+    }
 
-  if (action === 'access_resend_code') {
-    return respondJson(handleAccessResendCode(params), callback);
-  }
+    if (action === 'access_resend_code') {
+      return respondJson(handleAccessResendCode(params), callback);
+    }
 
-  if (action === 'access_approve') {
-    return handleAccessApprove(params);
-  }
+    if (action === 'access_approve') {
+      return handleAccessApprove(params);
+    }
 
-  if (action === 'access_deny') {
-    return handleAccessDeny(params);
-  }
+    if (action === 'access_deny') {
+      return handleAccessDeny(params);
+    }
 
-  if (action === 'access_revoke') {
-    return handleAccessRevoke(params);
-  }
+    if (action === 'access_revoke') {
+      return handleAccessRevoke(params);
+    }
 
-  if (action === 'beta_access_check') {
-    return respondJson(
-      buildBetaAccessCheckResult(params.toolId, params.email, { revalidate: params.revalidate }),
-      callback
+    if (action === 'beta_access_check') {
+      return respondJson(
+        buildBetaAccessCheckResult(params.toolId, params.email, { revalidate: params.revalidate }),
+        callback
+      );
+    }
+
+    if (action === 'beta_access_start') {
+      return respondJson(handleBetaAccessRequest(params), callback);
+    }
+
+    if (action === 'beta_access_approve') {
+      return handleBetaAccessApprove(params);
+    }
+
+    if (action === 'beta_access_deny') {
+      return handleBetaAccessDeny(params);
+    }
+
+    if (callback) {
+      return respondJson({ ok: false, error: 'Unknown action' }, callback);
+    }
+
+    return ContentService.createTextOutput(
+      'Trimble Technician Assistant workspace API — POST for writes, GET ?action=access_check for access status.'
+    ).setMimeType(ContentService.MimeType.TEXT);
+  } catch (err) {
+    if (callback) {
+      return respondJson({ ok: false, error: String(err) }, callback);
+    }
+    return ContentService.createTextOutput('Error: ' + String(err)).setMimeType(
+      ContentService.MimeType.TEXT
     );
   }
-
-  if (action === 'beta_access_start') {
-    return respondJson(handleBetaAccessRequest(params), callback);
-  }
-
-  if (action === 'beta_access_approve') {
-    return handleBetaAccessApprove(params);
-  }
-
-  if (action === 'beta_access_deny') {
-    return handleBetaAccessDeny(params);
-  }
-
-  if (callback) {
-    return respondJson({ ok: false, error: 'Unknown action' }, callback);
-  }
-
-  return ContentService.createTextOutput(
-    'Trimble Technician Assistant workspace API — POST for writes, GET ?action=access_check for access status.'
-  ).setMimeType(ContentService.MimeType.TEXT);
 }
 
 /** Header-only setup — run this if setupSheets fails with an unknown error. */

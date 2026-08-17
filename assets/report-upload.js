@@ -83,8 +83,16 @@
         reportName: options.reportName || '',
         dealer: options.dealer || options.dealerName || '',
       })
-      .then(function () {
-        setStatus('Copy sent to Trimble shared archive.', options.reportType);
+      .then(function (result) {
+        if (result && result.unverified) {
+          setStatus('Copy submitted for archive. If it does not appear, try again later.', options.reportType);
+          return;
+        }
+        if (result && result.ok !== false) {
+          setStatus('Copy sent to Trimble shared archive.', options.reportType);
+          return;
+        }
+        setStatus('Could not upload copy — PDF on this device is still available.', options.reportType);
       })
       .catch(function () {
         setStatus('Could not upload copy — PDF on this device is still available.', options.reportType);

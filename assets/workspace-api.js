@@ -143,9 +143,19 @@
       form.submit();
       setTimeout(function () {
         form.remove();
-        resolve({ ok: true });
+        resolve({ ok: true, unverified: true });
       }, 1200);
     });
+  }
+
+  function jsonpErrorResult(fallbackMessage, err) {
+    if (err && err.message === 'Access check timed out') {
+      return { ok: false, error: 'The access service timed out. Try again in a moment.' };
+    }
+    if (err && err.message === 'Access check failed') {
+      return { ok: false, error: 'Could not reach the access service. Check your connection and try again.' };
+    }
+    return { ok: false, error: fallbackMessage };
   }
 
   function jsonpGet(params) {
@@ -196,8 +206,8 @@
       appVersion: ctx.appVersion,
       userAgent: ctx.userAgent,
       deviceType: ctx.deviceType,
-    }).catch(function () {
-      return { ok: false, error: 'Could not start access request.' };
+    }).catch(function (err) {
+      return jsonpErrorResult('Could not start access request.', err);
     });
   }
 
@@ -206,8 +216,8 @@
       action: 'access_verify',
       email: email,
       code: code,
-    }).catch(function () {
-      return { ok: false, error: 'Could not verify sign-in code.' };
+    }).catch(function (err) {
+      return jsonpErrorResult('Could not verify sign-in code.', err);
     });
   }
 
@@ -215,8 +225,8 @@
     return jsonpGet({
       action: 'access_resend_code',
       email: email,
-    }).catch(function () {
-      return { ok: false, error: 'Could not resend sign-in code.' };
+    }).catch(function (err) {
+      return jsonpErrorResult('Could not resend sign-in code.', err);
     });
   }
 
@@ -224,8 +234,8 @@
     options = options || {};
     var params = { action: 'access_check', email: email };
     if (options.revalidate) params.revalidate = '1';
-    return jsonpGet(params).catch(function () {
-      return { ok: false, error: 'Could not verify access status.' };
+    return jsonpGet(params).catch(function (err) {
+      return jsonpErrorResult('Could not verify access status.', err);
     });
   }
 
@@ -240,8 +250,8 @@
       appVersion: ctx.appVersion,
       userAgent: ctx.userAgent,
       deviceType: ctx.deviceType,
-    }).catch(function () {
-      return { ok: false, error: 'Could not start BETA access request.' };
+    }).catch(function (err) {
+      return jsonpErrorResult('Could not start BETA access request.', err);
     });
   }
 
@@ -249,8 +259,8 @@
     options = options || {};
     var params = { action: 'beta_access_check', toolId: toolId, email: email };
     if (options.revalidate) params.revalidate = '1';
-    return jsonpGet(params).catch(function () {
-      return { ok: false, error: 'Could not verify BETA access status.' };
+    return jsonpGet(params).catch(function (err) {
+      return jsonpErrorResult('Could not verify BETA access status.', err);
     });
   }
 
