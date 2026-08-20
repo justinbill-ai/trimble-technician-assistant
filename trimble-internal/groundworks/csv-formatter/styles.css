@@ -25,13 +25,13 @@
 .gw-angle-note {
   margin: 0 0 14px;
   padding: 10px 12px;
-  background: var(--tc-warn-bg, #fff8e6);
+  background: var(--tc-warn-bg);
   border: 1px solid #f0d878;
   border-left: 3px solid var(--tc-yellow);
   border-radius: var(--tc-radius-lg);
   font-size: 0.84rem;
   line-height: 1.45;
-  color: var(--tc-grey-600);
+  color: var(--tc-warn-on-bg);
 }
 
 .gw-verify-note {

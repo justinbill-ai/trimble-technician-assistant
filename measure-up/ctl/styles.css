@@ -227,21 +227,21 @@
 }
 
 .ex-step__note--warning {
-  background: #fff8e6;
+  background: var(--tc-warn-bg);
   border-color: #f0d878;
   border-left-color: var(--tc-yellow);
-  color: var(--tc-text);
+  color: var(--tc-warn-on-bg);
 }
 
 [data-theme="dark"] .ex-step__note--warning {
   background: var(--tc-warn-bg);
   border-color: #6b5a2a;
   border-left-color: var(--tc-warn);
-  color: #f0e6c8;
+  color: var(--tc-warn-on-bg);
 }
 
 [data-theme="dark"] .ex-step__note--warning strong {
-  color: var(--tc-warn);
+  color: var(--tc-warn-on-bg-strong);
 }
 
 .ex-calculator--locked {
@@ -329,19 +329,20 @@
 .ex-measure-ref__warn {
   margin-top: 10px;
   padding: 8px 10px;
-  background: #fff8e6;
+  background: var(--tc-warn-bg);
   border: 1px solid #f0d878;
   border-left: 3px solid var(--tc-yellow);
   border-radius: var(--tc-radius);
   font-size: 0.82rem;
   line-height: 1.45;
+  color: var(--tc-warn-on-bg);
 }
 
 [data-theme="dark"] .ex-measure-ref__warn {
   background: var(--tc-warn-bg);
   border-color: #6b5a2a;
   border-left-color: var(--tc-warn);
-  color: #f0e6c8;
+  color: var(--tc-warn-on-bg);
 }
 
 .ex-measure-ref__plumb {
@@ -370,7 +371,7 @@
   border-radius: var(--tc-radius);
   font-size: 0.88rem;
   line-height: 1.45;
-  color: var(--tc-text);
+  color: var(--tc-warn-on-bg);
 }
 
 .mu-funnel--ok {

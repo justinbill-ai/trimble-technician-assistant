@@ -25,13 +25,13 @@
 .gw-angle-note {
   margin: 0 0 14px;
   padding: 10px 12px;
-  background: var(--tc-warn-bg, #fff8e6);
+  background: var(--tc-warn-bg);
   border: 1px solid #f0d878;
   border-left: 3px solid var(--tc-yellow);
   border-radius: var(--tc-radius-lg);
   font-size: 0.84rem;
   line-height: 1.45;
-  color: var(--tc-grey-600);
+  color: var(--tc-warn-on-bg);
 }
 
 .gw-verify-note {
@@ -639,17 +639,18 @@ body.gw-csv-busy {
 .gw-dc-reminder {
   margin: 0 0 16px;
   padding: 16px 18px;
-  background: var(--tc-warn-bg, #fff8e6);
+  background: var(--tc-warn-bg);
   border: 1px solid #e8c96a;
   border-left: 4px solid var(--tc-yellow);
   border-radius: var(--tc-radius-lg);
+  color: var(--tc-warn-on-bg);
 }
 
 .gw-dc-reminder__title {
   margin: 0 0 8px;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--tc-blue);
+  color: var(--tc-warn-on-bg-strong);
   line-height: 1.3;
 }
 
@@ -657,7 +658,7 @@ body.gw-csv-busy {
   margin: 0 0 8px;
   font-size: 0.88rem;
   line-height: 1.5;
-  color: var(--tc-grey-600);
+  color: var(--tc-warn-on-bg-muted);
 }
 
 .gw-dc-reminder__path-label {
